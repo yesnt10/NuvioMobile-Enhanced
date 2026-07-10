@@ -330,6 +330,18 @@ private fun NuvioEnhancedSettingsPageContent(
                         NuvioEnhancedSettingsRepository.setContentWarningsEnabled(it)
                     },
                 )
+                SettingsGroupDivider(isTablet = isTablet)
+                SettingsSwitchRow(
+                    title = stringResource(Res.string.nuvio_enhanced_source_pinning_title),
+                    description = stringResource(Res.string.nuvio_enhanced_source_pinning_desc),
+                    checked = settings.streamSourcePinningEnabled,
+                    isTablet = isTablet,
+                    highlighted = isNew(NuvioEnhancedFeature.StreamSourcePinning),
+                    onCheckedChange = {
+                        markSeen(NuvioEnhancedFeature.StreamSourcePinning)
+                        NuvioEnhancedSettingsRepository.setStreamSourcePinningEnabled(it)
+                    },
+                )
             }
         }
 

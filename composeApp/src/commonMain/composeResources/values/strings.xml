@@ -1542,6 +1542,9 @@
     <string name="streams_link_copied">Stream link copied</string>
     <string name="streams_no_direct_link">No direct stream link available</string>
     <string name="streams_no_metadata">No metadata available</string>
+    <string name="streams_pin_source_confirm">Pin</string>
+    <string name="streams_pin_source_message">Move %1$s to the top of the source list?</string>
+    <string name="streams_pin_source_title">Pin source?</string>
     <string name="streams_refresh">Refresh streams</string>
     <string name="streams_resume_from_percent">Resume from %1$d%</string>
     <string name="streams_resume_from_time">Resume from %1$s</string>
@@ -2247,6 +2250,8 @@
     <string name="nuvio_enhanced_live_tv_desc">Show or hide Live TV in the main navigation without removing the feature data.</string>
     <string name="nuvio_enhanced_content_warnings_title">Content warnings</string>
     <string name="nuvio_enhanced_content_warnings_desc">Show brief parental-guide warnings when playback starts. Turn this off for a cleaner player opening.</string>
+    <string name="nuvio_enhanced_source_pinning_title">Pinned stream sources</string>
+    <string name="nuvio_enhanced_source_pinning_desc">Ask before pinning a selected stream source to the top of the picker.</string>
     <string name="nuvio_enhanced_hero_display_title">Hero display mode</string>
     <string name="nuvio_enhanced_hero_display_desc">Cinematic keeps artwork dominant, Balanced is the premium default, Info Rich shows more metadata.</string>
     <string name="nuvio_enhanced_hero_mode_cinematic">Cinematic</string>

@@ -24,6 +24,7 @@ import com.nuvio.app.features.plugins.PluginRepository
 import com.nuvio.app.features.search.SearchHistoryRepository
 import com.nuvio.app.features.settings.ThemeSettingsRepository
 import com.nuvio.app.features.streams.StreamBadgeSettingsRepository
+import com.nuvio.app.features.streams.StreamSourcePreferencesRepository
 import com.nuvio.app.features.trakt.TraktAuthRepository
 import com.nuvio.app.features.trakt.TraktSettingsRepository
 import com.nuvio.app.features.tmdb.TmdbSettingsRepository
@@ -217,6 +218,9 @@ object ProfileRepository {
         }
         runProfileChangeStep("stream_badges") {
             StreamBadgeSettingsRepository.onProfileChanged()
+        }
+        runProfileChangeStep("stream_source_preferences") {
+            StreamSourcePreferencesRepository.onProfileChanged()
         }
         runProfileChangeStep("p2p") {
             P2pSettingsRepository.onProfileChanged()

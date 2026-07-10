@@ -17,6 +17,7 @@ internal data class NuvioEnhancedSettingsUiState(
     val releaseRadarHomeSignalsEnabled: Boolean = true,
     val profileStatsEnabled: Boolean = true,
     val liveTvEnabled: Boolean = true,
+    val streamSourcePinningEnabled: Boolean = false,
     val heroDisplayMode: NuvioHeroDisplayMode = NuvioHeroDisplayMode.Balanced,
     val heroArtworkSource: NuvioHeroArtworkSource = NuvioHeroArtworkSource.Backdrop,
     val compactHeroMetadata: Boolean = true,
@@ -80,6 +81,7 @@ internal enum class NuvioEnhancedFeature(val id: String) {
     LibraryHealth("library_health"),
     NuvioSpotlight("nuvio_spotlight"),
     NuvioReading("nuvio_reading"),
+    StreamSourcePinning("stream_source_pinning"),
 }
 
 @Serializable
@@ -90,6 +92,7 @@ private data class StoredNuvioEnhancedSettings(
     val releaseRadarHomeSignalsEnabled: Boolean = true,
     val profileStatsEnabled: Boolean = true,
     val liveTvEnabled: Boolean = true,
+    val streamSourcePinningEnabled: Boolean = false,
     val heroDisplayMode: NuvioHeroDisplayMode = NuvioHeroDisplayMode.Balanced,
     val heroArtworkSource: NuvioHeroArtworkSource = NuvioHeroArtworkSource.Backdrop,
     val compactHeroMetadata: Boolean = true,
@@ -175,6 +178,10 @@ internal object NuvioEnhancedSettingsRepository {
 
     fun setLiveTvEnabled(enabled: Boolean) = update {
         copy(liveTvEnabled = enabled)
+    }
+
+    fun setStreamSourcePinningEnabled(enabled: Boolean) = update {
+        copy(streamSourcePinningEnabled = enabled)
     }
 
     fun setHeroDisplayMode(mode: NuvioHeroDisplayMode) = update {
@@ -273,6 +280,7 @@ internal object NuvioEnhancedSettingsRepository {
             releaseRadarHomeSignalsEnabled = stored.releaseRadarHomeSignalsEnabled,
             profileStatsEnabled = stored.profileStatsEnabled,
             liveTvEnabled = stored.liveTvEnabled,
+            streamSourcePinningEnabled = stored.streamSourcePinningEnabled,
             heroDisplayMode = stored.heroDisplayMode,
             heroArtworkSource = stored.heroArtworkSource,
             compactHeroMetadata = stored.compactHeroMetadata,

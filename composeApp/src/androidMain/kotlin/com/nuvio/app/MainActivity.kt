@@ -57,6 +57,7 @@ import com.nuvio.app.core.ui.PosterCardStyleStorage
 import com.nuvio.app.features.watched.WatchedStorage
 import com.nuvio.app.features.streams.StreamLinkCacheStorage
 import com.nuvio.app.features.streams.StreamBadgeSettingsStorage
+import com.nuvio.app.features.streams.StreamSourcePreferencesStorage
 import com.nuvio.app.features.streams.BingeGroupCacheStorage
 import com.nuvio.app.features.watchprogress.ContinueWatchingEnrichmentStorage
 import com.nuvio.app.features.watchprogress.ContinueWatchingPreferencesStorage
@@ -113,6 +114,7 @@ class MainActivity : AppCompatActivity() {
         WatchProgressStorage.initialize(applicationContext)
         StreamLinkCacheStorage.initialize(applicationContext)
         StreamBadgeSettingsStorage.initialize(applicationContext)
+        StreamSourcePreferencesStorage.initialize(applicationContext)
         BingeGroupCacheStorage.initialize(applicationContext)
         PluginStorage.initialize(applicationContext)
         CollectionMobileSettingsStorage.initialize(applicationContext)
