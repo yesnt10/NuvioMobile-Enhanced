@@ -1918,4 +1918,7 @@
     <string name="player_torrent_starting_engine">P2Pエンジンを起動中…</string>
     <string name="player_error_failed_start_torrent">トレントの開始に失敗しました：%1$s</string>
     <string name="player_error_torrent">トレントエラー：%1$s</string>
+    <string name="nuvio_enhanced_player_clock_title">プレーヤー時刻</string>
+    <string name="nuvio_enhanced_player_clock_desc">操作ボタンの表示中に現在時刻と終了予定時刻を表示します。</string>
+    <string name="player_clock_ends_at">終了予定 %1$s</string>
 </resources>

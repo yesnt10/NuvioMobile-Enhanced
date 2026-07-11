@@ -1967,4 +1967,7 @@
         <item quantity="one">%d titre</item>
         <item quantity="other">%d titres</item>
     </plurals>
+    <string name="nuvio_enhanced_player_clock_title">Heure du lecteur</string>
+    <string name="nuvio_enhanced_player_clock_desc">Affiche l’heure actuelle et l’heure de fin estimée lorsque les commandes sont visibles.</string>
+    <string name="player_clock_ends_at">Se termine à %1$s</string>
 </resources>

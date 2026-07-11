@@ -1442,4 +1442,7 @@
     <plurals name="cw_airs_in_days_short">
         <item quantity="other">%1$d hari lagi</item>
     </plurals>
+    <string name="nuvio_enhanced_player_clock_title">Waktu pemutar</string>
+    <string name="nuvio_enhanced_player_clock_desc">Tampilkan waktu saat ini dan perkiraan waktu selesai saat kontrol terlihat.</string>
+    <string name="player_clock_ends_at">Selesai pukul %1$s</string>
 </resources>

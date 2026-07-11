@@ -1519,4 +1519,7 @@
   <string name="supporters_contributors_donation_progress_complete">Coperto. Qualsiasi supporto ulteriore andrà allo sviluppo.</string>
   <string name="supporters_contributors_donation_progress_remaining">Dopo il 100%, eventuale supporto in più andrà allo sviluppo.</string>
   <string name="supporters_contributors_donate_button">Dona a Nuvio</string>
+    <string name="nuvio_enhanced_player_clock_title">Ora del player</string>
+    <string name="nuvio_enhanced_player_clock_desc">Mostra l’ora attuale e l’orario di fine stimato mentre i controlli sono visibili.</string>
+    <string name="player_clock_ends_at">Termina alle %1$s</string>
 </resources>
