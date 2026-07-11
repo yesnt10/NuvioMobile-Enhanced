@@ -108,6 +108,8 @@ internal fun PlayerControlsShell(
     onSourcesClick: (() -> Unit)? = null,
     onEpisodesClick: (() -> Unit)? = null,
     onRandomEpisodeClick: (() -> Unit)? = null,
+    randomNextEpisodeMode: Boolean = false,
+    onRandomNextEpisodeModeToggle: (() -> Unit)? = null,
     onOpenInExternalPlayer: (() -> Unit)? = null,
     onSubmitIntroClick: (() -> Unit)? = null,
     parentalWarnings: List<ParentalWarning> = emptyList(),
@@ -186,6 +188,8 @@ internal fun PlayerControlsShell(
                     onLockToggle = onLockToggle,
                     onVideoSettingsClick = onVideoSettingsClick,
                     onRandomEpisodeClick = onRandomEpisodeClick,
+                    randomNextEpisodeMode = randomNextEpisodeMode,
+                    onRandomNextEpisodeModeToggle = onRandomNextEpisodeModeToggle,
                     onOpenInExternalPlayer = onOpenInExternalPlayer,
                     onBack = onBack,
                     modifier = Modifier
@@ -437,6 +441,8 @@ private fun PlayerHeader(
     onLockToggle: () -> Unit,
     onVideoSettingsClick: (() -> Unit)?,
     onRandomEpisodeClick: (() -> Unit)?,
+    randomNextEpisodeMode: Boolean,
+    onRandomNextEpisodeModeToggle: (() -> Unit)?,
     onOpenInExternalPlayer: (() -> Unit)?,
     onBack: () -> Unit,
     modifier: Modifier = Modifier,
@@ -555,6 +561,20 @@ private fun PlayerHeader(
                             onClick = onRandomEpisodeClick,
                         )
                     }
+                    if (onRandomNextEpisodeModeToggle != null) {
+                        PlayerHeaderIconButton(
+                            icon = Icons.Rounded.Shuffle,
+                            contentDescription = if (randomNextEpisodeMode) {
+                                stringResource(Res.string.player_random_next_enabled)
+                            } else {
+                                stringResource(Res.string.player_random_next_disabled)
+                            },
+                            buttonSize = metrics.headerIconSize + 16.dp,
+                            iconSize = metrics.headerIconSize,
+                            selected = randomNextEpisodeMode,
+                            onClick = onRandomNextEpisodeModeToggle,
+                        )
+                    }
                     PlayerHeaderIconButton(
                         icon = if (isLocked) Icons.Rounded.LockOpen else Icons.Rounded.Lock,
                         contentDescription = if (isLocked) {
@@ -595,13 +615,15 @@ private fun PlayerHeaderIconButton(
     contentDescription: String,
     buttonSize: androidx.compose.ui.unit.Dp,
     iconSize: androidx.compose.ui.unit.Dp,
+    selected: Boolean = false,
     onClick: () -> Unit,
 ) {
     Box(
         modifier = Modifier
             .size(buttonSize)
             .clip(CircleShape)
-            .background(Color.Black.copy(alpha = 0.35f))
+            .background(if (selected) Color.White.copy(alpha = 0.2f) else Color.Black.copy(alpha = 0.35f))
+            .then(if (selected) Modifier.border(1.5.dp, Color.White.copy(alpha = 0.9f), CircleShape) else Modifier)
             .clickable(onClick = onClick),
         contentAlignment = Alignment.Center,
     ) {

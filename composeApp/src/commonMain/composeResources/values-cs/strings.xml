@@ -1923,4 +1923,6 @@
     <string name="player_torrent_starting_engine">Spouštění enginu P2P…</string>
     <string name="player_error_failed_start_torrent">Nepodařilo se spustit torrent: %1$s</string>
     <string name="player_error_torrent">Chyba torrentu: %1$s</string>
+    <string name="player_random_next_enabled">Náhodný další díl zapnut</string>
+    <string name="player_random_next_disabled">Náhodný další díl vypnut</string>
 </resources>

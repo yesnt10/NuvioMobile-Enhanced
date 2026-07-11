@@ -1911,4 +1911,6 @@
     <string name="updates_github_api_error">GitHub releases API Σφάλμα: %1$d</string>
     <string name="updates_no_channel_release">No upΗμερομηνία has been published yet.</string>
     <string name="updates_release_missing_title">Release has Όχι tag or name</string>
+    <string name="player_random_next_enabled">Τυχαίο επόμενο επεισόδιο ενεργό</string>
+    <string name="player_random_next_disabled">Τυχαίο επόμενο επεισόδιο ανενεργό</string>
 </resources>

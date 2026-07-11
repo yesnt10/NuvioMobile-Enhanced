@@ -1341,4 +1341,6 @@
     <string name="unit_bytes_kb">KB</string>
     <string name="unit_bytes_mb">MB</string>
     <string name="unit_bytes_gb">GB</string>
+    <string name="player_random_next_enabled">Próximo episódio aleatório ativado</string>
+    <string name="player_random_next_disabled">Próximo episódio aleatório desativado</string>
 </resources>

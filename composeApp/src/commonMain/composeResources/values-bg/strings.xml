@@ -1892,4 +1892,6 @@
     <string name="trakt_error_add_list_failed">Добавянето към списък в Trakt не бе успешно</string>
     <string name="trakt_error_missing_ids">Липсват съвместими Trakt идентификатори</string>
     <string name="trakt_error_empty_response">Празно тяло на отговора</string>
+    <string name="player_random_next_enabled">Случаен следващ епизод: включен</string>
+    <string name="player_random_next_disabled">Случаен следващ епизод: изключен</string>
 </resources>

@@ -1442,4 +1442,6 @@
     <plurals name="cw_airs_in_days_short">
         <item quantity="other">%1$d hari lagi</item>
     </plurals>
+    <string name="player_random_next_enabled">Episode berikutnya acak aktif</string>
+    <string name="player_random_next_disabled">Episode berikutnya acak nonaktif</string>
 </resources>

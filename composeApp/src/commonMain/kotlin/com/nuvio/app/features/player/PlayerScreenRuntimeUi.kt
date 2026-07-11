@@ -268,6 +268,12 @@ private fun PlayerScreenRuntime.RenderPlayerControls(displayedPositionMs: Long, 
             } else {
                 null
             },
+            randomNextEpisodeMode = randomNextEpisodeMode,
+            onRandomNextEpisodeModeToggle = if (isSeries) {
+                { randomNextEpisodeMode = !randomNextEpisodeMode }
+            } else {
+                null
+            },
             onOpenInExternalPlayer = args.onOpenInExternalPlayer?.let { openExternal ->
                 {
                     val loadedSubtitles = addonSubtitles

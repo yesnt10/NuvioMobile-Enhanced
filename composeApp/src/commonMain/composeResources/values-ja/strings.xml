@@ -1918,4 +1918,6 @@
     <string name="player_torrent_starting_engine">P2Pエンジンを起動中…</string>
     <string name="player_error_failed_start_torrent">トレントの開始に失敗しました：%1$s</string>
     <string name="player_error_torrent">トレントエラー：%1$s</string>
+    <string name="player_random_next_enabled">次のエピソードをランダム再生：オン</string>
+    <string name="player_random_next_disabled">次のエピソードをランダム再生：オフ</string>
 </resources>

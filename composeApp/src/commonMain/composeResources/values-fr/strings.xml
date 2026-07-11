@@ -1967,4 +1967,6 @@
         <item quantity="one">%d titre</item>
         <item quantity="other">%d titres</item>
     </plurals>
+    <string name="player_random_next_enabled">Épisode suivant aléatoire activé</string>
+    <string name="player_random_next_disabled">Épisode suivant aléatoire désactivé</string>
 </resources>
