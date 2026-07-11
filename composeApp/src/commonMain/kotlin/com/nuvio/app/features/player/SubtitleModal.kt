@@ -66,6 +66,9 @@ fun SubtitleModal(
     subtitleDelayMs: Int,
     selectedAddonSubtitle: AddonSubtitle?,
     subtitleAutoSyncState: SubtitleAutoSyncUiState,
+    syncEnabled: Boolean,
+    currentPlaybackPositionMs: Long,
+    isPlaying: Boolean,
     onTabSelected: (SubtitleTab) -> Unit,
     onBuiltInTrackSelected: (Int) -> Unit,
     onAddonSubtitleSelected: (AddonSubtitle) -> Unit,
@@ -76,6 +79,7 @@ fun SubtitleModal(
     onAutoSyncCapture: () -> Unit,
     onAutoSyncCueSelected: (SubtitleSyncCue) -> Unit,
     onAutoSyncReload: () -> Unit,
+    onTogglePlayback: () -> Unit,
     onDismiss: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
@@ -136,6 +140,7 @@ fun SubtitleModal(
 
                         SubtitleTabBar(
                             activeTab = activeTab,
+                            syncEnabled = syncEnabled,
                             onTabSelected = onTabSelected,
                         )
 
@@ -162,12 +167,15 @@ fun SubtitleModal(
                                     subtitleDelayMs = subtitleDelayMs,
                                     selectedAddonSubtitle = selectedAddonSubtitle,
                                     subtitleAutoSyncState = subtitleAutoSyncState,
+                                    currentPlaybackPositionMs = currentPlaybackPositionMs,
+                                    isPlaying = isPlaying,
                                     isCompact = isCompact,
                                     onSubtitleDelayChanged = onSubtitleDelayChanged,
                                     onSubtitleDelayReset = onSubtitleDelayReset,
                                     onAutoSyncCapture = onAutoSyncCapture,
                                     onAutoSyncCueSelected = onAutoSyncCueSelected,
                                     onAutoSyncReload = onAutoSyncReload,
+                                    onTogglePlayback = onTogglePlayback,
                                 )
                                 SubtitleTab.Style -> SubtitleStylePanel(
                                     style = subtitleStyle,
@@ -186,6 +194,7 @@ fun SubtitleModal(
 @Composable
 private fun SubtitleTabBar(
     activeTab: SubtitleTab,
+    syncEnabled: Boolean,
     onTabSelected: (SubtitleTab) -> Unit,
 ) {
     val colorScheme = MaterialTheme.colorScheme
@@ -197,7 +206,7 @@ private fun SubtitleTabBar(
             .padding(bottom = 20.dp),
         horizontalArrangement = Arrangement.spacedBy(8.dp),
     ) {
-        SubtitleTab.entries.forEach { tab ->
+        SubtitleTab.entries.filter { it != SubtitleTab.Sync || syncEnabled }.forEach { tab ->
             val isSelected = tab == activeTab
             val bgColor by animateColorAsState(
                 targetValue = if (isSelected) colorScheme.primaryContainer else colorScheme.surfaceVariant.copy(alpha = 0.92f),

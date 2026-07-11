@@ -1918,4 +1918,6 @@
     <string name="player_torrent_starting_engine">P2Pエンジンを起動中…</string>
     <string name="player_error_failed_start_torrent">トレントの開始に失敗しました：%1$s</string>
     <string name="player_error_torrent">トレントエラー：%1$s</string>
+    <string name="nuvio_enhanced_subtitle_sync_title">字幕の同期</string>
+    <string name="nuvio_enhanced_subtitle_sync_desc">タイミング調整を表示し、再生中の字幕行を追跡します。</string>
 </resources>

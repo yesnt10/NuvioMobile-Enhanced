@@ -1442,4 +1442,6 @@
     <plurals name="cw_airs_in_days_short">
         <item quantity="other">%1$d hari lagi</item>
     </plurals>
+    <string name="nuvio_enhanced_subtitle_sync_title">Sinkronisasi subtitle</string>
+    <string name="nuvio_enhanced_subtitle_sync_desc">Tampilkan kontrol waktu dan ikuti baris aktif selama pemutaran.</string>
 </resources>

@@ -67,12 +67,15 @@ fun SubtitleSyncPanel(
     subtitleDelayMs: Int,
     selectedAddonSubtitle: AddonSubtitle?,
     subtitleAutoSyncState: SubtitleAutoSyncUiState,
+    currentPlaybackPositionMs: Long,
+    isPlaying: Boolean,
     isCompact: Boolean,
     onSubtitleDelayChanged: (Int) -> Unit,
     onSubtitleDelayReset: () -> Unit,
     onAutoSyncCapture: () -> Unit,
     onAutoSyncCueSelected: (SubtitleSyncCue) -> Unit,
     onAutoSyncReload: () -> Unit,
+    onTogglePlayback: () -> Unit,
 ) {
     val colorScheme = MaterialTheme.colorScheme
     val sectionPadding = if (isCompact) 12.dp else 16.dp
@@ -85,6 +88,8 @@ fun SubtitleSyncPanel(
             subtitleDelayMs = subtitleDelayMs,
             selectedAddonSubtitle = selectedAddonSubtitle,
             subtitleAutoSyncState = subtitleAutoSyncState,
+            currentPlaybackPositionMs = currentPlaybackPositionMs,
+            isPlaying = isPlaying,
             isCompact = isCompact,
             sectionPadding = sectionPadding,
             colorScheme = colorScheme,
@@ -93,6 +98,7 @@ fun SubtitleSyncPanel(
             onAutoSyncCapture = onAutoSyncCapture,
             onAutoSyncCueSelected = onAutoSyncCueSelected,
             onAutoSyncReload = onAutoSyncReload,
+            onTogglePlayback = onTogglePlayback,
         )
     }
 }
@@ -102,6 +108,8 @@ private fun SyncControlsCard(
     subtitleDelayMs: Int,
     selectedAddonSubtitle: AddonSubtitle?,
     subtitleAutoSyncState: SubtitleAutoSyncUiState,
+    currentPlaybackPositionMs: Long,
+    isPlaying: Boolean,
     isCompact: Boolean,
     sectionPadding: androidx.compose.ui.unit.Dp,
     colorScheme: androidx.compose.material3.ColorScheme,
@@ -110,6 +118,7 @@ private fun SyncControlsCard(
     onAutoSyncCapture: () -> Unit,
     onAutoSyncCueSelected: (SubtitleSyncCue) -> Unit,
     onAutoSyncReload: () -> Unit,
+    onTogglePlayback: () -> Unit,
 ) {
     val btnSize = if (isCompact) 28.dp else 32.dp
     val btnRadius = if (isCompact) 14.dp else 16.dp
@@ -165,10 +174,14 @@ private fun SyncControlsCard(
         AutoSyncControls(
             selectedAddonSubtitle = selectedAddonSubtitle,
             state = subtitleAutoSyncState,
+            subtitleDelayMs = subtitleDelayMs,
+            currentPlaybackPositionMs = currentPlaybackPositionMs,
+            isPlaying = isPlaying,
             isCompact = isCompact,
             onCapture = onAutoSyncCapture,
             onCueSelected = onAutoSyncCueSelected,
             onReload = onAutoSyncReload,
+            onTogglePlayback = onTogglePlayback,
         )
     }
 }
@@ -354,17 +367,20 @@ private fun StyleControlsCard(
 private fun AutoSyncControls(
     selectedAddonSubtitle: AddonSubtitle?,
     state: SubtitleAutoSyncUiState,
+    subtitleDelayMs: Int,
+    currentPlaybackPositionMs: Long,
+    isPlaying: Boolean,
     isCompact: Boolean,
     onCapture: () -> Unit,
     onCueSelected: (SubtitleSyncCue) -> Unit,
     onReload: () -> Unit,
+    onTogglePlayback: () -> Unit,
 ) {
     val colorScheme = MaterialTheme.colorScheme
     val capturedPositionMs = state.capturedPositionMs
     val cueListState = rememberLazyListState()
-    val highlightedCueIndex = capturedPositionMs?.let { captured ->
-        state.cues.indices.minByOrNull { index -> abs(state.cues[index].startTimeMs - captured) }
-    } ?: -1
+    val subtitlePositionMs = (currentPlaybackPositionMs - subtitleDelayMs).coerceAtLeast(0L)
+    val highlightedCueIndex = state.cues.indexOfLast { it.startTimeMs <= subtitlePositionMs }
 
     LaunchedEffect(highlightedCueIndex, state.cues.size) {
         if (highlightedCueIndex >= 0) {
@@ -393,6 +409,13 @@ private fun AutoSyncControls(
                 fontSize = 13.sp,
             )
             Row(horizontalArrangement = Arrangement.spacedBy(6.dp)) {
+                SmallActionPill(
+                    text = if (isPlaying) stringResource(Res.string.compose_action_pause)
+                    else stringResource(Res.string.action_play),
+                    enabled = selectedAddonSubtitle != null,
+                    selected = isPlaying,
+                    onClick = onTogglePlayback,
+                )
                 SmallActionPill(
                     text = stringResource(Res.string.compose_player_reload),
                     enabled = selectedAddonSubtitle != null,
