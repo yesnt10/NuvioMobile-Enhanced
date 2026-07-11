@@ -810,22 +810,15 @@ private fun EnhancedDnsProviderRow(
     val tokens = MaterialTheme.nuvio
     val iconSize = if (isTablet) 42.dp else 36.dp
     val rowShape = RoundedCornerShape(if (isTablet) NuvioTokens.Radius.lg else NuvioTokens.Radius.md)
-    val rowColor = when {
-        selected -> tokens.colors.accent.copy(alpha = 0.13f)
-        highlighted -> tokens.colors.accent.copy(alpha = 0.08f)
-        else -> Color.Transparent
-    }
-    val borderColor = when {
-        selected -> tokens.colors.accent.copy(alpha = 0.86f)
-        highlighted -> tokens.colors.accent.copy(alpha = 0.72f)
-        else -> Color.Transparent
-    }
+    val rowColor = if (selected) tokens.colors.accent.copy(alpha = 0.13f) else Color.Transparent
+    val borderColor = if (selected) tokens.colors.accent.copy(alpha = 0.86f) else Color.Transparent
 
     Row(
         modifier = Modifier
             .fillMaxWidth()
             .background(rowColor, rowShape)
             .border(tokens.borders.hairline, borderColor, rowShape)
+            .newFeatureHighlight(highlighted && !selected, rowShape, tokens.borders.hairline)
             .clickable(onClick = onClick)
             .padding(
                 horizontal = if (isTablet) 20.dp else 16.dp,
@@ -920,15 +913,7 @@ private fun <T> EnhancedChoiceRow(
     Column(
         modifier = Modifier
             .fillMaxWidth()
-            .then(
-                if (highlighted) {
-                    Modifier
-                        .background(tokens.colors.accent.copy(alpha = 0.08f), highlightShape)
-                        .border(tokens.borders.hairline, tokens.colors.accent.copy(alpha = 0.72f), highlightShape)
-                } else {
-                    Modifier
-                },
-            )
+            .newFeatureHighlight(highlighted, highlightShape, tokens.borders.hairline)
             .padding(horizontal = horizontalPadding, vertical = verticalPadding),
         verticalArrangement = Arrangement.spacedBy(10.dp),
     ) {
@@ -1188,13 +1173,16 @@ private fun LatestChangesCard(
     onMarkSeen: () -> Unit,
 ) {
     val tokens = MaterialTheme.nuvio
+    val shape = if (isTablet) RoundedCornerShape(NuvioTokens.Radius.xl) else tokens.shapes.compactCard
     Surface(
-        modifier = Modifier.fillMaxWidth(),
+        modifier = Modifier
+            .fillMaxWidth()
+            .newFeatureHighlight(highlighted, shape, if (highlighted) 1.5.dp else tokens.borders.hairline),
         color = tokens.colors.surface,
-        shape = if (isTablet) RoundedCornerShape(NuvioTokens.Radius.xl) else tokens.shapes.compactCard,
+        shape = shape,
         border = BorderStroke(
-            width = if (highlighted) 1.5.dp else tokens.borders.hairline,
-            color = if (highlighted) tokens.colors.accent else tokens.colors.borderSubtle,
+            width = tokens.borders.hairline,
+            color = tokens.colors.borderSubtle,
         ),
     ) {
         Column(

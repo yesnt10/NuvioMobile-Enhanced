@@ -1,6 +1,12 @@
 package com.nuvio.app.features.settings
 
 import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.animation.core.LinearEasing
+import androidx.compose.animation.core.RepeatMode
+import androidx.compose.animation.core.animateFloat
+import androidx.compose.animation.core.infiniteRepeatable
+import androidx.compose.animation.core.rememberInfiniteTransition
+import androidx.compose.animation.core.tween
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
@@ -34,15 +40,20 @@ import androidx.compose.material3.Switch
 import androidx.compose.material3.SwitchDefaults
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.alpha
+import androidx.compose.ui.geometry.Offset
+import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.Shape
 import androidx.compose.ui.graphics.painter.Painter
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.hapticfeedback.HapticFeedbackType
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalHapticFeedback
+import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.Dp
@@ -67,6 +78,46 @@ import nuvio.composeapp.generated.resources.settings_homescreen_visible
 import nuvio.composeapp.generated.resources.settings_new_feature_badge
 import org.jetbrains.compose.resources.stringResource
 import sh.calvin.reorderable.ReorderableCollectionItemScope
+
+@Composable
+internal fun Modifier.newFeatureHighlight(
+    highlighted: Boolean,
+    shape: Shape,
+    borderWidth: Dp = 1.dp,
+): Modifier {
+    if (!highlighted) return this
+
+    val tokens = MaterialTheme.nuvio
+    val transition = rememberInfiniteTransition(label = "feature-highlight")
+    val progress by transition.animateFloat(
+        initialValue = 0f,
+        targetValue = 1f,
+        animationSpec = infiniteRepeatable(
+            animation = tween(durationMillis = 2200, easing = LinearEasing),
+            repeatMode = RepeatMode.Restart,
+        ),
+        label = "feature-highlight-progress",
+    )
+    val travelPx = with(LocalDensity.current) { 820.dp.toPx() }
+    val sweepWidth = travelPx * 0.34f
+    val leadingX = -sweepWidth + ((travelPx + sweepWidth) * progress)
+    val highlightBrush = Brush.linearGradient(
+        colorStops = arrayOf(
+            0f to tokens.colors.accent.copy(alpha = 0f),
+            0.35f to tokens.colors.accent.copy(alpha = 0.65f),
+            0.5f to tokens.colors.textPrimary.copy(alpha = 0.82f),
+            0.65f to tokens.colors.accentStrong.copy(alpha = 0.95f),
+            1f to tokens.colors.accent.copy(alpha = 0f),
+        ),
+        start = Offset(leadingX, 0f),
+        end = Offset(leadingX + sweepWidth, travelPx * 0.16f),
+    )
+    val highlightBorderWidth = if (borderWidth.value < 1f) 1.5.dp else borderWidth * 1.85f
+
+    return background(tokens.colors.accent.copy(alpha = 0.085f), shape)
+        .border(borderWidth, tokens.colors.accent.copy(alpha = 0.42f), shape)
+        .border(highlightBorderWidth, highlightBrush, shape)
+}
 
 @Composable
 private fun SettingsCard(
@@ -249,15 +300,7 @@ internal fun SettingsNavigationRow(
     Row(
         modifier = Modifier
             .fillMaxWidth()
-            .then(
-                if (highlighted) {
-                    Modifier
-                        .background(tokens.colors.accent.copy(alpha = 0.08f), highlightShape)
-                        .border(tokens.borders.hairline, tokens.colors.accent.copy(alpha = 0.72f), highlightShape)
-                } else {
-                    Modifier
-                },
-            )
+            .newFeatureHighlight(highlighted, highlightShape, tokens.borders.hairline)
             .clickable(enabled = enabled, onClick = onClick)
             .padding(horizontal = horizontalPadding, vertical = verticalPadding)
             .alpha(if (enabled) NuvioTokens.Opacity.visible else tokens.opacity.medium),
@@ -335,15 +378,7 @@ internal fun SettingsSwitchRow(
     Row(
         modifier = Modifier
             .fillMaxWidth()
-            .then(
-                if (highlighted) {
-                    Modifier
-                        .background(tokens.colors.accent.copy(alpha = 0.08f), highlightShape)
-                        .border(tokens.borders.hairline, tokens.colors.accent.copy(alpha = 0.72f), highlightShape)
-                } else {
-                    Modifier
-                },
-            )
+            .newFeatureHighlight(highlighted, highlightShape, tokens.borders.hairline)
             .clickable(enabled = enabled) { onCheckedChange(!checked) }
             .padding(horizontal = horizontalPadding, vertical = verticalPadding),
         horizontalArrangement = Arrangement.Start,
