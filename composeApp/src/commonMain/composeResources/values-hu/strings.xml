@@ -1917,4 +1917,8 @@
         <item quantity="one">%d cím</item>
         <item quantity="other">%d cím</item>
     </plurals>
+    <string name="nuvio_enhanced_subtitle_sync_title">Feliratszinkronizálás</string>
+    <string name="nuvio_enhanced_subtitle_sync_desc">Megjeleníti az időzítési vezérlőket, és lejátszás közben követi az aktív sort.</string>
+    <string name="compose_player_auto_sync_capture_hint">Válassz egy feliratsort.</string>
+    <string name="compose_player_sync">Szinkronizálás</string>
 </resources>

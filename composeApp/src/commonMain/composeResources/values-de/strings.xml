@@ -1212,4 +1212,8 @@
     </plurals>
     <string name="cw_new_episode">Neue Folge</string>
     <string name="cw_new_season">Neue Staffel</string>
+    <string name="nuvio_enhanced_subtitle_sync_title">Untertitel synchronisieren</string>
+    <string name="nuvio_enhanced_subtitle_sync_desc">Zeigt die Zeitsteuerung an und folgt während der Wiedergabe der aktiven Untertitelzeile.</string>
+    <string name="compose_player_auto_sync_capture_hint">Wähle eine Untertitelzeile aus.</string>
+    <string name="compose_player_sync">Synchronisieren</string>
 </resources>

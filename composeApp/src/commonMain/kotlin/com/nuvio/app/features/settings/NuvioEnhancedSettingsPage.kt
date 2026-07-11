@@ -335,6 +335,19 @@ private fun NuvioEnhancedSettingsPageContent(
                 )
                 SettingsGroupDivider(isTablet = isTablet)
                 SettingsSwitchRow(
+                    title = stringResource(Res.string.nuvio_enhanced_subtitle_sync_title),
+                    description = stringResource(Res.string.nuvio_enhanced_subtitle_sync_desc),
+                    checked = settings.subtitleSyncMenuEnabled,
+                    enabled = settings.enhancedHomeFeaturesEnabled,
+                    isTablet = isTablet,
+                    highlighted = isNew(NuvioEnhancedFeature.SubtitleSyncMenu),
+                    onCheckedChange = {
+                        markSeen(NuvioEnhancedFeature.SubtitleSyncMenu)
+                        NuvioEnhancedSettingsRepository.setSubtitleSyncMenuEnabled(it)
+                    },
+                )
+                SettingsGroupDivider(isTablet = isTablet)
+                SettingsSwitchRow(
                     title = stringResource(Res.string.settings_continue_watching_ready_badge_title),
                     description = stringResource(Res.string.settings_continue_watching_ready_badge_description),
                     checked = settings.showContinueWatchingReadyBadge,

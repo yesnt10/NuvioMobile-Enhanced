@@ -1811,4 +1811,8 @@
     <string name="plugins_repository_filter_desc">Repolar arasında hızlı geçiş yap, sonra tüm listeyi kaydırmadan görünen provider'ları aç veya kapat.</string>
     <string name="plugins_repository_filter_enable_visible">Görünenleri aç</string>
     <string name="plugins_repository_filter_disable_visible">Görünenleri kapat</string>
+    <string name="nuvio_enhanced_subtitle_sync_title">Altyazı senkronizasyonu</string>
+    <string name="nuvio_enhanced_subtitle_sync_desc">Zamanlama kontrollerini gösterir ve oynatma sırasında etkin satırı takip eder.</string>
+    <string name="compose_player_auto_sync_capture_hint">Bir altyazı satırı seçin.</string>
+    <string name="compose_player_sync">Senkronize et</string>
 </resources>

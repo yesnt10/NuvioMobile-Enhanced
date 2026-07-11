@@ -1922,4 +1922,8 @@
     <string name="settings_playback_libmpv_yuv420p">Kompatibilita libmpv YUV420P</string>
     <string name="settings_playback_libmpv_yuv420p_description">Vynútiť výstup YUV420P pre zariadenia s problémami renderera alebo farieb.</string>
     <string name="streams_loading_skip_segments">Načítavajú sa segmenty preskočenia…</string>
+    <string name="nuvio_enhanced_subtitle_sync_title">Synchronizácia titulkov</string>
+    <string name="nuvio_enhanced_subtitle_sync_desc">Zobrazí ovládanie časovania a počas prehrávania sleduje aktívny riadok.</string>
+    <string name="compose_player_auto_sync_capture_hint">Vyberte riadok titulkov.</string>
+    <string name="compose_player_sync">Synchronizovať</string>
 </resources>

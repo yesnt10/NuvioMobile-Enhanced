@@ -233,7 +233,18 @@ private fun PlayerScreenRuntime.RenderPlayerControls(displayedPositionMs: Long, 
                     showSubtitleModal = true
                 }
             },
-            onSubtitleSyncClick = null,
+            onSubtitleSyncClick = if (
+                nuvioEnhancedSettingsUiState.enhancedHomeFeaturesEnabled &&
+                nuvioEnhancedSettingsUiState.subtitleSyncMenuEnabled
+            ) {
+                {
+                    activeSubtitleTab = SubtitleTab.Sync
+                    loadSubtitleAutoSyncCues()
+                    showSubtitleModal = true
+                }
+            } else {
+                null
+            },
             onAudioClick = {
                 refreshTracks()
                 showAudioModal = true
@@ -504,6 +515,10 @@ private fun PlayerScreenRuntime.RenderPlayerModals(displayedPositionMs: Long) {
         subtitleDelayMs = subtitleDelayMs,
         selectedAddonSubtitle = selectedAddonSubtitle,
         subtitleAutoSyncState = subtitleAutoSyncState,
+        subtitleSyncMenuEnabled = nuvioEnhancedSettingsUiState.enhancedHomeFeaturesEnabled &&
+            nuvioEnhancedSettingsUiState.subtitleSyncMenuEnabled,
+        currentPlaybackPositionMs = playbackSnapshot.positionMs,
+        isPlaying = playbackSnapshot.isPlaying,
         onSubtitleTabSelected = { tab ->
             activeSubtitleTab = tab
             if (tab == SubtitleTab.Sync) {
@@ -536,6 +551,7 @@ private fun PlayerScreenRuntime.RenderPlayerModals(displayedPositionMs: Long) {
         onAutoSyncCapture = { captureSubtitleAutoSyncTime() },
         onAutoSyncCueSelected = { cue -> applySubtitleAutoSyncCue(cue) },
         onAutoSyncReload = { loadSubtitleAutoSyncCues(force = true) },
+        onTogglePlayback = { togglePlayback() },
         onSubtitleModalDismissed = { showSubtitleModal = false },
         showVideoSettingsModal = showVideoSettingsModal,
         playerSettings = playerSettingsUiState,

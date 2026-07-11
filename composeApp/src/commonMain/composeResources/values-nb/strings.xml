@@ -1368,4 +1368,8 @@
         <item quantity="one">Om %d dag</item>
         <item quantity="other">Om %d dager</item>
     </plurals>
+    <string name="nuvio_enhanced_subtitle_sync_title">Synkronisering av undertekster</string>
+    <string name="nuvio_enhanced_subtitle_sync_desc">Vis tidskontroller og følg den aktive linjen under avspilling.</string>
+    <string name="compose_player_auto_sync_capture_hint">Velg en undertekstlinje.</string>
+    <string name="compose_player_sync">Synkroniser</string>
 </resources>

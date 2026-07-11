@@ -1892,4 +1892,8 @@
     <string name="trakt_error_add_list_failed">Добавянето към списък в Trakt не бе успешно</string>
     <string name="trakt_error_missing_ids">Липсват съвместими Trakt идентификатори</string>
     <string name="trakt_error_empty_response">Празно тяло на отговора</string>
+    <string name="nuvio_enhanced_subtitle_sync_title">Синхронизиране на субтитри</string>
+    <string name="nuvio_enhanced_subtitle_sync_desc">Показва контролите за синхронизация и следва активния ред по време на възпроизвеждане.</string>
+    <string name="compose_player_auto_sync_capture_hint">Изберете ред от субтитрите.</string>
+    <string name="compose_player_sync">Синхронизиране</string>
 </resources>

@@ -1923,4 +1923,8 @@
     <string name="player_torrent_starting_engine">Arrancando el motor P2P...</string>
     <string name="player_error_failed_start_torrent">No se pudo iniciar el torrent: %1$s</string>
     <string name="player_error_torrent">Error de torrent: %1$s</string>
+    <string name="nuvio_enhanced_subtitle_sync_title">Sincronización de subtítulos</string>
+    <string name="nuvio_enhanced_subtitle_sync_desc">Muestra los controles de tiempo y sigue la línea activa durante la reproducción.</string>
+    <string name="compose_player_auto_sync_capture_hint">Selecciona una línea de subtítulos.</string>
+    <string name="compose_player_sync">Sincronizar</string>
 </resources>

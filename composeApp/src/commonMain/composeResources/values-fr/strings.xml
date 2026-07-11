@@ -1967,4 +1967,8 @@
         <item quantity="one">%d titre</item>
         <item quantity="other">%d titres</item>
     </plurals>
+    <string name="nuvio_enhanced_subtitle_sync_title">Synchronisation des sous-titres</string>
+    <string name="nuvio_enhanced_subtitle_sync_desc">Affiche les commandes de synchronisation et suit la ligne active pendant la lecture.</string>
+    <string name="compose_player_auto_sync_capture_hint">Sélectionnez une ligne de sous-titres.</string>
+    <string name="compose_player_sync">Synchroniser</string>
 </resources>

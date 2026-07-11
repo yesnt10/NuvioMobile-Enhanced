@@ -1869,4 +1869,8 @@
     <string name="updates_github_api_error">Błąd API GitHub releases: %1$d</string>
     <string name="updates_no_channel_release">Nie opublikowano jeszcze żadnej aktualizacji.</string>
     <string name="updates_release_missing_title">Wydanie nie ma tagu ani nazwy</string>
+    <string name="nuvio_enhanced_subtitle_sync_title">Synchronizacja napisów</string>
+    <string name="nuvio_enhanced_subtitle_sync_desc">Pokazuje sterowanie czasem i śledzi aktywną linię podczas odtwarzania.</string>
+    <string name="compose_player_auto_sync_capture_hint">Wybierz linię napisów.</string>
+    <string name="compose_player_sync">Synchronizuj</string>
 </resources>
