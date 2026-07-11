@@ -1212,4 +1212,6 @@
     </plurals>
     <string name="cw_new_episode">Neue Folge</string>
     <string name="cw_new_season">Neue Staffel</string>
+    <string name="player_random_next_enabled">Nächste Folge zufällig aktiviert</string>
+    <string name="player_random_next_disabled">Nächste Folge zufällig deaktiviert</string>
 </resources>

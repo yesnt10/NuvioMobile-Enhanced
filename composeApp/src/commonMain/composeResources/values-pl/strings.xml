@@ -1869,4 +1869,6 @@
     <string name="updates_github_api_error">Błąd API GitHub releases: %1$d</string>
     <string name="updates_no_channel_release">Nie opublikowano jeszcze żadnej aktualizacji.</string>
     <string name="updates_release_missing_title">Wydanie nie ma tagu ani nazwy</string>
+    <string name="player_random_next_enabled">Losowy następny odcinek włączony</string>
+    <string name="player_random_next_disabled">Losowy następny odcinek wyłączony</string>
 </resources>

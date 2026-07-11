@@ -1917,4 +1917,6 @@
         <item quantity="one">%d cím</item>
         <item quantity="other">%d cím</item>
     </plurals>
+    <string name="player_random_next_enabled">Véletlenszerű következő epizód bekapcsolva</string>
+    <string name="player_random_next_disabled">Véletlenszerű következő epizód kikapcsolva</string>
 </resources>

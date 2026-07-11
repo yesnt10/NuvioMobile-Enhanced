@@ -1811,4 +1811,6 @@
     <string name="plugins_repository_filter_desc">Repolar arasında hızlı geçiş yap, sonra tüm listeyi kaydırmadan görünen provider'ları aç veya kapat.</string>
     <string name="plugins_repository_filter_enable_visible">Görünenleri aç</string>
     <string name="plugins_repository_filter_disable_visible">Görünenleri kapat</string>
+    <string name="player_random_next_enabled">Rastgele sonraki bölüm açık</string>
+    <string name="player_random_next_disabled">Rastgele sonraki bölüm kapalı</string>
 </resources>

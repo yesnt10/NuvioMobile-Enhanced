@@ -1519,4 +1519,6 @@
   <string name="supporters_contributors_donation_progress_complete">Coperto. Qualsiasi supporto ulteriore andrà allo sviluppo.</string>
   <string name="supporters_contributors_donation_progress_remaining">Dopo il 100%, eventuale supporto in più andrà allo sviluppo.</string>
   <string name="supporters_contributors_donate_button">Dona a Nuvio</string>
+    <string name="player_random_next_enabled">Prossimo episodio casuale attivo</string>
+    <string name="player_random_next_disabled">Prossimo episodio casuale disattivato</string>
 </resources>

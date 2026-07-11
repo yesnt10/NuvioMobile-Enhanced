@@ -1368,4 +1368,6 @@
         <item quantity="one">Om %d dag</item>
         <item quantity="other">Om %d dager</item>
     </plurals>
+    <string name="player_random_next_enabled">Tilfeldig neste episode på</string>
+    <string name="player_random_next_disabled">Tilfeldig neste episode av</string>
 </resources>

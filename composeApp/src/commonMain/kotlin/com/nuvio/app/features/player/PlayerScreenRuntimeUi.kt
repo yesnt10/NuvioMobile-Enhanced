@@ -259,12 +259,9 @@ private fun PlayerScreenRuntime.RenderPlayerControls(displayedPositionMs: Long, 
             },
             onSourcesClick = if (activeVideoId != null) { { openSourcesPanel() } } else null,
             onEpisodesClick = if (isSeries) { { openEpisodesPanel() } } else null,
-            onRandomEpisodeClick = if (
-                metaScreenSettingsUiState.randomEpisodeButton &&
-                isSeries &&
-                playerMetaVideos.any { (it.season ?: 0) > 0 && it.episode != null }
-            ) {
-                { playRandomEpisodeFromPlayer() }
+            randomNextEpisodeMode = randomNextEpisodeMode,
+            onRandomNextEpisodeModeToggle = if (isSeries) {
+                { randomNextEpisodeMode = !randomNextEpisodeMode }
             } else {
                 null
             },

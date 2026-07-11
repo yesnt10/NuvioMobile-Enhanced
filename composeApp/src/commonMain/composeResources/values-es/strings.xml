@@ -1923,4 +1923,6 @@
     <string name="player_torrent_starting_engine">Arrancando el motor P2P...</string>
     <string name="player_error_failed_start_torrent">No se pudo iniciar el torrent: %1$s</string>
     <string name="player_error_torrent">Error de torrent: %1$s</string>
+    <string name="player_random_next_enabled">Siguiente episodio aleatorio activado</string>
+    <string name="player_random_next_disabled">Siguiente episodio aleatorio desactivado</string>
 </resources>
