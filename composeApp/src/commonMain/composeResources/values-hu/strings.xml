@@ -1917,4 +1917,7 @@
         <item quantity="one">%d cím</item>
         <item quantity="other">%d cím</item>
     </plurals>
+    <string name="nuvio_enhanced_player_clock_title">Lejátszó ideje</string>
+    <string name="nuvio_enhanced_player_clock_desc">Megjeleníti az aktuális időt és a várható befejezést, amíg a vezérlők láthatók.</string>
+    <string name="player_clock_ends_at">Vége: %1$s</string>
 </resources>

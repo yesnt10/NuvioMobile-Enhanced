@@ -1911,4 +1911,7 @@
     <string name="updates_github_api_error">GitHub releases API Σφάλμα: %1$d</string>
     <string name="updates_no_channel_release">No upΗμερομηνία has been published yet.</string>
     <string name="updates_release_missing_title">Release has Όχι tag or name</string>
+    <string name="nuvio_enhanced_player_clock_title">Ώρα αναπαραγωγής</string>
+    <string name="nuvio_enhanced_player_clock_desc">Εμφανίζει την τρέχουσα ώρα και την εκτιμώμενη ώρα λήξης όταν τα στοιχεία ελέγχου είναι ορατά.</string>
+    <string name="player_clock_ends_at">Τελειώνει στις %1$s</string>
 </resources>

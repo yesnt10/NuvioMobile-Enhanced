@@ -1923,4 +1923,7 @@
     <string name="player_torrent_starting_engine">Spouštění enginu P2P…</string>
     <string name="player_error_failed_start_torrent">Nepodařilo se spustit torrent: %1$s</string>
     <string name="player_error_torrent">Chyba torrentu: %1$s</string>
+    <string name="nuvio_enhanced_player_clock_title">Čas v přehrávači</string>
+    <string name="nuvio_enhanced_player_clock_desc">Zobrazí aktuální čas a odhadovaný konec, když jsou ovládací prvky viditelné.</string>
+    <string name="player_clock_ends_at">Končí v %1$s</string>
 </resources>

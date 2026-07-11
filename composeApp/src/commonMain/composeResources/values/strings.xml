@@ -2265,6 +2265,9 @@
     <string name="nuvio_enhanced_content_warnings_desc">Show brief parental-guide warnings when playback starts. Turn this off for a cleaner player opening.</string>
     <string name="nuvio_enhanced_player_status_overlay_title">Player status overlay</string>
     <string name="nuvio_enhanced_player_status_overlay_desc">Show Wi-Fi/LTE, time, and battery in a compact top overlay while player controls are visible.</string>
+    <string name="nuvio_enhanced_player_clock_title">Player time</string>
+    <string name="nuvio_enhanced_player_clock_desc">Show the current time and estimated end time while controls are visible.</string>
+    <string name="player_clock_ends_at">Ends at %1$s</string>
     <string name="nuvio_enhanced_hero_display_title">Hero display mode</string>
     <string name="nuvio_enhanced_hero_display_desc">Cinematic keeps artwork dominant, Balanced is the premium default, Info Rich shows more metadata.</string>
     <string name="nuvio_enhanced_hero_mode_cinematic">Cinematic</string>

@@ -1892,4 +1892,7 @@
     <string name="trakt_error_add_list_failed">Добавянето към списък в Trakt не бе успешно</string>
     <string name="trakt_error_missing_ids">Липсват съвместими Trakt идентификатори</string>
     <string name="trakt_error_empty_response">Празно тяло на отговора</string>
+    <string name="nuvio_enhanced_player_clock_title">Час в плейъра</string>
+    <string name="nuvio_enhanced_player_clock_desc">Показва текущия час и очаквания край, докато контролите са видими.</string>
+    <string name="player_clock_ends_at">Приключва в %1$s</string>
 </resources>

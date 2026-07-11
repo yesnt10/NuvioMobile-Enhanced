@@ -1844,4 +1844,7 @@
     <string name="player_torrent_starting_engine">A iniciar motor P2P…</string>
     <string name="player_error_failed_start_torrent">Falha ao iniciar o torrent: %1$s</string>
     <string name="player_error_torrent">Erro de torrent: %1$s</string>
+    <string name="nuvio_enhanced_player_clock_title">Hora no player</string>
+    <string name="nuvio_enhanced_player_clock_desc">Mostra a hora atual e a hora estimada de fim enquanto os controlos estão visíveis.</string>
+    <string name="player_clock_ends_at">Termina às %1$s</string>
 </resources>

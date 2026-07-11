@@ -1368,4 +1368,7 @@
         <item quantity="one">Om %d dag</item>
         <item quantity="other">Om %d dager</item>
     </plurals>
+    <string name="nuvio_enhanced_player_clock_title">Tid i spilleren</string>
+    <string name="nuvio_enhanced_player_clock_desc">Vis gjeldende klokkeslett og beregnet sluttid mens kontrollene er synlige.</string>
+    <string name="player_clock_ends_at">Slutter kl. %1$s</string>
 </resources>

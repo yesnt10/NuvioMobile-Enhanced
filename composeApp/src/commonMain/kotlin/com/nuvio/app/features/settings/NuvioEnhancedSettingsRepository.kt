@@ -32,6 +32,7 @@ internal data class NuvioEnhancedSettingsUiState(
     val libraryHealthEnabled: Boolean = false,
     val contentWarningsEnabled: Boolean = true,
     val playerStatusOverlayEnabled: Boolean = false,
+    val playerClockEndTimeEnabled: Boolean = false,
     val showContinueWatchingReadyBadge: Boolean = true,
     val releaseRadarLibraryOnly: Boolean = true,
     val releaseRadarWindowDays: Int = 30,
@@ -77,6 +78,7 @@ internal enum class NuvioEnhancedFeature(val id: String) {
     DetailExperienceControls("detail_experience_controls"),
     ContentWarnings("content_warnings"),
     PlayerStatusOverlay("player_status_overlay"),
+    PlayerTimeOverlay("player_time_overlay_v2"),
     NetworkControls("network_controls"),
     CommunityLinks("community_links"),
     PremiumLabs("premium_labs"),
@@ -109,6 +111,7 @@ private data class StoredNuvioEnhancedSettings(
     val libraryHealthEnabled: Boolean = false,
     val contentWarningsEnabled: Boolean = true,
     val playerStatusOverlayEnabled: Boolean = false,
+    val playerClockEndTimeEnabled: Boolean = false,
     val showContinueWatchingReadyBadge: Boolean = true,
     val releaseRadarLibraryOnly: Boolean = true,
     val releaseRadarWindowDays: Int = 30,
@@ -252,6 +255,10 @@ internal object NuvioEnhancedSettingsRepository {
         copy(playerStatusOverlayEnabled = enabled)
     }
 
+    fun setPlayerClockEndTimeEnabled(enabled: Boolean) = update {
+        copy(playerClockEndTimeEnabled = enabled)
+    }
+
     fun setShowContinueWatchingReadyBadge(enabled: Boolean) = update {
         copy(showContinueWatchingReadyBadge = enabled)
     }
@@ -323,6 +330,7 @@ internal object NuvioEnhancedSettingsRepository {
             libraryHealthEnabled = stored.libraryHealthEnabled,
             contentWarningsEnabled = stored.contentWarningsEnabled,
             playerStatusOverlayEnabled = stored.playerStatusOverlayEnabled,
+            playerClockEndTimeEnabled = stored.playerClockEndTimeEnabled,
             showContinueWatchingReadyBadge = stored.showContinueWatchingReadyBadge,
             releaseRadarLibraryOnly = stored.releaseRadarLibraryOnly,
             releaseRadarWindowDays = stored.releaseRadarWindowDays.coerceIn(7, 45),

@@ -1922,4 +1922,7 @@
     <string name="settings_playback_libmpv_yuv420p">Kompatibilita libmpv YUV420P</string>
     <string name="settings_playback_libmpv_yuv420p_description">Vynútiť výstup YUV420P pre zariadenia s problémami renderera alebo farieb.</string>
     <string name="streams_loading_skip_segments">Načítavajú sa segmenty preskočenia…</string>
+    <string name="nuvio_enhanced_player_clock_title">Čas v prehrávači</string>
+    <string name="nuvio_enhanced_player_clock_desc">Zobrazí aktuálny čas a odhadovaný koniec, keď sú ovládacie prvky viditeľné.</string>
+    <string name="player_clock_ends_at">Končí o %1$s</string>
 </resources>

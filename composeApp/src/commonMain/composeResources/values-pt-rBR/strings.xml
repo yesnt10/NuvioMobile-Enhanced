@@ -1341,4 +1341,7 @@
     <string name="unit_bytes_kb">KB</string>
     <string name="unit_bytes_mb">MB</string>
     <string name="unit_bytes_gb">GB</string>
+    <string name="nuvio_enhanced_player_clock_title">Horário no player</string>
+    <string name="nuvio_enhanced_player_clock_desc">Mostra o horário atual e o término estimado enquanto os controles estão visíveis.</string>
+    <string name="player_clock_ends_at">Termina às %1$s</string>
 </resources>

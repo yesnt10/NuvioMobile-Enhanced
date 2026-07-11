@@ -1212,4 +1212,7 @@
     </plurals>
     <string name="cw_new_episode">Neue Folge</string>
     <string name="cw_new_season">Neue Staffel</string>
+    <string name="nuvio_enhanced_player_clock_title">Player-Zeit</string>
+    <string name="nuvio_enhanced_player_clock_desc">Zeigt die aktuelle Uhrzeit und die geschätzte Endzeit an, solange die Bedienelemente sichtbar sind.</string>
+    <string name="player_clock_ends_at">Endet um %1$s</string>
 </resources>
