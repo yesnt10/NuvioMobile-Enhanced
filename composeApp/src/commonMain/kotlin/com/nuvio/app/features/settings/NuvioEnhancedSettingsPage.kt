@@ -67,6 +67,7 @@ import com.nuvio.app.core.ui.appIconPainter
 import com.nuvio.app.core.ui.nuvio
 import com.nuvio.app.features.details.MetaScreenSettingsRepository
 import com.nuvio.app.features.home.HomeCatalogSettingsRepository
+import com.nuvio.app.features.onboarding.EnhancedOnboardingRepository
 import nuvio.composeapp.generated.resources.Res
 import nuvio.composeapp.generated.resources.*
 import nuvio.composeapp.generated.resources.settings_advanced_doh_description
@@ -690,6 +691,7 @@ private fun NuvioEnhancedSettingsPageContent(
 
         EnhancedCommunityFooter(
             isTablet = isTablet,
+            onShowWelcomeAgain = EnhancedOnboardingRepository::showPreview,
             onGithubClick = {
                 markSeen(NuvioEnhancedFeature.CommunityLinks)
                 uriHandler.openUri(NuvioEnhancedGithubUrl)
@@ -950,6 +952,7 @@ private fun EnhancedNewBadge() {
 @Composable
 private fun EnhancedCommunityFooter(
     isTablet: Boolean,
+    onShowWelcomeAgain: () -> Unit,
     onGithubClick: () -> Unit,
     onDiscordClick: () -> Unit,
 ) {
@@ -975,6 +978,28 @@ private fun EnhancedCommunityFooter(
                 style = MaterialTheme.typography.bodyMedium,
                 color = tokens.colors.textMuted,
             )
+            OutlinedButton(
+                onClick = onShowWelcomeAgain,
+                modifier = Modifier.fillMaxWidth(),
+                shape = RoundedCornerShape(NuvioTokens.Radius.lg),
+            ) {
+                Icon(
+                    imageVector = Icons.Rounded.Restore,
+                    contentDescription = null,
+                )
+                Spacer(modifier = Modifier.width(10.dp))
+                Column(modifier = Modifier.weight(1f)) {
+                    Text(
+                        text = stringResource(Res.string.nuvio_enhanced_onboarding_show_again),
+                        style = MaterialTheme.typography.titleSmall,
+                        fontWeight = FontWeight.SemiBold,
+                    )
+                    Text(
+                        text = stringResource(Res.string.nuvio_enhanced_onboarding_show_again_desc),
+                        style = MaterialTheme.typography.bodySmall,
+                    )
+                }
+            }
             Row(
                 modifier = Modifier.fillMaxWidth(),
                 horizontalArrangement = Arrangement.spacedBy(12.dp),

@@ -1455,4 +1455,6 @@
     <string name="nuvio_enhanced_onboarding_members">1.000+ anggota komunitas</string>
     <string name="nuvio_enhanced_onboarding_join_discord">Bergabung ke Discord kami</string>
     <string name="nuvio_enhanced_onboarding_start">Mulai menjelajah</string>
+    <string name="nuvio_enhanced_onboarding_show_again">Tampilkan sambutan lagi</string>
+    <string name="nuvio_enhanced_onboarding_show_again_desc">Lihat kembali pengenalan saat pertama kali aplikasi dibuka.</string>
 </resources>

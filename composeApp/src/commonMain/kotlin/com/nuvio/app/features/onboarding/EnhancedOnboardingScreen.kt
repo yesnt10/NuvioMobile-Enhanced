@@ -49,7 +49,6 @@ import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.remember
-import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -107,7 +106,7 @@ internal fun EnhancedOnboardingScreen(
     onComplete: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
-    var page by rememberSaveable { mutableIntStateOf(0) }
+    var page by remember { mutableIntStateOf(0) }
     val tokens = MaterialTheme.nuvio
 
     PlatformBackHandler(enabled = true) {

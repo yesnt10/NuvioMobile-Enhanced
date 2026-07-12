@@ -1931,4 +1931,6 @@
     <string name="nuvio_enhanced_onboarding_members">コミュニティメンバー1,000人以上</string>
     <string name="nuvio_enhanced_onboarding_join_discord">Discord に参加</string>
     <string name="nuvio_enhanced_onboarding_start">探索を始める</string>
+    <string name="nuvio_enhanced_onboarding_show_again">ウェルカム画面をもう一度表示</string>
+    <string name="nuvio_enhanced_onboarding_show_again_desc">初回起動時の案内をもう一度確認します。</string>
 </resources>

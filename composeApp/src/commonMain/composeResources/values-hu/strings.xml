@@ -1930,4 +1930,6 @@
     <string name="nuvio_enhanced_onboarding_members">Több mint 1000 közösségi tag</string>
     <string name="nuvio_enhanced_onboarding_join_discord">Csatlakozás a Discordhoz</string>
     <string name="nuvio_enhanced_onboarding_start">Felfedezés indítása</string>
+    <string name="nuvio_enhanced_onboarding_show_again">Üdvözlés újbóli megjelenítése</string>
+    <string name="nuvio_enhanced_onboarding_show_again_desc">Tekintsd meg újra az első indítás bemutatóját.</string>
 </resources>

@@ -1936,4 +1936,6 @@
     <string name="nuvio_enhanced_onboarding_members">Více než 1 000 členů komunity</string>
     <string name="nuvio_enhanced_onboarding_join_discord">Připojit se na Discord</string>
     <string name="nuvio_enhanced_onboarding_start">Začít objevovat</string>
+    <string name="nuvio_enhanced_onboarding_show_again">Zobrazit uvítání znovu</string>
+    <string name="nuvio_enhanced_onboarding_show_again_desc">Znovu si prohlédněte úvod při prvním spuštění.</string>
 </resources>

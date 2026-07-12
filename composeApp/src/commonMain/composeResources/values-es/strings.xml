@@ -1936,4 +1936,6 @@
     <string name="nuvio_enhanced_onboarding_members">Más de 1.000 miembros en la comunidad</string>
     <string name="nuvio_enhanced_onboarding_join_discord">Unirse a nuestro Discord</string>
     <string name="nuvio_enhanced_onboarding_start">Empezar a explorar</string>
+    <string name="nuvio_enhanced_onboarding_show_again">Mostrar bienvenida de nuevo</string>
+    <string name="nuvio_enhanced_onboarding_show_again_desc">Vuelve a ver la introducción del primer inicio.</string>
 </resources>

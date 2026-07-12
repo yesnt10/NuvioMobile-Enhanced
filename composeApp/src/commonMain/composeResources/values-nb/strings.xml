@@ -1381,4 +1381,6 @@
     <string name="nuvio_enhanced_onboarding_members">Over 1 000 medlemmer</string>
     <string name="nuvio_enhanced_onboarding_join_discord">Bli med på Discord</string>
     <string name="nuvio_enhanced_onboarding_start">Begynn å utforske</string>
+    <string name="nuvio_enhanced_onboarding_show_again">Vis velkomsten igjen</string>
+    <string name="nuvio_enhanced_onboarding_show_again_desc">Se introduksjonen fra første oppstart på nytt.</string>
 </resources>

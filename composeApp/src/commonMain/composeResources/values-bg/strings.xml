@@ -1905,4 +1905,6 @@
     <string name="nuvio_enhanced_onboarding_members">Над 1000 членове на общността</string>
     <string name="nuvio_enhanced_onboarding_join_discord">Присъединяване към Discord</string>
     <string name="nuvio_enhanced_onboarding_start">Започнете да разглеждате</string>
+    <string name="nuvio_enhanced_onboarding_show_again">Покажи приветствието отново</string>
+    <string name="nuvio_enhanced_onboarding_show_again_desc">Прегледайте отново въведението при първото стартиране.</string>
 </resources>

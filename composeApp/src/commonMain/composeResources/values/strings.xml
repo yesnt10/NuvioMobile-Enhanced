@@ -2334,4 +2334,6 @@
     <string name="nuvio_enhanced_onboarding_members">1,000+ community members</string>
     <string name="nuvio_enhanced_onboarding_join_discord">Join our Discord</string>
     <string name="nuvio_enhanced_onboarding_start">Start exploring</string>
+    <string name="nuvio_enhanced_onboarding_show_again">Show welcome again</string>
+    <string name="nuvio_enhanced_onboarding_show_again_desc">Preview the first-launch introduction again.</string>
 </resources>

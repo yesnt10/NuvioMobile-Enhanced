@@ -157,6 +157,7 @@ import com.nuvio.app.features.livetv.LiveTvRepository
 import com.nuvio.app.features.livetv.LiveTvScreen
 import com.nuvio.app.features.notifications.EpisodeReleaseNotificationsRepository
 import com.nuvio.app.features.onboarding.EnhancedOnboardingScreen
+import com.nuvio.app.features.onboarding.EnhancedOnboardingRepository
 import com.nuvio.app.features.p2p.P2pConsentDialog
 import com.nuvio.app.features.p2p.P2pSettingsRepository
 import com.nuvio.app.features.player.PlayerLaunch
@@ -426,6 +427,12 @@ fun App() {
     }.collectAsStateWithLifecycle()
     val amoledEnabled by remember { ThemeSettingsRepository.amoledEnabled }.collectAsStateWithLifecycle()
     NuvioTheme(appTheme = selectedTheme, amoled = amoledEnabled) {
+        val onboardingState by remember {
+            EnhancedOnboardingRepository.ensureLoaded()
+            EnhancedOnboardingRepository.uiState
+        }.collectAsStateWithLifecycle()
+        val onboardingUriHandler = LocalUriHandler.current
+
         LaunchedEffect(Unit) {
             AuthRepository.initialize()
         }
@@ -607,15 +614,17 @@ fun App() {
             }
         }
 
-        AnimatedContent(
-            targetState = gateScreen,
-            label = "app_gate",
-            transitionSpec = {
-                (fadeIn(tween(400)) + scaleIn(tween(400), initialScale = 0.94f))
-                    .togetherWith(fadeOut(tween(250)))
-            },
-        ) { currentGate ->
-            when (currentGate) {
+        Box(modifier = Modifier.fillMaxSize()) {
+            AnimatedContent(
+                targetState = gateScreen,
+                modifier = Modifier.fillMaxSize(),
+                label = "app_gate",
+                transitionSpec = {
+                    (fadeIn(tween(400)) + scaleIn(tween(400), initialScale = 0.94f))
+                        .togetherWith(fadeOut(tween(250)))
+                },
+            ) { currentGate ->
+                when (currentGate) {
                 AppGateScreen.Loading.name -> {
                     Box(
                         modifier = Modifier
@@ -697,6 +706,20 @@ fun App() {
                         },
                     )
                 }
+                }
+            }
+
+            if (onboardingState.visible) {
+                EnhancedOnboardingScreen(
+                    onJoinDiscord = {
+                        EnhancedOnboardingRepository.dismiss()
+                        onboardingUriHandler.openUri(NuvioDiscordInviteUrl)
+                    },
+                    onComplete = EnhancedOnboardingRepository::dismiss,
+                    modifier = Modifier
+                        .align(Alignment.Center)
+                        .zIndex(100f),
+                )
             }
         }
     }
@@ -724,7 +747,6 @@ private fun MainAppContent(
         }
         val hapticFeedback = LocalHapticFeedback.current
         val focusManager = LocalFocusManager.current
-        val uriHandler = LocalUriHandler.current
         val coroutineScope = rememberCoroutineScope()
         var selectedTab by rememberSaveable { mutableStateOf(initialSelectedTab) }
         var searchFocusRequestCount by remember { mutableStateOf(0) }
@@ -867,15 +889,6 @@ private fun MainAppContent(
             AppScreenTab.Library -> libraryScrollToTopRequests.tryEmit(Unit)
             AppScreenTab.Settings -> settingsRootActionRequests.tryEmit(Unit)
         }
-    }
-
-    fun completeEnhancedOnboarding() {
-        NuvioEnhancedSettingsRepository.markOnboardingCompleted()
-    }
-
-    fun openEnhancedDiscord() {
-        completeEnhancedOnboarding()
-        uriHandler.openUri(NuvioDiscordInviteUrl)
     }
 
     LaunchedEffect(liquidGlassNativeTabBarSupported, liquidGlassNativeTabBarEnabled, liveTvEnabled) {
@@ -3183,16 +3196,6 @@ private fun MainAppContent(
                     .align(Alignment.BottomCenter)
                     .zIndex(15f),
             )
-
-            if (!nuvioEnhancedSettings.onboardingCompleted) {
-                EnhancedOnboardingScreen(
-                    onJoinDiscord = ::openEnhancedDiscord,
-                    onComplete = ::completeEnhancedOnboarding,
-                    modifier = Modifier
-                        .align(Alignment.Center)
-                        .zIndex(40f),
-                )
-            }
 
             NuvioToastHost(
                 modifier = Modifier
