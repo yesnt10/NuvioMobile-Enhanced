@@ -1212,4 +1212,17 @@
     </plurals>
     <string name="cw_new_episode">Neue Folge</string>
     <string name="cw_new_season">Neue Staffel</string>
+    <string name="nuvio_enhanced_onboarding_welcome_title">Willkommen zu mehr</string>
+    <string name="nuvio_enhanced_onboarding_welcome_body">Nuvio Enhanced erweitert Nuvio um intelligentere Entdeckungen, tiefere Personalisierung und gemeinschaftlich geprägte Funktionen. Mach es zu deinem.</string>
+    <string name="nuvio_enhanced_onboarding_features_title">Für mehr Möglichkeiten</string>
+    <string name="nuvio_enhanced_onboarding_features_body">Gezielte Ergänzungen machen das Entdecken, Organisieren und Ansehen von Inhalten persönlicher.</string>
+    <string name="nuvio_enhanced_onboarding_team_title">Von zwei Menschen entwickelt</string>
+    <string name="nuvio_enhanced_onboarding_team_body">Nuvio Enhanced wird unabhängig von Russo und yesn\'t entwickelt.</string>
+    <string name="nuvio_enhanced_onboarding_team_note">Wir sind die einzigen beiden Entwickler dieses Projekts. Danke für deine Unterstützung unserer Arbeit an jedem Build.</string>
+    <string name="nuvio_enhanced_onboarding_developer_role">Entwickler</string>
+    <string name="nuvio_enhanced_onboarding_community_title">Du bist nicht allein</string>
+    <string name="nuvio_enhanced_onboarding_community_body">Brauchst du Hilfe, möchtest du einen Fehler melden oder die Zukunft mitgestalten? Über Discord erreichst du uns und die Community am schnellsten.</string>
+    <string name="nuvio_enhanced_onboarding_members">Über 1.000 Community-Mitglieder</string>
+    <string name="nuvio_enhanced_onboarding_join_discord">Unserem Discord beitreten</string>
+    <string name="nuvio_enhanced_onboarding_start">Jetzt entdecken</string>
 </resources>

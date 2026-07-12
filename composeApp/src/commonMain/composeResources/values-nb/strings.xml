@@ -1368,4 +1368,17 @@
         <item quantity="one">Om %d dag</item>
         <item quantity="other">Om %d dager</item>
     </plurals>
+    <string name="nuvio_enhanced_onboarding_welcome_title">Velkommen til noe mer</string>
+    <string name="nuvio_enhanced_onboarding_welcome_body">Nuvio Enhanced bygger videre på Nuvio med smartere oppdagelse, dypere tilpasning og funksjoner drevet av fellesskapet. Gjør det til ditt.</string>
+    <string name="nuvio_enhanced_onboarding_features_title">Laget for å gjøre mer</string>
+    <string name="nuvio_enhanced_onboarding_features_body">Et fokusert utvalg tillegg som gjør det mer personlig å finne, organisere og se innhold.</string>
+    <string name="nuvio_enhanced_onboarding_team_title">Bygget av to personer</string>
+    <string name="nuvio_enhanced_onboarding_team_body">Nuvio Enhanced utvikles uavhengig av Russo og yesn\'t.</string>
+    <string name="nuvio_enhanced_onboarding_team_note">Vi er de eneste to utviklerne bak prosjektet. Takk for at du støtter tiden og omtanken vi legger i hver versjon.</string>
+    <string name="nuvio_enhanced_onboarding_developer_role">Utvikler</string>
+    <string name="nuvio_enhanced_onboarding_community_title">Du er ikke alene</string>
+    <string name="nuvio_enhanced_onboarding_community_body">Trenger du hjelp, vil du melde en feil eller påvirke veien videre? Discord er den raskeste måten å nå oss og fellesskapet på.</string>
+    <string name="nuvio_enhanced_onboarding_members">Over 1 000 medlemmer</string>
+    <string name="nuvio_enhanced_onboarding_join_discord">Bli med på Discord</string>
+    <string name="nuvio_enhanced_onboarding_start">Begynn å utforske</string>
 </resources>

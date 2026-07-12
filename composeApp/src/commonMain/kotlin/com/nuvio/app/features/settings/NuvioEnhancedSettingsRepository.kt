@@ -32,7 +32,7 @@ internal data class NuvioEnhancedSettingsUiState(
     val releaseRadarWindowDays: Int = 30,
     val releaseRadarContentFilter: NuvioReleaseRadarContentFilter = NuvioReleaseRadarContentFilter.All,
     val featureHighlightsEnabled: Boolean = true,
-    val discordWelcomeSeen: Boolean = false,
+    val onboardingCompleted: Boolean = false,
     val seenFeatureIds: Set<String> = emptySet(),
 ) {
     fun isNew(feature: NuvioEnhancedFeature): Boolean =
@@ -105,6 +105,7 @@ private data class StoredNuvioEnhancedSettings(
     val releaseRadarWindowDays: Int = 30,
     val releaseRadarContentFilter: NuvioReleaseRadarContentFilter = NuvioReleaseRadarContentFilter.All,
     val featureHighlightsEnabled: Boolean = true,
+    val onboardingCompleted: Boolean = false,
     val discordWelcomeSeen: Boolean = false,
     val seenFeatureIds: Set<String> = emptySet(),
 )
@@ -120,6 +121,7 @@ internal object NuvioEnhancedSettingsRepository {
 
     private var hasLoaded = false
     private var stored = StoredNuvioEnhancedSettings()
+    private var deviceOnboardingCompleted = false
 
     fun ensureLoaded() {
         if (hasLoaded) return
@@ -131,13 +133,17 @@ internal object NuvioEnhancedSettingsRepository {
         } else {
             StoredNuvioEnhancedSettings()
         }
+        loadDeviceOnboardingState()
         publish()
     }
 
     fun onProfileChanged() {
         hasLoaded = false
         stored = StoredNuvioEnhancedSettings()
-        _uiState.value = NuvioEnhancedSettingsUiState()
+        deviceOnboardingCompleted = NuvioEnhancedSettingsStorage.loadOnboardingCompleted() ?: false
+        _uiState.value = NuvioEnhancedSettingsUiState(
+            onboardingCompleted = deviceOnboardingCompleted,
+        )
     }
 
     fun exportPayload(): String {
@@ -149,6 +155,7 @@ internal object NuvioEnhancedSettingsRepository {
         stored = runCatching { json.decodeFromString<StoredNuvioEnhancedSettings>(payload) }
             .getOrDefault(StoredNuvioEnhancedSettings())
         hasLoaded = true
+        loadDeviceOnboardingState()
         publish()
         persist()
     }
@@ -237,8 +244,15 @@ internal object NuvioEnhancedSettingsRepository {
         copy(featureHighlightsEnabled = enabled)
     }
 
-    fun markDiscordWelcomeSeen() = update {
-        copy(discordWelcomeSeen = true)
+    fun markOnboardingCompleted() {
+        ensureLoaded()
+        deviceOnboardingCompleted = true
+        NuvioEnhancedSettingsStorage.saveOnboardingCompleted(true)
+        if (!stored.onboardingCompleted) {
+            stored = stored.copy(onboardingCompleted = true)
+            persist()
+        }
+        publish()
     }
 
     fun markFeatureSeen(feature: NuvioEnhancedFeature) {
@@ -288,13 +302,22 @@ internal object NuvioEnhancedSettingsRepository {
             releaseRadarWindowDays = stored.releaseRadarWindowDays.coerceIn(7, 45),
             releaseRadarContentFilter = stored.releaseRadarContentFilter,
             featureHighlightsEnabled = stored.featureHighlightsEnabled,
-            discordWelcomeSeen = stored.discordWelcomeSeen,
+            onboardingCompleted = deviceOnboardingCompleted,
             seenFeatureIds = stored.seenFeatureIds,
         )
     }
 
     private fun persist() {
         NuvioEnhancedSettingsStorage.savePayload(json.encodeToString(stored))
+    }
+
+    private fun loadDeviceOnboardingState() {
+        val legacyCompleted = stored.onboardingCompleted || stored.discordWelcomeSeen
+        val savedCompletion = NuvioEnhancedSettingsStorage.loadOnboardingCompleted()
+        deviceOnboardingCompleted = savedCompletion ?: legacyCompleted
+        if (savedCompletion == null && legacyCompleted) {
+            NuvioEnhancedSettingsStorage.saveOnboardingCompleted(true)
+        }
     }
 }
 

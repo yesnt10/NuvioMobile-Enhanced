@@ -1892,4 +1892,17 @@
     <string name="trakt_error_add_list_failed">Добавянето към списък в Trakt не бе успешно</string>
     <string name="trakt_error_missing_ids">Липсват съвместими Trakt идентификатори</string>
     <string name="trakt_error_empty_response">Празно тяло на отговора</string>
+    <string name="nuvio_enhanced_onboarding_welcome_title">Добре дошли в нещо повече</string>
+    <string name="nuvio_enhanced_onboarding_welcome_body">Nuvio Enhanced надгражда Nuvio с по-умно откриване, по-дълбоко персонализиране и функции, водени от общността. Направете го свое.</string>
+    <string name="nuvio_enhanced_onboarding_features_title">Създадено за повече</string>
+    <string name="nuvio_enhanced_onboarding_features_body">Подбран набор от допълнения, които правят откриването, организирането и гледането на съдържание по-лично.</string>
+    <string name="nuvio_enhanced_onboarding_team_title">Създадено от двама души</string>
+    <string name="nuvio_enhanced_onboarding_team_body">Nuvio Enhanced се разработва независимо от Russo и yesn\'t.</string>
+    <string name="nuvio_enhanced_onboarding_team_note">Ние сме единствените двама разработчици на проекта. Благодарим, че подкрепяте времето и грижата, които влагаме във всяка версия.</string>
+    <string name="nuvio_enhanced_onboarding_developer_role">Разработчик</string>
+    <string name="nuvio_enhanced_onboarding_community_title">Не сте сами</string>
+    <string name="nuvio_enhanced_onboarding_community_body">Нуждаете се от помощ, искате да съобщите за грешка или да повлияете на бъдещето? Discord е най-бързият начин да се свържете с нас и общността.</string>
+    <string name="nuvio_enhanced_onboarding_members">Над 1000 членове на общността</string>
+    <string name="nuvio_enhanced_onboarding_join_discord">Присъединяване към Discord</string>
+    <string name="nuvio_enhanced_onboarding_start">Започнете да разглеждате</string>
 </resources>

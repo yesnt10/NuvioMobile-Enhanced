@@ -1869,4 +1869,17 @@
     <string name="updates_github_api_error">Błąd API GitHub releases: %1$d</string>
     <string name="updates_no_channel_release">Nie opublikowano jeszcze żadnej aktualizacji.</string>
     <string name="updates_release_missing_title">Wydanie nie ma tagu ani nazwy</string>
+    <string name="nuvio_enhanced_onboarding_welcome_title">Witaj w czymś więcej</string>
+    <string name="nuvio_enhanced_onboarding_welcome_body">Nuvio Enhanced rozwija Nuvio o inteligentniejsze odkrywanie, głębszą personalizację i funkcje tworzone z udziałem społeczności. Dostosuj je do siebie.</string>
+    <string name="nuvio_enhanced_onboarding_features_title">Stworzone, by oferować więcej</string>
+    <string name="nuvio_enhanced_onboarding_features_body">Skupiony zestaw dodatków, dzięki którym odkrywanie, organizowanie i oglądanie treści staje się bardziej osobiste.</string>
+    <string name="nuvio_enhanced_onboarding_team_title">Stworzone przez dwie osoby</string>
+    <string name="nuvio_enhanced_onboarding_team_body">Nuvio Enhanced jest niezależnie rozwijane przez Russo i yesn\'t.</string>
+    <string name="nuvio_enhanced_onboarding_team_note">Jesteśmy jedynymi dwoma programistami tego projektu. Dziękujemy za wsparcie czasu i troski wkładanych w każdą wersję.</string>
+    <string name="nuvio_enhanced_onboarding_developer_role">Programista</string>
+    <string name="nuvio_enhanced_onboarding_community_title">Nie jesteś sam</string>
+    <string name="nuvio_enhanced_onboarding_community_body">Potrzebujesz pomocy, chcesz zgłosić błąd lub wpłynąć na dalszy rozwój? Discord to najszybszy kontakt z nami i społecznością.</string>
+    <string name="nuvio_enhanced_onboarding_members">Ponad 1000 członków społeczności</string>
+    <string name="nuvio_enhanced_onboarding_join_discord">Dołącz do naszego Discorda</string>
+    <string name="nuvio_enhanced_onboarding_start">Zacznij odkrywać</string>
 </resources>

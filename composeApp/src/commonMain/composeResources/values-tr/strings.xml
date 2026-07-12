@@ -1774,4 +1774,17 @@
     <string name="plugins_repository_filter_desc">Repolar arasında hızlı geçiş yap, sonra tüm listeyi kaydırmadan görünen provider'ları aç veya kapat.</string>
     <string name="plugins_repository_filter_enable_visible">Görünenleri aç</string>
     <string name="plugins_repository_filter_disable_visible">Görünenleri kapat</string>
+    <string name="nuvio_enhanced_onboarding_welcome_title">Daha fazlasına hoş geldin</string>
+    <string name="nuvio_enhanced_onboarding_welcome_body">Nuvio Enhanced; Nuvio\'yu daha akıllı keşif, gelişmiş kişiselleştirme ve topluluk odaklı özelliklerle genişletir. Onu kendine göre şekillendir.</string>
+    <string name="nuvio_enhanced_onboarding_features_title">Daha fazlası için tasarlandı</string>
+    <string name="nuvio_enhanced_onboarding_features_body">İçerik bulmayı, düzenlemeyi ve izlemeyi daha kişisel hâle getiren odaklı bir eklenti koleksiyonu.</string>
+    <string name="nuvio_enhanced_onboarding_team_title">İki kişi tarafından geliştirildi</string>
+    <string name="nuvio_enhanced_onboarding_team_body">Nuvio Enhanced, Russo ve yesn\'t tarafından bağımsız olarak geliştiriliyor.</string>
+    <string name="nuvio_enhanced_onboarding_team_note">Bu projenin arkasındaki iki geliştirici yalnızca biziz. Her sürüme ayırdığımız zaman ve özeni desteklediğin için teşekkürler.</string>
+    <string name="nuvio_enhanced_onboarding_developer_role">Geliştirici</string>
+    <string name="nuvio_enhanced_onboarding_community_title">Yalnız değilsin</string>
+    <string name="nuvio_enhanced_onboarding_community_body">Yardıma mı ihtiyacın var, hata mı bildirmek ya da geleceği şekillendirmek mi istiyorsun? Bize ve topluluğa ulaşmanın en hızlı yolu Discord.</string>
+    <string name="nuvio_enhanced_onboarding_members">1.000+ topluluk üyesi</string>
+    <string name="nuvio_enhanced_onboarding_join_discord">Discord sunucumuza katıl</string>
+    <string name="nuvio_enhanced_onboarding_start">Keşfetmeye başla</string>
 </resources>

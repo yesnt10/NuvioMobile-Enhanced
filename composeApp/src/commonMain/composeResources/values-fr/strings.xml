@@ -1941,4 +1941,17 @@
         <item quantity="one">%d titre</item>
         <item quantity="other">%d titres</item>
     </plurals>
+    <string name="nuvio_enhanced_onboarding_welcome_title">Bienvenue vers de nouveaux horizons</string>
+    <string name="nuvio_enhanced_onboarding_welcome_body">Nuvio Enhanced enrichit Nuvio avec une découverte plus intelligente, une personnalisation approfondie et des fonctions portées par la communauté. Faites-en votre espace.</string>
+    <string name="nuvio_enhanced_onboarding_features_title">Conçu pour aller plus loin</string>
+    <string name="nuvio_enhanced_onboarding_features_body">Un ensemble ciblé d’ajouts qui rendent la découverte, l’organisation et le visionnage plus personnels.</string>
+    <string name="nuvio_enhanced_onboarding_team_title">Créé par deux personnes</string>
+    <string name="nuvio_enhanced_onboarding_team_body">Nuvio Enhanced est développé indépendamment par Russo et yesn\'t.</string>
+    <string name="nuvio_enhanced_onboarding_team_note">Nous sommes les deux seuls développeurs du projet. Merci de soutenir le temps et le soin investis dans chaque version.</string>
+    <string name="nuvio_enhanced_onboarding_developer_role">Développeur</string>
+    <string name="nuvio_enhanced_onboarding_community_title">Vous n’êtes pas seul</string>
+    <string name="nuvio_enhanced_onboarding_community_body">Besoin d’aide, envie de signaler un bug ou d’influencer la suite ? Notre Discord est le moyen le plus rapide de nous joindre et d’échanger avec la communauté.</string>
+    <string name="nuvio_enhanced_onboarding_members">Plus de 1 000 membres</string>
+    <string name="nuvio_enhanced_onboarding_join_discord">Rejoindre notre Discord</string>
+    <string name="nuvio_enhanced_onboarding_start">Commencer l’exploration</string>
 </resources>

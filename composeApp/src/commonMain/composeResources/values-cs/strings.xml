@@ -1923,4 +1923,17 @@
     <string name="player_torrent_starting_engine">Spouštění enginu P2P…</string>
     <string name="player_error_failed_start_torrent">Nepodařilo se spustit torrent: %1$s</string>
     <string name="player_error_torrent">Chyba torrentu: %1$s</string>
+    <string name="nuvio_enhanced_onboarding_welcome_title">Vítejte u něčeho navíc</string>
+    <string name="nuvio_enhanced_onboarding_welcome_body">Nuvio Enhanced rozšiřuje Nuvio o chytřejší objevování, hlubší přizpůsobení a komunitní funkce. Přizpůsobte si ho.</string>
+    <string name="nuvio_enhanced_onboarding_features_title">Vytvořeno pro více možností</string>
+    <string name="nuvio_enhanced_onboarding_features_body">Promyšlená sada doplňků, díky kterým je hledání, organizace a sledování obsahu osobnější.</string>
+    <string name="nuvio_enhanced_onboarding_team_title">Vytvořeno dvěma lidmi</string>
+    <string name="nuvio_enhanced_onboarding_team_body">Nuvio Enhanced nezávisle vyvíjejí Russo a yesn\'t.</string>
+    <string name="nuvio_enhanced_onboarding_team_note">Jsme jediní dva vývojáři tohoto projektu. Děkujeme za podporu času a péče, které věnujeme každé verzi.</string>
+    <string name="nuvio_enhanced_onboarding_developer_role">Vývojář</string>
+    <string name="nuvio_enhanced_onboarding_community_title">Nejste na to sami</string>
+    <string name="nuvio_enhanced_onboarding_community_body">Potřebujete pomoc, chcete nahlásit chybu nebo ovlivnit další vývoj? Discord je nejrychlejší cesta k nám i komunitě.</string>
+    <string name="nuvio_enhanced_onboarding_members">Více než 1 000 členů komunity</string>
+    <string name="nuvio_enhanced_onboarding_join_discord">Připojit se na Discord</string>
+    <string name="nuvio_enhanced_onboarding_start">Začít objevovat</string>
 </resources>

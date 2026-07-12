@@ -2321,4 +2321,17 @@
     <string name="nuvio_enhanced_toast_backup_import_failed">Backup import failed</string>
     <string name="nuvio_enhanced_toast_backup_copied">Backup copied to clipboard</string>
     <string name="nuvio_enhanced_toast_no_email_app">No email app available</string>
+    <string name="nuvio_enhanced_onboarding_welcome_title">Welcome to something more</string>
+    <string name="nuvio_enhanced_onboarding_welcome_body">Nuvio Enhanced builds on Nuvio with smarter discovery, deeper personalization and community-driven features. Make it yours.</string>
+    <string name="nuvio_enhanced_onboarding_features_title">Made to do more</string>
+    <string name="nuvio_enhanced_onboarding_features_body">A focused collection of additions designed to make finding, organizing and watching content feel more personal.</string>
+    <string name="nuvio_enhanced_onboarding_team_title">Built by two people</string>
+    <string name="nuvio_enhanced_onboarding_team_body">Nuvio Enhanced is independently developed by Russo and yesn\'t.</string>
+    <string name="nuvio_enhanced_onboarding_team_note">We are the only two developers behind this project. Thank you for supporting the time and care we put into every build.</string>
+    <string name="nuvio_enhanced_onboarding_developer_role">Developer</string>
+    <string name="nuvio_enhanced_onboarding_community_title">You are not on your own</string>
+    <string name="nuvio_enhanced_onboarding_community_body">Need help, want to report a bug or shape what comes next? Our Discord is the fastest way to reach us and the community.</string>
+    <string name="nuvio_enhanced_onboarding_members">1,000+ community members</string>
+    <string name="nuvio_enhanced_onboarding_join_discord">Join our Discord</string>
+    <string name="nuvio_enhanced_onboarding_start">Start exploring</string>
 </resources>

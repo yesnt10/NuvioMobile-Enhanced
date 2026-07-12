@@ -83,7 +83,7 @@ import nuvio.composeapp.generated.resources.settings_nuvio_enhanced_title
 import org.jetbrains.compose.resources.stringResource
 
 private const val NuvioEnhancedGithubUrl = "https://github.com/yesnt10/NuvioMobile-Enhanced"
-private const val NuvioEnhancedDiscordUrl = "https://discord.gg/at8xffxuRU"
+private const val NuvioEnhancedDiscordUrl = "https://discord.com/invite/nuvioenhanced"
 
 internal fun LazyListScope.nuvioEnhancedSettingsContent(
     isTablet: Boolean,

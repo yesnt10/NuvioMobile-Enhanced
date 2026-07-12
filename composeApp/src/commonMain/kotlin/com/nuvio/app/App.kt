@@ -31,8 +31,6 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Home
 import androidx.compose.material.icons.filled.Tv
-import androidx.compose.material3.AlertDialog
-import androidx.compose.material3.Button
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.remember
@@ -44,7 +42,6 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
-import androidx.compose.material3.TextButton
 import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.DisposableEffect
@@ -116,9 +113,7 @@ import com.nuvio.app.core.ui.NuvioTokens
 import com.nuvio.app.core.ui.LocalNuvioBottomNavigationOverlayPadding
 import com.nuvio.app.core.ui.NativeNavigationTab
 import com.nuvio.app.core.ui.NativeTabBridge
-import com.nuvio.app.core.ui.AppIconResource
 import com.nuvio.app.core.ui.isLiquidGlassNativeTabBarSupported
-import com.nuvio.app.core.ui.appIconPainter
 import com.nuvio.app.core.ui.localizedContinueWatchingSubtitle
 import com.nuvio.app.core.ui.nuvio
 import com.nuvio.app.core.ui.nuvioBottomNavigationBarInsets
@@ -161,6 +156,7 @@ import com.nuvio.app.features.livetv.LiveTvChannel
 import com.nuvio.app.features.livetv.LiveTvRepository
 import com.nuvio.app.features.livetv.LiveTvScreen
 import com.nuvio.app.features.notifications.EpisodeReleaseNotificationsRepository
+import com.nuvio.app.features.onboarding.EnhancedOnboardingScreen
 import com.nuvio.app.features.p2p.P2pConsentDialog
 import com.nuvio.app.features.p2p.P2pSettingsRepository
 import com.nuvio.app.features.player.PlayerLaunch
@@ -251,7 +247,7 @@ import org.jetbrains.compose.resources.getString
 import org.jetbrains.compose.resources.painterResource
 import org.jetbrains.compose.resources.stringResource
 
-private const val NuvioDiscordInviteUrl = "https://discord.gg/at8xffxuRU"
+private const val NuvioDiscordInviteUrl = "https://discord.com/invite/nuvioenhanced"
 
 @Serializable
 object TabsRoute
@@ -873,12 +869,12 @@ private fun MainAppContent(
         }
     }
 
-    fun dismissDiscordWelcome() {
-        NuvioEnhancedSettingsRepository.markDiscordWelcomeSeen()
+    fun completeEnhancedOnboarding() {
+        NuvioEnhancedSettingsRepository.markOnboardingCompleted()
     }
 
-    fun openDiscordWelcome() {
-        dismissDiscordWelcome()
+    fun openEnhancedDiscord() {
+        completeEnhancedOnboarding()
         uriHandler.openUri(NuvioDiscordInviteUrl)
     }
 
@@ -3188,11 +3184,15 @@ private fun MainAppContent(
                     .zIndex(15f),
             )
 
-            NuvioDiscordWelcomeDialog(
-                visible = !nuvioEnhancedSettings.discordWelcomeSeen,
-                onJoinDiscord = ::openDiscordWelcome,
-                onDismiss = ::dismissDiscordWelcome,
-            )
+            if (!nuvioEnhancedSettings.onboardingCompleted) {
+                EnhancedOnboardingScreen(
+                    onJoinDiscord = ::openEnhancedDiscord,
+                    onComplete = ::completeEnhancedOnboarding,
+                    modifier = Modifier
+                        .align(Alignment.Center)
+                        .zIndex(40f),
+                )
+            }
 
             NuvioToastHost(
                 modifier = Modifier
@@ -3207,55 +3207,6 @@ private fun MainAppContent(
                     .zIndex(25f),
             )
         }
-}
-
-@Composable
-private fun NuvioDiscordWelcomeDialog(
-    visible: Boolean,
-    onJoinDiscord: () -> Unit,
-    onDismiss: () -> Unit,
-) {
-    if (!visible) return
-
-    AlertDialog(
-        onDismissRequest = onDismiss,
-        icon = {
-            Box(
-                modifier = Modifier
-                    .size(52.dp)
-                    .clip(CircleShape)
-                    .background(Color(0xFF5865F2)),
-                contentAlignment = Alignment.Center,
-            ) {
-                Icon(
-                    painter = appIconPainter(AppIconResource.DiscordMark),
-                    contentDescription = null,
-                    tint = Color.Unspecified,
-                    modifier = Modifier.size(28.dp),
-                )
-            }
-        },
-        title = {
-            Text("Join the Nuvio Discord")
-        },
-        text = {
-            Column(verticalArrangement = Arrangement.spacedBy(10.dp)) {
-                Text(
-                    text = "Updates, polls, feature requests and community feedback now live in the Nuvio Discord.",
-                )
-            }
-        },
-        confirmButton = {
-            Button(onClick = onJoinDiscord) {
-                Text("Join Discord")
-            }
-        },
-        dismissButton = {
-            TextButton(onClick = onDismiss) {
-                Text("Not now")
-            }
-        },
-    )
 }
 
 @Composable

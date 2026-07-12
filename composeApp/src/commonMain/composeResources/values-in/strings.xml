@@ -1442,4 +1442,17 @@
     <plurals name="cw_airs_in_days_short">
         <item quantity="other">%1$d hari lagi</item>
     </plurals>
+    <string name="nuvio_enhanced_onboarding_welcome_title">Selamat datang di sesuatu yang lebih</string>
+    <string name="nuvio_enhanced_onboarding_welcome_body">Nuvio Enhanced memperluas Nuvio dengan penemuan yang lebih cerdas, personalisasi mendalam, dan fitur berbasis komunitas. Jadikan milikmu.</string>
+    <string name="nuvio_enhanced_onboarding_features_title">Dibuat untuk lebih banyak hal</string>
+    <string name="nuvio_enhanced_onboarding_features_body">Kumpulan tambahan terpilih yang membuat pencarian, pengaturan, dan menonton konten terasa lebih personal.</string>
+    <string name="nuvio_enhanced_onboarding_team_title">Dibuat oleh dua orang</string>
+    <string name="nuvio_enhanced_onboarding_team_body">Nuvio Enhanced dikembangkan secara independen oleh Russo dan yesn\'t.</string>
+    <string name="nuvio_enhanced_onboarding_team_note">Kami adalah dua pengembang di balik proyek ini. Terima kasih telah mendukung waktu dan perhatian yang kami berikan pada setiap versi.</string>
+    <string name="nuvio_enhanced_onboarding_developer_role">Pengembang</string>
+    <string name="nuvio_enhanced_onboarding_community_title">Kamu tidak sendirian</string>
+    <string name="nuvio_enhanced_onboarding_community_body">Butuh bantuan, ingin melaporkan bug, atau ikut menentukan langkah berikutnya? Discord adalah cara tercepat untuk menghubungi kami dan komunitas.</string>
+    <string name="nuvio_enhanced_onboarding_members">1.000+ anggota komunitas</string>
+    <string name="nuvio_enhanced_onboarding_join_discord">Bergabung ke Discord kami</string>
+    <string name="nuvio_enhanced_onboarding_start">Mulai menjelajah</string>
 </resources>

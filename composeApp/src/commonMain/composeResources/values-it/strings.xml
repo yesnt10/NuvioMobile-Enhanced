@@ -1519,4 +1519,17 @@
   <string name="supporters_contributors_donation_progress_complete">Coperto. Qualsiasi supporto ulteriore andrà allo sviluppo.</string>
   <string name="supporters_contributors_donation_progress_remaining">Dopo il 100%%, eventuale supporto in più andrà allo sviluppo.</string>
   <string name="supporters_contributors_donate_button">Dona a Nuvio</string>
+    <string name="nuvio_enhanced_onboarding_welcome_title">Benvenuto in qualcosa di più</string>
+    <string name="nuvio_enhanced_onboarding_welcome_body">Nuvio Enhanced amplia Nuvio con una scoperta più intelligente, una personalizzazione più profonda e funzioni guidate dalla community. Rendilo tuo.</string>
+    <string name="nuvio_enhanced_onboarding_features_title">Creato per fare di più</string>
+    <string name="nuvio_enhanced_onboarding_features_body">Una raccolta mirata di aggiunte pensate per rendere più personale la scoperta, l’organizzazione e la visione dei contenuti.</string>
+    <string name="nuvio_enhanced_onboarding_team_title">Creato da due persone</string>
+    <string name="nuvio_enhanced_onboarding_team_body">Nuvio Enhanced è sviluppato indipendentemente da Russo e yesn\'t.</string>
+    <string name="nuvio_enhanced_onboarding_team_note">Siamo gli unici due sviluppatori del progetto. Grazie per sostenere il tempo e la cura che dedichiamo a ogni versione.</string>
+    <string name="nuvio_enhanced_onboarding_developer_role">Sviluppatore</string>
+    <string name="nuvio_enhanced_onboarding_community_title">Non sei solo</string>
+    <string name="nuvio_enhanced_onboarding_community_body">Hai bisogno di aiuto, vuoi segnalare un bug o influenzare il futuro? Il nostro Discord è il modo più rapido per raggiungere noi e la community.</string>
+    <string name="nuvio_enhanced_onboarding_members">Oltre 1.000 membri della community</string>
+    <string name="nuvio_enhanced_onboarding_join_discord">Unisciti al nostro Discord</string>
+    <string name="nuvio_enhanced_onboarding_start">Inizia a esplorare</string>
 </resources>

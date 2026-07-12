@@ -1918,4 +1918,17 @@
     <string name="player_torrent_starting_engine">P2Pエンジンを起動中…</string>
     <string name="player_error_failed_start_torrent">トレントの開始に失敗しました：%1$s</string>
     <string name="player_error_torrent">トレントエラー：%1$s</string>
+    <string name="nuvio_enhanced_onboarding_welcome_title">さらに広がる体験へようこそ</string>
+    <string name="nuvio_enhanced_onboarding_welcome_body">Nuvio Enhanced は、より賢い作品発見、細かなカスタマイズ、コミュニティ主導の機能で Nuvio を拡張します。自分らしく楽しみましょう。</string>
+    <string name="nuvio_enhanced_onboarding_features_title">もっとできるように</string>
+    <string name="nuvio_enhanced_onboarding_features_body">作品の発見、整理、視聴をより自分らしくするための厳選された追加機能です。</string>
+    <string name="nuvio_enhanced_onboarding_team_title">2人で開発しています</string>
+    <string name="nuvio_enhanced_onboarding_team_body">Nuvio Enhanced は Russo と yesn\'t が独立して開発しています。</string>
+    <string name="nuvio_enhanced_onboarding_team_note">このプロジェクトの開発者は私たち2人だけです。各バージョンに込めた時間と丁寧な作業を応援していただき、ありがとうございます。</string>
+    <string name="nuvio_enhanced_onboarding_developer_role">開発者</string>
+    <string name="nuvio_enhanced_onboarding_community_title">ひとりではありません</string>
+    <string name="nuvio_enhanced_onboarding_community_body">サポート、バグ報告、今後の提案は Discord へ。私たちやコミュニティに最も早くつながれます。</string>
+    <string name="nuvio_enhanced_onboarding_members">コミュニティメンバー1,000人以上</string>
+    <string name="nuvio_enhanced_onboarding_join_discord">Discord に参加</string>
+    <string name="nuvio_enhanced_onboarding_start">探索を始める</string>
 </resources>

@@ -1917,4 +1917,17 @@
         <item quantity="one">%d cím</item>
         <item quantity="other">%d cím</item>
     </plurals>
+    <string name="nuvio_enhanced_onboarding_welcome_title">Üdvözlünk valami többen</string>
+    <string name="nuvio_enhanced_onboarding_welcome_body">A Nuvio Enhanced intelligensebb felfedezéssel, mélyebb személyre szabással és közösségi funkciókkal bővíti a Nuviót. Tedd a sajátoddá.</string>
+    <string name="nuvio_enhanced_onboarding_features_title">Többre tervezve</string>
+    <string name="nuvio_enhanced_onboarding_features_body">Célzott kiegészítések, amelyek személyesebbé teszik a tartalmak felfedezését, rendezését és megtekintését.</string>
+    <string name="nuvio_enhanced_onboarding_team_title">Két ember munkája</string>
+    <string name="nuvio_enhanced_onboarding_team_body">A Nuvio Enhanced független fejlesztői Russo és yesn\'t.</string>
+    <string name="nuvio_enhanced_onboarding_team_note">Mi vagyunk a projekt egyetlen két fejlesztője. Köszönjük, hogy támogatod az egyes verziókba fektetett időnket és gondosságunkat.</string>
+    <string name="nuvio_enhanced_onboarding_developer_role">Fejlesztő</string>
+    <string name="nuvio_enhanced_onboarding_community_title">Nem vagy egyedül</string>
+    <string name="nuvio_enhanced_onboarding_community_body">Segítség kell, hibát jelentenél vagy alakítanád a jövőt? Discordon érhetsz el minket és a közösséget a leggyorsabban.</string>
+    <string name="nuvio_enhanced_onboarding_members">Több mint 1000 közösségi tag</string>
+    <string name="nuvio_enhanced_onboarding_join_discord">Csatlakozás a Discordhoz</string>
+    <string name="nuvio_enhanced_onboarding_start">Felfedezés indítása</string>
 </resources>

@@ -1922,4 +1922,17 @@
     <string name="settings_playback_libmpv_yuv420p">Kompatibilita libmpv YUV420P</string>
     <string name="settings_playback_libmpv_yuv420p_description">Vynútiť výstup YUV420P pre zariadenia s problémami renderera alebo farieb.</string>
     <string name="streams_loading_skip_segments">Načítavajú sa segmenty preskočenia…</string>
+    <string name="nuvio_enhanced_onboarding_welcome_title">Vitajte pri niečom navyše</string>
+    <string name="nuvio_enhanced_onboarding_welcome_body">Nuvio Enhanced rozširuje Nuvio o inteligentnejšie objavovanie, hlbšie prispôsobenie a komunitné funkcie. Prispôsobte si ho.</string>
+    <string name="nuvio_enhanced_onboarding_features_title">Vytvorené pre viac možností</string>
+    <string name="nuvio_enhanced_onboarding_features_body">Premyslená sada doplnkov, vďaka ktorým je hľadanie, organizovanie a sledovanie obsahu osobnejšie.</string>
+    <string name="nuvio_enhanced_onboarding_team_title">Vytvorené dvoma ľuďmi</string>
+    <string name="nuvio_enhanced_onboarding_team_body">Nuvio Enhanced nezávisle vyvíjajú Russo a yesn\'t.</string>
+    <string name="nuvio_enhanced_onboarding_team_note">Sme jediní dvaja vývojári tohto projektu. Ďakujeme za podporu času a starostlivosti, ktoré venujeme každej verzii.</string>
+    <string name="nuvio_enhanced_onboarding_developer_role">Vývojár</string>
+    <string name="nuvio_enhanced_onboarding_community_title">Nie ste na to sami</string>
+    <string name="nuvio_enhanced_onboarding_community_body">Potrebujete pomoc, chcete nahlásiť chybu alebo ovplyvniť ďalší vývoj? Discord je najrýchlejší spôsob, ako osloviť nás aj komunitu.</string>
+    <string name="nuvio_enhanced_onboarding_members">Viac ako 1 000 členov komunity</string>
+    <string name="nuvio_enhanced_onboarding_join_discord">Pripojiť sa na Discord</string>
+    <string name="nuvio_enhanced_onboarding_start">Začať objavovať</string>
 </resources>
