@@ -257,6 +257,7 @@ object ProfileSettingsSync {
                     episodeReleaseAlertsEnabled = EpisodeReleaseNotificationsRepository.uiState.value.isEnabled,
                 ),
                 nuvioEnhancedSettingsPayload = NuvioEnhancedSettingsRepository.exportPayload(),
+                animeTrackerMappings = com.nuvio.app.features.anilist.AnimeTrackerMappingStorage.exportToSyncPayload(),
             ),
         )
     }
@@ -283,6 +284,10 @@ object ProfileSettingsSync {
         MdbListSettingsStorage.replaceFromSyncPayload(blob.features.mdbListSettings)
         MdbListMetadataService.clearCache()
         MdbListSettingsRepository.onProfileChanged()
+
+        if (blob.features.animeTrackerMappings != null) {
+            com.nuvio.app.features.anilist.AnimeTrackerMappingStorage.applySyncPayload(blob.features.animeTrackerMappings)
+        }
 
         MetaScreenSettingsStorage.savePayload(blob.features.metaScreenSettingsPayload)
         MetaScreenSettingsRepository.onProfileChanged()
@@ -374,6 +379,7 @@ private data class MobileProfileSettingsFeatures(
     @SerialName("trakt_comments_settings") val traktCommentsSettings: JsonObject = JsonObject(emptyMap()),
     @SerialName("notifications_settings") val notificationsSettings: NotificationsSettingsPayload = NotificationsSettingsPayload(),
     @SerialName("nuvio_enhanced_settings_payload") val nuvioEnhancedSettingsPayload: String = "",
+    @SerialName("anime_tracker_mappings") val animeTrackerMappings: Map<String, String>? = null,
 )
 
 @Serializable

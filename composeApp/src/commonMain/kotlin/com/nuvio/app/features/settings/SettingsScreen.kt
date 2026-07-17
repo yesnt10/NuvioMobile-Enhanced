@@ -79,6 +79,12 @@ import com.nuvio.app.features.trakt.TraktAuthRepository
 import com.nuvio.app.features.trakt.TraktCommentsSettings
 import com.nuvio.app.features.trakt.TraktSettingsRepository
 import com.nuvio.app.features.trakt.TraktSettingsUiState
+import com.nuvio.app.features.anilist.AniListAuthRepository
+import com.nuvio.app.features.anilist.AniListAuthUiState
+import com.nuvio.app.features.anilist.aniListSettingsContent
+import com.nuvio.app.features.mal.MalAuthRepository
+import com.nuvio.app.features.mal.MalAuthUiState
+import com.nuvio.app.features.mal.malSettingsContent
 import com.nuvio.app.features.tmdb.TmdbSettings
 import com.nuvio.app.features.tmdb.TmdbSettingsRepository
 import com.nuvio.app.features.watchprogress.ContinueWatchingPreferencesRepository
@@ -167,6 +173,14 @@ fun SettingsScreen(
         val traktAuthUiState by remember {
             TraktAuthRepository.ensureLoaded()
             TraktAuthRepository.uiState
+        }.collectAsStateWithLifecycle()
+        val aniListAuthUiState by remember {
+            AniListAuthRepository.ensureLoaded()
+            AniListAuthRepository.uiState
+        }.collectAsStateWithLifecycle()
+        val malAuthUiState by remember {
+            MalAuthRepository.ensureLoaded()
+            MalAuthRepository.uiState
         }.collectAsStateWithLifecycle()
         val traktCommentsEnabled by remember {
             TraktCommentsSettings.ensureLoaded()
@@ -321,6 +335,8 @@ fun SettingsScreen(
                 mdbListSettings = mdbListSettings,
                 debridSettings = debridSettings,
                 traktAuthUiState = traktAuthUiState,
+                aniListAuthUiState = aniListAuthUiState,
+                malAuthUiState = malAuthUiState,
                 traktCommentsEnabled = traktCommentsEnabled,
                 traktSettingsUiState = traktSettingsUiState,
                 homescreenHeroEnabled = homescreenSettingsUiState.heroEnabled,
@@ -385,6 +401,8 @@ fun SettingsScreen(
                 traktAuthUiState = traktAuthUiState,
                 traktCommentsEnabled = traktCommentsEnabled,
                 traktSettingsUiState = traktSettingsUiState,
+                aniListAuthUiState = aniListAuthUiState,
+                malAuthUiState = malAuthUiState,
                 homescreenHeroEnabled = homescreenSettingsUiState.heroEnabled,
                 homescreenHideUnreleasedContent = homescreenSettingsUiState.hideUnreleasedContent,
                 homescreenHideCatalogUnderline = homescreenSettingsUiState.hideCatalogUnderline,
@@ -455,6 +473,8 @@ private fun MobileSettingsScreen(
     mdbListSettings: MdbListSettings,
     debridSettings: DebridSettings,
     traktAuthUiState: TraktAuthUiState,
+    aniListAuthUiState: com.nuvio.app.features.anilist.AniListAuthUiState,
+    malAuthUiState: com.nuvio.app.features.mal.MalAuthUiState,
     traktCommentsEnabled: Boolean,
     traktSettingsUiState: TraktSettingsUiState,
     homescreenHeroEnabled: Boolean,
@@ -712,6 +732,8 @@ private fun MobileSettingsScreen(
                 SettingsPage.Integrations -> integrationsContent(
                     isTablet = false,
                     onTraktClick = { onPageChange(SettingsPage.TraktAuthentication) },
+                    onAniListClick = { onPageChange(SettingsPage.AniListAuthentication) },
+                    onMalClick = { onPageChange(SettingsPage.MalAuthentication) },
                     onAiAssistantClick = { onPageChange(SettingsPage.AiAssistant) },
                     onTmdbClick = { onPageChange(SettingsPage.TmdbEnrichment) },
                     onMdbListClick = { onPageChange(SettingsPage.MdbListRatings) },
@@ -739,6 +761,14 @@ private fun MobileSettingsScreen(
                     settingsUiState = traktSettingsUiState,
                     commentsEnabled = traktCommentsEnabled,
                     onCommentsEnabledChange = TraktCommentsSettings::setEnabled,
+                )
+                SettingsPage.AniListAuthentication -> aniListSettingsContent(
+                    isTablet = false,
+                    uiState = aniListAuthUiState,
+                )
+                SettingsPage.MalAuthentication -> malSettingsContent(
+                    isTablet = false,
+                    uiState = malAuthUiState,
                 )
             }
         }
@@ -831,6 +861,8 @@ private fun TabletSettingsScreen(
     traktAuthUiState: TraktAuthUiState,
     traktCommentsEnabled: Boolean,
     traktSettingsUiState: TraktSettingsUiState,
+    aniListAuthUiState: com.nuvio.app.features.anilist.AniListAuthUiState,
+    malAuthUiState: com.nuvio.app.features.mal.MalAuthUiState,
     homescreenHeroEnabled: Boolean,
     homescreenHideUnreleasedContent: Boolean,
     homescreenHideCatalogUnderline: Boolean,
@@ -1145,6 +1177,8 @@ private fun TabletSettingsScreen(
                     SettingsPage.Integrations -> integrationsContent(
                         isTablet = true,
                         onTraktClick = { openInlinePage(SettingsPage.TraktAuthentication) },
+                        onAniListClick = { openInlinePage(SettingsPage.AniListAuthentication) },
+                        onMalClick = { openInlinePage(SettingsPage.MalAuthentication) },
                         onAiAssistantClick = { openInlinePage(SettingsPage.AiAssistant) },
                         onTmdbClick = { openInlinePage(SettingsPage.TmdbEnrichment) },
                         onMdbListClick = { openInlinePage(SettingsPage.MdbListRatings) },
@@ -1172,6 +1206,14 @@ private fun TabletSettingsScreen(
                         settingsUiState = traktSettingsUiState,
                         commentsEnabled = traktCommentsEnabled,
                         onCommentsEnabledChange = TraktCommentsSettings::setEnabled,
+                    )
+                    SettingsPage.AniListAuthentication -> aniListSettingsContent(
+                        isTablet = true,
+                        uiState = aniListAuthUiState,
+                    )
+                    SettingsPage.MalAuthentication -> malSettingsContent(
+                        isTablet = true,
+                        uiState = malAuthUiState,
                     )
                 }
             }

@@ -14,6 +14,7 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.widthIn
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.DeleteOutline
+import androidx.compose.material.icons.filled.Edit
 import androidx.compose.material.icons.filled.Info
 import androidx.compose.material.icons.filled.PlayArrow
 import androidx.compose.material.icons.filled.Replay
@@ -55,6 +56,7 @@ fun NuvioContinueWatchingActionSheet(
     onStartFromBeginning: (() -> Unit)? = null,
     onPlayManually: (() -> Unit)? = null,
     onRemove: () -> Unit,
+    onTracking: (() -> Unit)? = null,
 ) {
     if (item == null) return
     val artwork = continueWatchingSheetArtwork(item)
@@ -94,8 +96,18 @@ fun NuvioContinueWatchingActionSheet(
                             onClick = { dismissAfter(onOpenDetails) },
                         )
                     }
-                    if (showManualPlayOption && onPlayManually != null) {
+                    if (onTracking != null) {
                         if (showDetailsOption) {
+                            ContinueWatchingSheetDivider()
+                        }
+                        ContinueWatchingSheetActionRow(
+                            icon = Icons.Default.Edit,
+                            title = "Tracking",
+                            onClick = { dismissAfter(onTracking) },
+                        )
+                    }
+                    if (showManualPlayOption && onPlayManually != null) {
+                        if (showDetailsOption || onTracking != null) {
                             ContinueWatchingSheetDivider()
                         }
                         ContinueWatchingSheetActionRow(
@@ -105,7 +117,7 @@ fun NuvioContinueWatchingActionSheet(
                         )
                     }
                     if (!item.isNextUp && onStartFromBeginning != null) {
-                        if (showDetailsOption || (showManualPlayOption && onPlayManually != null)) {
+                        if (showDetailsOption || onTracking != null || (showManualPlayOption && onPlayManually != null)) {
                             ContinueWatchingSheetDivider()
                         }
                         ContinueWatchingSheetActionRow(
@@ -114,7 +126,7 @@ fun NuvioContinueWatchingActionSheet(
                             onClick = { dismissAfter(onStartFromBeginning) },
                         )
                     }
-                    if (showDetailsOption || (showManualPlayOption && onPlayManually != null) || (!item.isNextUp && onStartFromBeginning != null)) {
+                    if (showDetailsOption || onTracking != null || (showManualPlayOption && onPlayManually != null) || (!item.isNextUp && onStartFromBeginning != null)) {
                         ContinueWatchingSheetDivider()
                     }
                     ContinueWatchingSheetActionRow(

@@ -117,6 +117,34 @@ abstract class GenerateRuntimeConfigsTask : DefaultTask() {
             )
         }
 
+        outDir.resolve("com/nuvio/app/features/anilist").apply {
+            mkdirs()
+            resolve("AniListConfig.kt").writeText(
+                """
+                |package com.nuvio.app.features.anilist
+                |
+                |object AniListConfig {
+                |    val CLIENT_ID = "${props.getProperty("ANILIST_CLIENT_ID", "")}" 
+                |    val REDIRECT_URI = "${props.getProperty("ANILIST_REDIRECT_URI", "nuvioenhanced://auth/anilist")}"
+                |}
+                """.trimMargin()
+            )
+        }
+
+        outDir.resolve("com/nuvio/app/features/mal").apply {
+            mkdirs()
+            resolve("MalConfig.kt").writeText(
+                """
+                |package com.nuvio.app.features.mal
+                |
+                |object MalConfig {
+                |    val CLIENT_ID = "${props.getProperty("MAL_CLIENT_ID", "")}" 
+                |    val REDIRECT_URI = "${props.getProperty("MAL_REDIRECT_URI", "nuvioenhanced://auth/mal")}"
+                |}
+                """.trimMargin()
+            )
+        }
+
         outDir.resolve("com/nuvio/app/features/player/skip").apply {
             mkdirs()
             resolve("IntroDbConfig.kt").writeText(
