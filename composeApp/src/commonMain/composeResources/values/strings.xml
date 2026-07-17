@@ -484,6 +484,8 @@
     <string name="compose_settings_page_supporters_contributors">Supporters &amp; Contributors</string>
     <string name="compose_settings_page_tmdb_enrichment">TMDB Enrichment</string>
     <string name="compose_settings_page_trakt">Trakt</string>
+    <string name="compose_settings_page_anilist">AniList</string>
+    <string name="compose_settings_page_mal">MyAnimeList</string>
     <string name="compose_settings_root_about_section">ABOUT</string>
     <string name="compose_settings_root_account_description">Account and sync status</string>
     <string name="compose_settings_root_account_section">ACCOUNT</string>
@@ -503,7 +505,10 @@
     <string name="compose_settings_root_streams_description">Stream result display and badge URL rules.</string>
     <string name="compose_settings_root_switch_profile_description">Change to a different profile.</string>
     <string name="compose_settings_root_switch_profile_title">Switch Profile</string>
-    <string name="compose_settings_root_trakt_description">Open Trakt connection screen</string>
+    <string name="compose_settings_root_tmdb_description">Enrich metadata using TMDB</string>
+    <string name="compose_settings_root_trakt_description">Two-way sync with Trakt.tv</string>
+    <string name="compose_settings_root_anilist_description">Sync with AniList</string>
+    <string name="compose_settings_root_mal_description">Sync with MyAnimeList</string>
     <string name="settings_search_empty">No settings found.</string>
     <string name="settings_search_placeholder">Search settings...</string>
     <string name="settings_search_results_section">RESULTS</string>

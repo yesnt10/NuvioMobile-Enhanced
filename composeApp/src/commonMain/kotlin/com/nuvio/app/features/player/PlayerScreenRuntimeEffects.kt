@@ -399,9 +399,9 @@ private fun PlayerScreenRuntime.BindPlayerUiVisibilityEffects() {
 
         if (playbackSnapshot.isPlaying && pendingScrobbleStartAfterSeek) {
             pendingScrobbleStartAfterSeek = false
-            emitTraktScrobbleStart()
+            emitScrobbleStart()
         } else if (!previousIsPlaying && playbackSnapshot.isPlaying) {
-            emitTraktScrobbleStart()
+            emitScrobbleStart()
         }
 
         if (!playbackSnapshot.isLoading) {

@@ -16,4 +16,6 @@ internal actual fun integrationLogoPainter(logo: IntegrationLogo): Painter =
         IntegrationLogo.Trakt -> painterResource(Res.drawable.trakt_tv_favicon)
         IntegrationLogo.MdbList -> painterResource(Res.drawable.mdblist_logo)
         IntegrationLogo.IntroDb -> painterResource(Res.drawable.introdb_favicon)
+        IntegrationLogo.AniList -> painterResource(Res.drawable.rating_tmdb) // TODO: Add AniList logo
+        IntegrationLogo.MyAnimeList -> painterResource(Res.drawable.rating_tmdb) // TODO: Add MAL logo
     }

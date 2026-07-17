@@ -35,6 +35,8 @@ import nuvio.composeapp.generated.resources.compose_settings_page_streams
 import nuvio.composeapp.generated.resources.compose_settings_page_supporters_contributors
 import nuvio.composeapp.generated.resources.compose_settings_page_tmdb_enrichment
 import nuvio.composeapp.generated.resources.compose_settings_page_trakt
+import nuvio.composeapp.generated.resources.compose_settings_page_anilist
+import nuvio.composeapp.generated.resources.compose_settings_page_mal
 import nuvio.composeapp.generated.resources.settings_account
 import nuvio.composeapp.generated.resources.settings_nuvio_enhanced_title
 import org.jetbrains.compose.resources.StringResource
@@ -172,6 +174,16 @@ internal enum class SettingsPage(
     ),
     TraktAuthentication(
         titleRes = Res.string.compose_settings_page_trakt,
+        category = SettingsCategory.Account,
+        parentPage = Integrations,
+    ),
+    AniListAuthentication(
+        titleRes = Res.string.compose_settings_page_anilist,
+        category = SettingsCategory.Account,
+        parentPage = Integrations,
+    ),
+    MalAuthentication(
+        titleRes = Res.string.compose_settings_page_mal,
         category = SettingsCategory.Account,
         parentPage = Integrations,
     ),

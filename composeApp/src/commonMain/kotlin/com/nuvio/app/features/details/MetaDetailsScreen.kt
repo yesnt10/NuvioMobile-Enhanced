@@ -34,6 +34,7 @@ import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.Check
 import androidx.compose.material.icons.filled.CheckCircle
 import androidx.compose.material.icons.filled.CheckCircleOutline
+import androidx.compose.material.icons.filled.Edit
 import androidx.compose.material.icons.filled.Shuffle
 import androidx.compose.material.icons.rounded.AutoAwesome
 import androidx.compose.material3.Button
@@ -163,6 +164,14 @@ fun MetaDetailsScreen(
         TraktSettingsRepository.ensureLoaded()
         TraktSettingsRepository.uiState
     }.collectAsStateWithLifecycle()
+    val aniListAuthUiState by remember {
+        com.nuvio.app.features.anilist.AniListAuthRepository.ensureLoaded()
+        com.nuvio.app.features.anilist.AniListAuthRepository.uiState
+    }.collectAsStateWithLifecycle()
+    val malAuthUiState by remember {
+        com.nuvio.app.features.mal.MalAuthRepository.ensureLoaded()
+        com.nuvio.app.features.mal.MalAuthRepository.uiState
+    }.collectAsStateWithLifecycle()
     val tmdbSettingsUiState by remember {
         TmdbSettingsRepository.ensureLoaded()
         TmdbSettingsRepository.uiState
@@ -213,6 +222,7 @@ fun MetaDetailsScreen(
     var episodeImdbRatings by remember(type, id) { mutableStateOf<Map<Pair<Int, Int>, Double>>(emptyMap()) }
     var deferredMetaWorkAllowed by remember(type, id) { mutableStateOf(false) }
     var showAiAssistant by remember(type, id) { mutableStateOf(false) }
+    var showAnimeTrackerSheet by remember(type, id) { mutableStateOf(false) }
 
     val shouldShowComments = commentsEnabled &&
         traktAuthUiState.mode == TraktConnectionMode.CONNECTED &&
@@ -1125,6 +1135,7 @@ fun MetaDetailsScreen(
                                 onOpenMeta = onOpenMeta,
                                 onCastClick = onCastClick,
                                 onCompanyClick = onCompanyClick,
+                                onTrackerClick = { showAnimeTrackerSheet = true },
                                 sharedTransitionScope = sharedTransitionScope,
                                 animatedVisibilityScope = animatedVisibilityScope,
                             )
@@ -1444,6 +1455,15 @@ fun MetaDetailsScreen(
             }
         }
 
+        if (showAnimeTrackerSheet) {
+            com.nuvio.app.features.anilist.AnimeTrackerSheet(
+                contentId = id,
+                videoId = null,
+                title = displayedMeta?.name ?: "",
+                onDismiss = { showAnimeTrackerSheet = false },
+            )
+        }
+
         if (displayedMeta == null) {
             NuvioBackButton(
                 onClick = onBack,
@@ -1585,6 +1605,7 @@ private fun LazyListScope.configuredMetaSectionItems(
     onOpenMeta: ((MetaPreview) -> Unit)?,
     onCastClick: ((MetaPerson, String?) -> Unit)?,
     onCompanyClick: ((MetaCompany, String) -> Unit)?,
+    onTrackerClick: () -> Unit,
     sharedTransitionScope: SharedTransitionScope?,
     animatedVisibilityScope: AnimatedVisibilityScope?,
 ) {
@@ -1628,6 +1649,7 @@ private fun LazyListScope.configuredMetaSectionItems(
                         items = sectionItems,
                         tabLayout = forceTabLayout,
                     ),
+                    onTrackerClick = onTrackerClick,
                     meta = meta,
                     isTablet = isTablet,
                     playButtonLabel = playButtonLabel,
@@ -1778,6 +1800,7 @@ private fun metaSectionHasContent(
 @OptIn(ExperimentalSharedTransitionApi::class)
 private fun ConfiguredMetaSections(
     settings: MetaScreenSettingsUiState,
+    onTrackerClick: () -> Unit,
     meta: MetaDetails,
     isTablet: Boolean,
     playButtonLabel: String,
@@ -1845,9 +1868,26 @@ private fun ConfiguredMetaSections(
     fun RenderSection(key: MetaScreenSectionKey, showHeader: Boolean = true) {
         when (key) {
             MetaScreenSectionKey.ACTIONS -> {
+                val isAnime = meta.type.equals("anime", ignoreCase = true) || meta.genres.any { it.contains("anime", ignoreCase = true) } || (meta.country?.contains("JP", ignoreCase = true) == true && meta.genres.any { it.contains("animation", ignoreCase = true) })
+                val actualFeaturedAction = if (isAnime) {
+                    DetailSecondaryAction(
+                        label = "Tracker",
+                        icon = androidx.compose.material.icons.Icons.Default.Edit,
+                        isActive = false,
+                        onClick = onTrackerClick,
+                    )
+                } else {
+                    featuredAction
+                }
+
+                val extraSecondaryActions = mutableListOf<DetailSecondaryAction>()
+                if (isAnime && featuredAction != null) {
+                    extraSecondaryActions.add(featuredAction)
+                }
+
                 DetailActionButtons(
                     playLabel = playButtonLabel,
-                    featuredAction = featuredAction,
+                    featuredAction = actualFeaturedAction,
                     secondaryActions = listOf(
                         DetailSecondaryAction(
                             label = if (isWatched) {
@@ -1878,7 +1918,7 @@ private fun ConfiguredMetaSections(
                             onClick = onSaveClick,
                             onLongClick = onSaveLongClick,
                         ),
-                    ),
+                    ) + extraSecondaryActions,
                     isTablet = isTablet,
                     onPlayClick = onPrimaryPlayClick,
                     onPlayLongClick = if (showManualPlayOption) onPrimaryPlayLongClick else null,
