@@ -1942,4 +1942,8 @@
     <string name="ai_chat_prompt_explain">Какво трябва да знам преди гледане?</string>
     <string name="ai_chat_prompt_similar">Препоръчай подобни заглавия</string>
     <string name="ai_chat_error">Асистентът не можа да отговори. Провери ключа и опитай отново.</string>
+    <string name="nuvio_enhanced_subtitle_sync_title">Синхронизиране на субтитри</string>
+    <string name="nuvio_enhanced_subtitle_sync_desc">Показва контролите за синхронизация и следва активния ред по време на възпроизвеждане.</string>
+    <string name="compose_player_auto_sync_capture_hint">Изберете ред от субтитрите.</string>
+    <string name="compose_player_sync">Синхронизиране</string>
 </resources>

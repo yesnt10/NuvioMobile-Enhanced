@@ -1958,4 +1958,8 @@
     <string name="ai_chat_prompt_explain">Ce ar trebui să știu înainte să mă uit?</string>
     <string name="ai_chat_prompt_similar">Recomandă titluri similare</string>
     <string name="ai_chat_error">Asistentul nu a putut răspunde. Verifică cheia și încearcă din nou.</string>
+    <string name="nuvio_enhanced_subtitle_sync_title">Sincronizarea subtitrărilor</string>
+    <string name="nuvio_enhanced_subtitle_sync_desc">Afișează comenzile de sincronizare și urmărește linia activă în timpul redării.</string>
+    <string name="compose_player_auto_sync_capture_hint">Selectează o linie de subtitrare.</string>
+    <string name="compose_player_sync">Sincronizează</string>
 </resources>

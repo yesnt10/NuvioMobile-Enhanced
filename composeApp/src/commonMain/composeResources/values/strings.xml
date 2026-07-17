@@ -2414,4 +2414,8 @@
     <string name="theme_color_yellow">Yellow</string>
     <string name="theme_color_red">Red</string>
     <string name="theme_color_white">White</string>
+    <string name="nuvio_enhanced_subtitle_sync_title">Subtitle sync</string>
+    <string name="nuvio_enhanced_subtitle_sync_desc">Show subtitle timing controls and follow the active line during playback.</string>
+    <string name="compose_player_auto_sync_capture_hint">Select a subtitle line.</string>
+    <string name="compose_player_sync">Sync</string>
 </resources>

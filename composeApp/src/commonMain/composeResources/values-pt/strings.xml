@@ -1894,4 +1894,8 @@
     <string name="ai_chat_prompt_explain">O que devo saber antes de ver?</string>
     <string name="ai_chat_prompt_similar">Recomenda títulos semelhantes</string>
     <string name="ai_chat_error">O assistente não conseguiu responder. Verifica a chave e tenta novamente.</string>
+    <string name="nuvio_enhanced_subtitle_sync_title">Sincronização de legendas</string>
+    <string name="nuvio_enhanced_subtitle_sync_desc">Mostra os controlos de tempo e acompanha a legenda ativa durante a reprodução.</string>
+    <string name="compose_player_auto_sync_capture_hint">Seleciona uma linha de legendas.</string>
+    <string name="compose_player_sync">Sincronizar</string>
 </resources>

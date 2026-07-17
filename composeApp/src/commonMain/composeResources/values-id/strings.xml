@@ -1492,4 +1492,8 @@
     <string name="ai_chat_prompt_explain">Apa yang perlu saya tahu sebelum menonton?</string>
     <string name="ai_chat_prompt_similar">Rekomendasikan judul serupa</string>
     <string name="ai_chat_error">Asisten tidak dapat menjawab. Periksa kunci dan coba lagi.</string>
+    <string name="nuvio_enhanced_subtitle_sync_title">Sinkronisasi subtitle</string>
+    <string name="nuvio_enhanced_subtitle_sync_desc">Tampilkan kontrol waktu dan ikuti baris aktif selama pemutaran.</string>
+    <string name="compose_player_auto_sync_capture_hint">Pilih baris subtitle.</string>
+    <string name="compose_player_sync">Sinkronkan</string>
 </resources>

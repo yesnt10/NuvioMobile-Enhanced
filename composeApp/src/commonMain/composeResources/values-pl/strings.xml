@@ -1919,4 +1919,8 @@
     <string name="ai_chat_prompt_explain">Co warto wiedzieć przed oglądaniem?</string>
     <string name="ai_chat_prompt_similar">Poleć podobne tytuły</string>
     <string name="ai_chat_error">Asystent nie mógł odpowiedzieć. Sprawdź klucz i spróbuj ponownie.</string>
+    <string name="nuvio_enhanced_subtitle_sync_title">Synchronizacja napisów</string>
+    <string name="nuvio_enhanced_subtitle_sync_desc">Pokazuje sterowanie czasem i śledzi aktywną linię podczas odtwarzania.</string>
+    <string name="compose_player_auto_sync_capture_hint">Wybierz linię napisów.</string>
+    <string name="compose_player_sync">Synchronizuj</string>
 </resources>

@@ -1262,4 +1262,8 @@
     <string name="ai_chat_prompt_explain">Was sollte ich vor dem Anschauen wissen?</string>
     <string name="ai_chat_prompt_similar">Ähnliche Titel empfehlen</string>
     <string name="ai_chat_error">Der Assistent konnte nicht antworten. Prüfe den Schlüssel und versuche es erneut.</string>
+    <string name="nuvio_enhanced_subtitle_sync_title">Untertitel synchronisieren</string>
+    <string name="nuvio_enhanced_subtitle_sync_desc">Zeigt die Zeitsteuerung an und folgt während der Wiedergabe der aktiven Untertitelzeile.</string>
+    <string name="compose_player_auto_sync_capture_hint">Wähle eine Untertitelzeile aus.</string>
+    <string name="compose_player_sync">Synchronisieren</string>
 </resources>

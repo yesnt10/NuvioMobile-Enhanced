@@ -698,6 +698,10 @@ private fun ExoPlayerSurface(
                 override fun setSubtitleDelayMs(delayMs: Int) {
                     subtitleDelayMs = delayMs.coerceIn(SUBTITLE_DELAY_MIN_MS, SUBTITLE_DELAY_MAX_MS)
                 }
+
+                override fun refreshSubtitlePosition(positionMs: Long) {
+                    exoPlayer.seekTo(positionMs.coerceAtLeast(0L))
+                }
             }
         )
     }
@@ -1197,6 +1201,10 @@ private class NuvioLibmpvView(
                     "sub-delay",
                     delayMs.coerceIn(SUBTITLE_DELAY_MIN_MS, SUBTITLE_DELAY_MAX_MS) / 1000.0,
                 )
+            }
+
+            override fun refreshSubtitlePosition(positionMs: Long) {
+                mpv.command("seek", (positionMs.coerceAtLeast(0L) / 1000.0).toString(), "absolute")
             }
         }
 

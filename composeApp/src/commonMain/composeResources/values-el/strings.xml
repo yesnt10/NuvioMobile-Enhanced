@@ -1961,4 +1961,8 @@
     <string name="ai_chat_prompt_explain">Τι πρέπει να ξέρω πριν το δω;</string>
     <string name="ai_chat_prompt_similar">Πρότεινε παρόμοιους τίτλους</string>
     <string name="ai_chat_error">Ο βοηθός δεν μπόρεσε να απαντήσει. Έλεγξε το κλειδί και δοκίμασε ξανά.</string>
+    <string name="nuvio_enhanced_subtitle_sync_title">Συγχρονισμός υποτίτλων</string>
+    <string name="nuvio_enhanced_subtitle_sync_desc">Εμφανίζει τα στοιχεία χρονισμού και ακολουθεί την ενεργή γραμμή κατά την αναπαραγωγή.</string>
+    <string name="compose_player_auto_sync_capture_hint">Επιλέξτε μια γραμμή υποτίτλων.</string>
+    <string name="compose_player_sync">Συγχρονισμός</string>
 </resources>

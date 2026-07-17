@@ -2361,4 +2361,8 @@
     <string name="theme_color_yellow">أصفر</string>
     <string name="theme_color_red">أحمر</string>
     <string name="theme_color_white">أبيض</string>
+    <string name="nuvio_enhanced_subtitle_sync_title">مزامنة الترجمة</string>
+    <string name="nuvio_enhanced_subtitle_sync_desc">إظهار عناصر توقيت الترجمة ومتابعة السطر النشط أثناء التشغيل.</string>
+    <string name="compose_player_auto_sync_capture_hint">اختر سطر ترجمة.</string>
+    <string name="compose_player_sync">مزامنة</string>
 </resources>

@@ -2110,4 +2110,8 @@
     <string name="nuvio_enhanced_toast_backup_copied">Copia guardada en el portapapeles</string>
     <string name="nuvio_enhanced_toast_crash_copied">Informe de crash copiado al portapapeles</string>
     <string name="nuvio_enhanced_toast_no_email_app">No hay app de correo disponible</string>
+    <string name="nuvio_enhanced_subtitle_sync_title">Sincronización de subtítulos</string>
+    <string name="nuvio_enhanced_subtitle_sync_desc">Muestra los controles de tiempo y sigue la línea activa durante la reproducción.</string>
+    <string name="compose_player_auto_sync_capture_hint">Selecciona una línea de subtítulos.</string>
+    <string name="compose_player_sync">Sincronizar</string>
 </resources>

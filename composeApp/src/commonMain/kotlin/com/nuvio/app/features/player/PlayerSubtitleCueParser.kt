@@ -55,11 +55,11 @@ object PlayerSubtitleCueParser {
                     .filter { it.isNotBlank() }
                 val timingIndex = lines.indexOfFirst { it.contains("-->") }
                 if (timingIndex < 0) return@mapNotNull null
-                val start = parseCueStart(lines[timingIndex]) ?: return@mapNotNull null
+                val (start, end) = parseCueTiming(lines[timingIndex]) ?: return@mapNotNull null
                 val body = lines.drop(timingIndex + 1)
                     .joinToString(" ")
                     .cleanSubtitleCueText()
-                if (body.isBlank()) null else SubtitleSyncCue(start, body)
+                if (body.isBlank()) null else SubtitleSyncCue(start, end, body)
             }
             .sortedBy { it.startTimeMs }
 
@@ -74,11 +74,11 @@ object PlayerSubtitleCueParser {
                     .filter { it.isNotBlank() && !it.startsWith("NOTE") }
                 val timingIndex = lines.indexOfFirst { it.contains("-->") }
                 if (timingIndex < 0) return@mapNotNull null
-                val start = parseCueStart(lines[timingIndex]) ?: return@mapNotNull null
+                val (start, end) = parseCueTiming(lines[timingIndex]) ?: return@mapNotNull null
                 val body = lines.drop(timingIndex + 1)
                     .joinToString(" ")
                     .cleanSubtitleCueText()
-                if (body.isBlank()) null else SubtitleSyncCue(start, body)
+                if (body.isBlank()) null else SubtitleSyncCue(start, end, body)
             }
             .sortedBy { it.startTimeMs }
 
@@ -118,14 +118,16 @@ object PlayerSubtitleCueParser {
             .split(',', limit = fields.ifEmpty { defaultAssFormatFields }.size)
             .map { it.trim() }
         val startIndex = fields.indexOfField("Start").takeIf { it >= 0 } ?: 1
+        val endIndex = fields.indexOfField("End").takeIf { it >= 0 } ?: 2
         val textIndex = fields.indexOfField("Text").takeIf { it >= 0 } ?: 9
 
-        if (parts.size <= startIndex || parts.size <= textIndex) return null
+        if (parts.size <= startIndex || parts.size <= endIndex || parts.size <= textIndex) return null
         val start = parseTimestamp(parts[startIndex]) ?: return null
+        val end = parseTimestamp(parts[endIndex])?.takeIf { it > start }
         val body = parts[textIndex]
             .cleanAssCueText()
             .cleanSubtitleCueText()
-        return if (body.isBlank()) null else SubtitleSyncCue(start, body)
+        return if (body.isBlank()) null else SubtitleSyncCue(start, end, body)
     }
 
     private fun parseTtml(text: String): List<SubtitleSyncCue> =
@@ -137,17 +139,26 @@ object PlayerSubtitleCueParser {
                     ?: attrs.attributeValue("start")
                     ?: return@mapNotNull null
                 val start = parseTtmlTimestamp(startRaw) ?: return@mapNotNull null
+                val end = attrs.attributeValue("end")
+                    ?.let(::parseTtmlTimestamp)
+                    ?.takeIf { it > start }
+                    ?: attrs.attributeValue("dur")
+                        ?.let(::parseTtmlTimestamp)
+                        ?.takeIf { it > 0L }
+                        ?.let { start + it }
                 val body = match.groupValues[2]
                     .replace(Regex("""<br\s*/?>""", RegexOption.IGNORE_CASE), " ")
                     .cleanSubtitleCueText()
-                if (body.isBlank()) null else SubtitleSyncCue(start, body)
+                if (body.isBlank()) null else SubtitleSyncCue(start, end, body)
             }
             .sortedBy { it.startTimeMs }
             .toList()
 
-    private fun parseCueStart(timingLine: String): Long? {
-        val startPart = timingLine.substringBefore("-->").trim()
-        return parseTimestamp(startPart)
+    private fun parseCueTiming(timingLine: String): Pair<Long, Long?>? {
+        val start = parseTimestamp(timingLine.substringBefore("-->").trim()) ?: return null
+        val end = parseTimestamp(timingLine.substringAfter("-->").trim())
+            ?.takeIf { it > start }
+        return start to end
     }
 
     private fun parseTimestamp(raw: String): Long? {

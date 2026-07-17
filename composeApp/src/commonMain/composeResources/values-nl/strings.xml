@@ -1990,4 +1990,8 @@
     <string name="ai_chat_prompt_explain">Wat moet ik weten voordat ik kijk?</string>
     <string name="ai_chat_prompt_similar">Beveel vergelijkbare titels aan</string>
     <string name="ai_chat_error">De assistent kon niet antwoorden. Controleer de sleutel en probeer opnieuw.</string>
+    <string name="nuvio_enhanced_subtitle_sync_title">Synchronisatie van ondertitels</string>
+    <string name="nuvio_enhanced_subtitle_sync_desc">Toon timingbediening en volg de actieve regel tijdens het afspelen.</string>
+    <string name="compose_player_auto_sync_capture_hint">Selecteer een ondertitelregel.</string>
+    <string name="compose_player_sync">Synchroniseren</string>
 </resources>

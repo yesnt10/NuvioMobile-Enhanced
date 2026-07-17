@@ -1973,4 +1973,8 @@
     <string name="ai_chat_prompt_explain">Co bych měl/a vědět před sledováním?</string>
     <string name="ai_chat_prompt_similar">Doporuč podobné tituly</string>
     <string name="ai_chat_error">Asistent nemohl odpovědět. Zkontrolujte klíč a zkuste to znovu.</string>
+    <string name="nuvio_enhanced_subtitle_sync_title">Synchronizace titulků</string>
+    <string name="nuvio_enhanced_subtitle_sync_desc">Zobrazí ovládání časování a během přehrávání sleduje aktivní řádek.</string>
+    <string name="compose_player_auto_sync_capture_hint">Vyberte řádek titulků.</string>
+    <string name="compose_player_sync">Synchronizace</string>
 </resources>

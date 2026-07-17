@@ -1950,4 +1950,8 @@
     <string name="ai_chat_prompt_explain">Tôi nên biết gì trước khi xem?</string>
     <string name="ai_chat_prompt_similar">Đề xuất tiêu đề tương tự</string>
     <string name="ai_chat_error">Trợ lý không thể trả lời. Kiểm tra khóa rồi thử lại.</string>
+    <string name="nuvio_enhanced_subtitle_sync_title">Đồng bộ phụ đề</string>
+    <string name="nuvio_enhanced_subtitle_sync_desc">Hiển thị điều khiển thời gian và theo dõi dòng đang hoạt động khi phát.</string>
+    <string name="compose_player_auto_sync_capture_hint">Chọn một dòng phụ đề.</string>
+    <string name="compose_player_sync">Đồng bộ</string>
 </resources>

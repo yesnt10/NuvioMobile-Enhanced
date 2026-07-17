@@ -34,6 +34,7 @@ internal data class NuvioEnhancedSettingsUiState(
     val libraryHealthEnabled: Boolean = false,
     val statusBarVisible: Boolean = true,
     val playerStatusOverlayEnabled: Boolean = false,
+    val subtitleSyncMenuEnabled: Boolean = false,
     val showContinueWatchingReadyBadge: Boolean = true,
     val selectedAppIconId: String = NuvioAppIconOption.Default.id,
     val releaseRadarLibraryOnly: Boolean = true,
@@ -78,6 +79,7 @@ internal enum class NuvioEnhancedFeature(val id: String) {
     ReleaseRadarFilters("release_radar_filters"),
     DetailExperienceControls("detail_experience_controls"),
     PlayerStatusOverlay("player_status_overlay"),
+    SubtitleSyncMenu("subtitle_sync_menu_v2"),
     StatusBarVisibility("status_bar_visibility"),
     AppIconPicker("app_icon_picker"),
     NetworkControls("network_controls"),
@@ -116,6 +118,7 @@ private data class StoredNuvioEnhancedSettings(
     val libraryHealthEnabled: Boolean = false,
     val statusBarVisible: Boolean = true,
     val playerStatusOverlayEnabled: Boolean = false,
+    val subtitleSyncMenuEnabled: Boolean = false,
     val showContinueWatchingReadyBadge: Boolean = true,
     val selectedAppIconId: String = NuvioAppIconOption.Default.id,
     val releaseRadarLibraryOnly: Boolean = true,
@@ -277,6 +280,10 @@ internal object NuvioEnhancedSettingsRepository {
         copy(playerStatusOverlayEnabled = enabled)
     }
 
+    fun setSubtitleSyncMenuEnabled(enabled: Boolean) = update {
+        copy(subtitleSyncMenuEnabled = enabled)
+    }
+
     fun setStatusBarVisible(visible: Boolean) = update {
         copy(statusBarVisible = visible)
     }
@@ -362,6 +369,7 @@ internal object NuvioEnhancedSettingsRepository {
             libraryHealthEnabled = stored.libraryHealthEnabled,
             statusBarVisible = stored.statusBarVisible,
             playerStatusOverlayEnabled = stored.playerStatusOverlayEnabled,
+            subtitleSyncMenuEnabled = stored.subtitleSyncMenuEnabled,
             showContinueWatchingReadyBadge = stored.showContinueWatchingReadyBadge,
             selectedAppIconId = stored.selectedAppIconId,
             releaseRadarLibraryOnly = stored.releaseRadarLibraryOnly,

@@ -86,6 +86,7 @@ data class SubtitleFontImportResult(
 
 data class SubtitleSyncCue(
     val startTimeMs: Long,
+    val endTimeMs: Long? = null,
     val text: String,
 )
 

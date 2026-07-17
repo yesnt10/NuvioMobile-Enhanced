@@ -2361,4 +2361,8 @@
     <string name="theme_color_yellow">Желтый</string>
     <string name="theme_color_red">Красный</string>
     <string name="theme_color_white">Белый</string>
+    <string name="nuvio_enhanced_subtitle_sync_title">Синхронизация субтитров</string>
+    <string name="nuvio_enhanced_subtitle_sync_desc">Показывать элементы настройки времени и отслеживать активную строку во время воспроизведения.</string>
+    <string name="compose_player_auto_sync_capture_hint">Выберите строку субтитров.</string>
+    <string name="compose_player_sync">Синхронизировать</string>
 </resources>

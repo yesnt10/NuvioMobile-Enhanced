@@ -1418,4 +1418,8 @@
     <string name="ai_chat_prompt_explain">Hva bør jeg vite før jeg ser den?</string>
     <string name="ai_chat_prompt_similar">Anbefal lignende titler</string>
     <string name="ai_chat_error">Assistenten kunne ikke svare. Sjekk nøkkelen og prøv igjen.</string>
+    <string name="nuvio_enhanced_subtitle_sync_title">Synkronisering av undertekster</string>
+    <string name="nuvio_enhanced_subtitle_sync_desc">Vis tidskontroller og følg den aktive linjen under avspilling.</string>
+    <string name="compose_player_auto_sync_capture_hint">Velg en undertekstlinje.</string>
+    <string name="compose_player_sync">Synkroniser</string>
 </resources>

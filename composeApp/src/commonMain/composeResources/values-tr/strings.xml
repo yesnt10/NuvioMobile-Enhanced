@@ -1872,4 +1872,8 @@
     <string name="theme_color_yellow">Sarı</string>
     <string name="theme_color_red">Kırmızı</string>
     <string name="theme_color_white">Beyaz</string>
+    <string name="nuvio_enhanced_subtitle_sync_title">Altyazı senkronizasyonu</string>
+    <string name="nuvio_enhanced_subtitle_sync_desc">Zamanlama kontrollerini gösterir ve oynatma sırasında etkin satırı takip eder.</string>
+    <string name="compose_player_auto_sync_capture_hint">Bir altyazı satırı seçin.</string>
+    <string name="compose_player_sync">Senkronize et</string>
 </resources>

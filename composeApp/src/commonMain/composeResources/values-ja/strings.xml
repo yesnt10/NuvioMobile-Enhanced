@@ -1968,4 +1968,8 @@
     <string name="ai_chat_prompt_explain">観る前に知っておくべきことは？</string>
     <string name="ai_chat_prompt_similar">似たタイトルをおすすめ</string>
     <string name="ai_chat_error">アシスタントが回答できませんでした。キーを確認してもう一度お試しください。</string>
+    <string name="nuvio_enhanced_subtitle_sync_title">字幕の同期</string>
+    <string name="nuvio_enhanced_subtitle_sync_desc">タイミング調整を表示し、再生中の字幕行を追跡します。</string>
+    <string name="compose_player_auto_sync_capture_hint">字幕の行を選択してください。</string>
+    <string name="compose_player_sync">同期</string>
 </resources>
