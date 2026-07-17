@@ -1,18 +1,17 @@
 package com.nuvio.app.core.build
 
-enum class TrailerPlaybackMode {
-    IN_APP,
-    EXTERNAL,
+object AppFeaturePolicy {
+    val pluginsEnabled: Boolean = true
+    val supportersContributorsPageEnabled: Boolean = true
+    val inAppUpdaterEnabled: Boolean = true
+    val personalMediaAddonCopyEnabled: Boolean = true
+    val heroTrailerPlaybackSupported: Boolean = true
+    val imdbRatingLogoEnabled: Boolean = true
+    val p2pEnabled: Boolean = false
+    val accountDeletionEnabled: Boolean = true
+    val trailerPlaybackMode = TrailerPlaybackMode.IN_APP
 }
 
-expect object AppFeaturePolicy {
-    val pluginsEnabled: Boolean
-    val supportersContributorsPageEnabled: Boolean
-    val accountDeletionEnabled: Boolean
-    val personalMediaAddonCopyEnabled: Boolean
-    val p2pEnabled: Boolean
-    val trailerPlaybackMode: TrailerPlaybackMode
-    val heroTrailerPlaybackSupported: Boolean
-    val inAppUpdaterEnabled: Boolean
-    val imdbRatingLogoEnabled: Boolean
+enum class TrailerPlaybackMode {
+    IN_APP, EXTERNAL
 }

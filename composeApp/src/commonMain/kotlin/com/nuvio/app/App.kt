@@ -36,6 +36,7 @@ import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.CheckCircle
 import androidx.compose.material.icons.filled.CheckCircleOutline
 import androidx.compose.material.icons.filled.DeleteOutline
+import androidx.compose.material.icons.filled.Edit
 import androidx.compose.material.icons.filled.Home
 import androidx.compose.material.icons.filled.Info
 import androidx.compose.material.icons.filled.Tv
@@ -805,6 +806,7 @@ private fun MainAppContent(
         val liquidGlassNativeTabBarSupported = remember { isLiquidGlassNativeTabBarSupported() }
         var showExitConfirmation by rememberSaveable { mutableStateOf(false) }
         var selectedPosterActionTarget by remember { mutableStateOf<PosterActionTarget?>(null) }
+        var showPosterTrackerSheet by remember { mutableStateOf<PosterActionTarget?>(null) }
         var selectedPosterAnchor by remember { mutableStateOf<PosterZoomAnchor?>(null) }
         val posterOverlayHazeState = rememberHazeState()
         var selectedContinueWatchingForActions by remember { mutableStateOf<ContinueWatchingItem?>(null) }
@@ -3406,6 +3408,15 @@ private fun MainAppContent(
                                     }
                                 },
                             ),
+                            PosterZoomOverlayAction(
+                                icon = Icons.Default.Edit,
+                                label = "Tracking",
+                                onSelected = {
+                                    showPosterTrackerSheet = posterActionTarget
+                                    selectedPosterActionTarget = null
+                                    selectedPosterAnchor = null
+                                },
+                            ),
                         ),
                         hazeState = posterOverlayHazeState,
                         onDismissed = {
@@ -3414,6 +3425,25 @@ private fun MainAppContent(
                         },
                     )
                 }
+            }
+            
+            var showContinueWatchingTrackerSheet by remember { mutableStateOf<com.nuvio.app.features.watchprogress.ContinueWatchingItem?>(null) }
+            
+            if (showContinueWatchingTrackerSheet != null) {
+                com.nuvio.app.features.anilist.AnimeTrackerSheet(
+                    contentId = showContinueWatchingTrackerSheet!!.parentMetaId,
+                    videoId = showContinueWatchingTrackerSheet!!.videoId,
+                    title = showContinueWatchingTrackerSheet!!.title,
+                    onDismiss = { showContinueWatchingTrackerSheet = null },
+                )
+            }
+            if (showPosterTrackerSheet != null) {
+                com.nuvio.app.features.anilist.AnimeTrackerSheet(
+                    contentId = showPosterTrackerSheet!!.preview.id,
+                    videoId = null,
+                    title = showPosterTrackerSheet!!.preview.name,
+                    onDismiss = { showPosterTrackerSheet = null },
+                )
             }
 
             NuvioContinueWatchingActionSheet(
@@ -3450,6 +3480,9 @@ private fun MainAppContent(
                             WatchProgressRepository.removeProgress(contentId = item.parentMetaId)
                         }
                     }
+                },
+                onTracking = selectedContinueWatchingForActions?.let { item ->
+                    { showContinueWatchingTrackerSheet = item }
                 },
             )
 
