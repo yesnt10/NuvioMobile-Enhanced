@@ -2414,4 +2414,7 @@
     <string name="theme_color_yellow">Yellow</string>
     <string name="theme_color_red">Red</string>
     <string name="theme_color_white">White</string>
+    <string name="nuvio_enhanced_player_clock_title">Player time</string>
+    <string name="nuvio_enhanced_player_clock_desc">Show the current time and estimated end time while controls are visible.</string>
+    <string name="player_clock_ends_at">Ends at %1$s</string>
 </resources>

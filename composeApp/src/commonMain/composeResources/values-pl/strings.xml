@@ -1919,4 +1919,7 @@
     <string name="ai_chat_prompt_explain">Co warto wiedzieć przed oglądaniem?</string>
     <string name="ai_chat_prompt_similar">Poleć podobne tytuły</string>
     <string name="ai_chat_error">Asystent nie mógł odpowiedzieć. Sprawdź klucz i spróbuj ponownie.</string>
+    <string name="nuvio_enhanced_player_clock_title">Czas w odtwarzaczu</string>
+    <string name="nuvio_enhanced_player_clock_desc">Pokazuje bieżącą godzinę i przewidywany czas zakończenia, gdy elementy sterujące są widoczne.</string>
+    <string name="player_clock_ends_at">Koniec o %1$s</string>
 </resources>

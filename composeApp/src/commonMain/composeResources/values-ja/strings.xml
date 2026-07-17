@@ -1968,4 +1968,7 @@
     <string name="ai_chat_prompt_explain">観る前に知っておくべきことは？</string>
     <string name="ai_chat_prompt_similar">似たタイトルをおすすめ</string>
     <string name="ai_chat_error">アシスタントが回答できませんでした。キーを確認してもう一度お試しください。</string>
+    <string name="nuvio_enhanced_player_clock_title">プレーヤー時刻</string>
+    <string name="nuvio_enhanced_player_clock_desc">操作ボタンの表示中に現在時刻と終了予定時刻を表示します。</string>
+    <string name="player_clock_ends_at">終了予定 %1$s</string>
 </resources>

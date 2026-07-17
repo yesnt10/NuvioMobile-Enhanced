@@ -1492,4 +1492,7 @@
     <string name="ai_chat_prompt_explain">Apa yang perlu saya tahu sebelum menonton?</string>
     <string name="ai_chat_prompt_similar">Rekomendasikan judul serupa</string>
     <string name="ai_chat_error">Asisten tidak dapat menjawab. Periksa kunci dan coba lagi.</string>
+    <string name="nuvio_enhanced_player_clock_title">Waktu pemutar</string>
+    <string name="nuvio_enhanced_player_clock_desc">Tampilkan waktu saat ini dan perkiraan waktu selesai saat kontrol terlihat.</string>
+    <string name="player_clock_ends_at">Selesai pukul %1$s</string>
 </resources>

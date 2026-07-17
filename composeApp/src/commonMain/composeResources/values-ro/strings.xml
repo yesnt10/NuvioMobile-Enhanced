@@ -1958,4 +1958,7 @@
     <string name="ai_chat_prompt_explain">Ce ar trebui să știu înainte să mă uit?</string>
     <string name="ai_chat_prompt_similar">Recomandă titluri similare</string>
     <string name="ai_chat_error">Asistentul nu a putut răspunde. Verifică cheia și încearcă din nou.</string>
+    <string name="nuvio_enhanced_player_clock_title">Ora playerului</string>
+    <string name="nuvio_enhanced_player_clock_desc">Afișează ora curentă și ora estimată de final când comenzile sunt vizibile.</string>
+    <string name="player_clock_ends_at">Se termină la %1$s</string>
 </resources>

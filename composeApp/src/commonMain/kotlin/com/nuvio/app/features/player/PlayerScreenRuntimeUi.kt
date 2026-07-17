@@ -7,8 +7,11 @@ import androidx.compose.animation.fadeOut
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.BoxScope
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.padding
 import androidx.compose.runtime.Composable
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.unit.dp
 import androidx.compose.ui.layout.onSizeChanged
 import com.nuvio.app.features.p2p.P2pStreamingState
 import com.nuvio.app.features.p2p.formatP2pMegabytes
@@ -174,6 +177,19 @@ internal fun PlayerScreenRuntime.RenderPlayerRuntimeUi() {
                 metrics = metrics,
                 horizontalSafePadding = horizontalSafePadding,
                 modifier = Modifier.fillMaxSize(),
+            )
+        }
+
+        if (
+            nuvioEnhancedSettingsUiState.enhancedHomeFeaturesEnabled &&
+            nuvioEnhancedSettingsUiState.playerClockEndTimeEnabled &&
+            !isLiveTv && controlsVisible && !playerControlsLocked
+        ) {
+            PlayerClockEndTimeOverlay(
+                playbackSnapshot = playbackSnapshot,
+                modifier = Modifier
+                    .align(Alignment.TopEnd)
+                    .padding(top = 68.dp, end = horizontalSafePadding + 20.dp),
             )
         }
 

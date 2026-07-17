@@ -1872,4 +1872,7 @@
     <string name="theme_color_yellow">Sarı</string>
     <string name="theme_color_red">Kırmızı</string>
     <string name="theme_color_white">Beyaz</string>
+    <string name="nuvio_enhanced_player_clock_title">Oynatıcı saati</string>
+    <string name="nuvio_enhanced_player_clock_desc">Kontroller görünürken geçerli saati ve tahmini bitiş saatini gösterir.</string>
+    <string name="player_clock_ends_at">Bitiş: %1$s</string>
 </resources>

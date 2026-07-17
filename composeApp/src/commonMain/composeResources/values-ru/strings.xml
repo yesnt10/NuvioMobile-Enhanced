@@ -2361,4 +2361,7 @@
     <string name="theme_color_yellow">Желтый</string>
     <string name="theme_color_red">Красный</string>
     <string name="theme_color_white">Белый</string>
+    <string name="nuvio_enhanced_player_clock_title">Время в проигрывателе</string>
+    <string name="nuvio_enhanced_player_clock_desc">Показывать текущее время и расчётное время окончания, когда элементы управления видимы.</string>
+    <string name="player_clock_ends_at">Закончится в %1$s</string>
 </resources>

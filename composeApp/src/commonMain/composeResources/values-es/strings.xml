@@ -2110,4 +2110,7 @@
     <string name="nuvio_enhanced_toast_backup_copied">Copia guardada en el portapapeles</string>
     <string name="nuvio_enhanced_toast_crash_copied">Informe de crash copiado al portapapeles</string>
     <string name="nuvio_enhanced_toast_no_email_app">No hay app de correo disponible</string>
+    <string name="nuvio_enhanced_player_clock_title">Hora del reproductor</string>
+    <string name="nuvio_enhanced_player_clock_desc">Muestra la hora actual y la hora estimada de finalización mientras los controles están visibles.</string>
+    <string name="player_clock_ends_at">Termina a las %1$s</string>
 </resources>

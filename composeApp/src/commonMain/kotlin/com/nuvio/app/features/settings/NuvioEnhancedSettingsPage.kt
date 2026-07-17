@@ -350,6 +350,19 @@ private fun NuvioEnhancedSettingsPageContent(
                 )
                 SettingsGroupDivider(isTablet = isTablet)
                 SettingsSwitchRow(
+                    title = stringResource(Res.string.nuvio_enhanced_player_clock_title),
+                    description = stringResource(Res.string.nuvio_enhanced_player_clock_desc),
+                    checked = settings.playerClockEndTimeEnabled,
+                    enabled = settings.enhancedHomeFeaturesEnabled,
+                    isTablet = isTablet,
+                    highlighted = isNew(NuvioEnhancedFeature.PlayerTimeOverlay),
+                    onCheckedChange = {
+                        markSeen(NuvioEnhancedFeature.PlayerTimeOverlay)
+                        NuvioEnhancedSettingsRepository.setPlayerClockEndTimeEnabled(it)
+                    },
+                )
+                SettingsGroupDivider(isTablet = isTablet)
+                SettingsSwitchRow(
                     title = stringResource(Res.string.nuvio_enhanced_status_bar_title),
                     description = stringResource(Res.string.nuvio_enhanced_status_bar_desc),
                     checked = settings.statusBarVisible,

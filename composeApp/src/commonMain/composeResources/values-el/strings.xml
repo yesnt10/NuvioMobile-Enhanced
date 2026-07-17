@@ -1961,4 +1961,7 @@
     <string name="ai_chat_prompt_explain">Τι πρέπει να ξέρω πριν το δω;</string>
     <string name="ai_chat_prompt_similar">Πρότεινε παρόμοιους τίτλους</string>
     <string name="ai_chat_error">Ο βοηθός δεν μπόρεσε να απαντήσει. Έλεγξε το κλειδί και δοκίμασε ξανά.</string>
+    <string name="nuvio_enhanced_player_clock_title">Ώρα αναπαραγωγής</string>
+    <string name="nuvio_enhanced_player_clock_desc">Εμφανίζει την τρέχουσα ώρα και την εκτιμώμενη ώρα λήξης όταν τα στοιχεία ελέγχου είναι ορατά.</string>
+    <string name="player_clock_ends_at">Τελειώνει στις %1$s</string>
 </resources>

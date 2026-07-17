@@ -1942,4 +1942,7 @@
     <string name="ai_chat_prompt_explain">Какво трябва да знам преди гледане?</string>
     <string name="ai_chat_prompt_similar">Препоръчай подобни заглавия</string>
     <string name="ai_chat_error">Асистентът не можа да отговори. Провери ключа и опитай отново.</string>
+    <string name="nuvio_enhanced_player_clock_title">Час в плейъра</string>
+    <string name="nuvio_enhanced_player_clock_desc">Показва текущия час и очаквания край, докато контролите са видими.</string>
+    <string name="player_clock_ends_at">Приключва в %1$s</string>
 </resources>

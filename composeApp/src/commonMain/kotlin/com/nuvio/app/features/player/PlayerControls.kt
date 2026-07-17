@@ -30,7 +30,6 @@ import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.rounded.OpenInNew
-import androidx.compose.material.icons.rounded.AccessTime
 import androidx.compose.material.icons.rounded.Build
 import androidx.compose.material.icons.rounded.Flag
 import androidx.compose.material.icons.rounded.Forward10
@@ -204,7 +203,6 @@ internal fun PlayerControlsShell(
             if (showQuietDeviceStatusOverlay && deviceStatus != null) {
                 PlayerDeviceStatusOverlay(
                     status = deviceStatus,
-                    playbackSnapshot = playbackSnapshot,
                     metrics = metrics,
                     modifier = Modifier
                         .align(Alignment.TopCenter)
@@ -258,13 +256,10 @@ internal fun PlayerControlsShell(
 @Composable
 private fun PlayerDeviceStatusOverlay(
     status: PlayerDeviceStatus,
-    playbackSnapshot: PlayerPlaybackSnapshot,
     metrics: PlayerLayoutMetrics,
     modifier: Modifier = Modifier,
 ) {
     val typeScale = MaterialTheme.nuvioTypeScale
-    val remainingLabel = playerFinishRemainingLabel(playbackSnapshot)
-    val finishClockLabel = playerFinishClockLabel(status.timeLabel, playbackSnapshot)
     Surface(
         modifier = modifier.widthIn(min = 220.dp, max = 460.dp),
         shape = RoundedCornerShape(999.dp),
@@ -308,51 +303,7 @@ private fun PlayerDeviceStatusOverlay(
                 charging = status.batteryCharging,
                 metrics = metrics,
             )
-            if (remainingLabel != null) {
-                PlayerDeviceStatusItem(
-                    icon = Icons.Rounded.AccessTime,
-                    text = finishClockLabel?.let { finishClock ->
-                        stringResource(Res.string.player_status_ends_at, finishClock, remainingLabel)
-                    } ?: stringResource(Res.string.player_status_time_left, remainingLabel),
-                    metrics = metrics,
-                )
-            }
         }
-    }
-}
-
-private fun playerFinishClockLabel(
-    currentTimeLabel: String,
-    snapshot: PlayerPlaybackSnapshot,
-): String? {
-    val durationMs = snapshot.durationMs.takeIf { it > 0L } ?: return null
-    val remainingMs = (durationMs - snapshot.positionMs).coerceAtLeast(0L)
-    if (remainingMs <= 0L) return null
-    val speed = snapshot.playbackSpeed.takeIf { it > 0.05f } ?: 1f
-    val adjustedMinutes = ((remainingMs / speed) / 60_000f).roundToLong().coerceAtLeast(1L)
-    val clockMatch = Regex("""(\d{1,2})\D+(\d{2})""").find(currentTimeLabel) ?: return null
-    val hour = clockMatch.groupValues.getOrNull(1)?.toIntOrNull() ?: return null
-    val minute = clockMatch.groupValues.getOrNull(2)?.toIntOrNull() ?: return null
-    val totalMinutes = ((hour * 60L + minute + adjustedMinutes) % (24L * 60L)).let { value ->
-        if (value < 0L) value + 24L * 60L else value
-    }
-    val finishHour = (totalMinutes / 60L).toInt()
-    val finishMinute = (totalMinutes % 60L).toInt()
-    return "${finishHour.toString().padStart(2, '0')}:${finishMinute.toString().padStart(2, '0')}"
-}
-
-private fun playerFinishRemainingLabel(snapshot: PlayerPlaybackSnapshot): String? {
-    val durationMs = snapshot.durationMs.takeIf { it > 0L } ?: return null
-    val remainingMs = (durationMs - snapshot.positionMs).coerceAtLeast(0L)
-    if (remainingMs <= 0L) return null
-    val speed = snapshot.playbackSpeed.takeIf { it > 0.05f } ?: 1f
-    val adjustedMinutes = ((remainingMs / speed) / 60_000f).roundToLong().coerceAtLeast(1L)
-    val hours = adjustedMinutes / 60L
-    val minutes = adjustedMinutes % 60L
-    return when {
-        hours <= 0L -> "${minutes}m"
-        minutes <= 0L -> "${hours}h"
-        else -> "${hours}h ${minutes}m"
     }
 }
 

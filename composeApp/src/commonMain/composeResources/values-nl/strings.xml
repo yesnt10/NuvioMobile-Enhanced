@@ -1990,4 +1990,7 @@
     <string name="ai_chat_prompt_explain">Wat moet ik weten voordat ik kijk?</string>
     <string name="ai_chat_prompt_similar">Beveel vergelijkbare titels aan</string>
     <string name="ai_chat_error">De assistent kon niet antwoorden. Controleer de sleutel en probeer opnieuw.</string>
+    <string name="nuvio_enhanced_player_clock_title">Spelertijd</string>
+    <string name="nuvio_enhanced_player_clock_desc">Toon de huidige tijd en de geschatte eindtijd wanneer de bediening zichtbaar is.</string>
+    <string name="player_clock_ends_at">Eindigt om %1$s</string>
 </resources>

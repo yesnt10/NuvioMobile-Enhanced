@@ -1262,4 +1262,7 @@
     <string name="ai_chat_prompt_explain">Was sollte ich vor dem Anschauen wissen?</string>
     <string name="ai_chat_prompt_similar">Ähnliche Titel empfehlen</string>
     <string name="ai_chat_error">Der Assistent konnte nicht antworten. Prüfe den Schlüssel und versuche es erneut.</string>
+    <string name="nuvio_enhanced_player_clock_title">Player-Zeit</string>
+    <string name="nuvio_enhanced_player_clock_desc">Zeigt die aktuelle Uhrzeit und die geschätzte Endzeit an, solange die Bedienelemente sichtbar sind.</string>
+    <string name="player_clock_ends_at">Endet um %1$s</string>
 </resources>

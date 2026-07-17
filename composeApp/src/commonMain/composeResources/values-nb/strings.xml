@@ -1418,4 +1418,7 @@
     <string name="ai_chat_prompt_explain">Hva bør jeg vite før jeg ser den?</string>
     <string name="ai_chat_prompt_similar">Anbefal lignende titler</string>
     <string name="ai_chat_error">Assistenten kunne ikke svare. Sjekk nøkkelen og prøv igjen.</string>
+    <string name="nuvio_enhanced_player_clock_title">Tid i spilleren</string>
+    <string name="nuvio_enhanced_player_clock_desc">Vis gjeldende klokkeslett og beregnet sluttid mens kontrollene er synlige.</string>
+    <string name="player_clock_ends_at">Slutter kl. %1$s</string>
 </resources>

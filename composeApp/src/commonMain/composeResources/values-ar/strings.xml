@@ -2361,4 +2361,7 @@
     <string name="theme_color_yellow">أصفر</string>
     <string name="theme_color_red">أحمر</string>
     <string name="theme_color_white">أبيض</string>
+    <string name="nuvio_enhanced_player_clock_title">وقت المشغل</string>
+    <string name="nuvio_enhanced_player_clock_desc">عرض الوقت الحالي ووقت الانتهاء المتوقع أثناء ظهور عناصر التحكم.</string>
+    <string name="player_clock_ends_at">ينتهي في %1$s</string>
 </resources>

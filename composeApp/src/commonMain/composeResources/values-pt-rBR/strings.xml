@@ -1391,4 +1391,7 @@
     <string name="ai_chat_prompt_explain">O que devo saber antes de assistir?</string>
     <string name="ai_chat_prompt_similar">Recomende títulos parecidos</string>
     <string name="ai_chat_error">O assistente não conseguiu responder. Verifique a chave e tente novamente.</string>
+    <string name="nuvio_enhanced_player_clock_title">Horário no player</string>
+    <string name="nuvio_enhanced_player_clock_desc">Mostra o horário atual e o término estimado enquanto os controles estão visíveis.</string>
+    <string name="player_clock_ends_at">Termina às %1$s</string>
 </resources>
