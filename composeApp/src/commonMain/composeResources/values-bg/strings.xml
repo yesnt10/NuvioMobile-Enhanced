@@ -1942,4 +1942,6 @@
     <string name="ai_chat_prompt_explain">Какво трябва да знам преди гледане?</string>
     <string name="ai_chat_prompt_similar">Препоръчай подобни заглавия</string>
     <string name="ai_chat_error">Асистентът не можа да отговори. Провери ключа и опитай отново.</string>
+    <string name="player_random_next_enabled">Случаен следващ епизод: включен</string>
+    <string name="player_random_next_disabled">Случаен следващ епизод: изключен</string>
 </resources>

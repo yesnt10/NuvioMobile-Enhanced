@@ -1872,4 +1872,6 @@
     <string name="theme_color_yellow">Sarı</string>
     <string name="theme_color_red">Kırmızı</string>
     <string name="theme_color_white">Beyaz</string>
+    <string name="player_random_next_enabled">Rastgele sonraki bölüm açık</string>
+    <string name="player_random_next_disabled">Rastgele sonraki bölüm kapalı</string>
 </resources>

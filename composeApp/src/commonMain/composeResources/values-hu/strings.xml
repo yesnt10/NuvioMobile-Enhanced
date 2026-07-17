@@ -1967,4 +1967,6 @@
     <string name="ai_chat_prompt_explain">Mit érdemes tudnom nézés előtt?</string>
     <string name="ai_chat_prompt_similar">Ajánlj hasonló címeket</string>
     <string name="ai_chat_error">Az asszisztens nem tudott válaszolni. Ellenőrizd a kulcsot, majd próbáld újra.</string>
+    <string name="player_random_next_enabled">Véletlenszerű következő epizód bekapcsolva</string>
+    <string name="player_random_next_disabled">Véletlenszerű következő epizód kikapcsolva</string>
 </resources>

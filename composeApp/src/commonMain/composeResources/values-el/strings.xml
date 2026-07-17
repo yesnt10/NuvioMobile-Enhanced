@@ -1,4 +1,4 @@
-﻿<?xml version="1.0" encoding="utf-8"?>
+<?xml version="1.0" encoding="utf-8"?>
 <resources>
     <string name="about_supporters_contributors_subtitle">Δημόσια αναγνώριση και συντελεστές του έργου</string>
     <string name="action_back">Πίσω</string>
@@ -1961,4 +1961,6 @@
     <string name="ai_chat_prompt_explain">Τι πρέπει να ξέρω πριν το δω;</string>
     <string name="ai_chat_prompt_similar">Πρότεινε παρόμοιους τίτλους</string>
     <string name="ai_chat_error">Ο βοηθός δεν μπόρεσε να απαντήσει. Έλεγξε το κλειδί και δοκίμασε ξανά.</string>
+    <string name="player_random_next_enabled">Τυχαίο επόμενο επεισόδιο ενεργό</string>
+    <string name="player_random_next_disabled">Τυχαίο επόμενο επεισόδιο ανενεργό</string>
 </resources>

@@ -1972,4 +1972,6 @@
     <string name="ai_chat_prompt_explain">Čo by som mal vedieť pred sledovaním?</string>
     <string name="ai_chat_prompt_similar">Odporuč podobné tituly</string>
     <string name="ai_chat_error">Asistent nemohol odpovedať. Skontrolujte kľúč a skúste to znova.</string>
+    <string name="player_random_next_enabled">Náhodná ďalšia epizóda zapnutá</string>
+    <string name="player_random_next_disabled">Náhodná ďalšia epizóda vypnutá</string>
 </resources>

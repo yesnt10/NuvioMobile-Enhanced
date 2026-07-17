@@ -1262,4 +1262,6 @@
     <string name="ai_chat_prompt_explain">Was sollte ich vor dem Anschauen wissen?</string>
     <string name="ai_chat_prompt_similar">Ähnliche Titel empfehlen</string>
     <string name="ai_chat_error">Der Assistent konnte nicht antworten. Prüfe den Schlüssel und versuche es erneut.</string>
+    <string name="player_random_next_enabled">Nächste Folge zufällig aktiviert</string>
+    <string name="player_random_next_disabled">Nächste Folge zufällig deaktiviert</string>
 </resources>

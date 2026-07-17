@@ -1919,4 +1919,6 @@
     <string name="ai_chat_prompt_explain">Co warto wiedzieć przed oglądaniem?</string>
     <string name="ai_chat_prompt_similar">Poleć podobne tytuły</string>
     <string name="ai_chat_error">Asystent nie mógł odpowiedzieć. Sprawdź klucz i spróbuj ponownie.</string>
+    <string name="player_random_next_enabled">Losowy następny odcinek włączony</string>
+    <string name="player_random_next_disabled">Losowy następny odcinek wyłączony</string>
 </resources>

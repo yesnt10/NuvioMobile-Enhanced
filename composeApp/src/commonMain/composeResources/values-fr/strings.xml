@@ -2017,4 +2017,6 @@
     <string name="ai_chat_prompt_explain">Que dois-je savoir avant de regarder ?</string>
     <string name="ai_chat_prompt_similar">Recommander des titres similaires</string>
     <string name="ai_chat_error">L’assistant n’a pas pu répondre. Vérifiez la clé et réessayez.</string>
+    <string name="player_random_next_enabled">Épisode suivant aléatoire activé</string>
+    <string name="player_random_next_disabled">Épisode suivant aléatoire désactivé</string>
 </resources>

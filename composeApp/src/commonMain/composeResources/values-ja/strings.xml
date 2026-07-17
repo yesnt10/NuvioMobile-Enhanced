@@ -1968,4 +1968,6 @@
     <string name="ai_chat_prompt_explain">観る前に知っておくべきことは？</string>
     <string name="ai_chat_prompt_similar">似たタイトルをおすすめ</string>
     <string name="ai_chat_error">アシスタントが回答できませんでした。キーを確認してもう一度お試しください。</string>
+    <string name="player_random_next_enabled">次のエピソードをランダム再生：オン</string>
+    <string name="player_random_next_disabled">次のエピソードをランダム再生：オフ</string>
 </resources>

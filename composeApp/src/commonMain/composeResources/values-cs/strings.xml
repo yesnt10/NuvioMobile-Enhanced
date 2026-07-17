@@ -1973,4 +1973,6 @@
     <string name="ai_chat_prompt_explain">Co bych měl/a vědět před sledováním?</string>
     <string name="ai_chat_prompt_similar">Doporuč podobné tituly</string>
     <string name="ai_chat_error">Asistent nemohl odpovědět. Zkontrolujte klíč a zkuste to znovu.</string>
+    <string name="player_random_next_enabled">Náhodný další díl zapnut</string>
+    <string name="player_random_next_disabled">Náhodný další díl vypnut</string>
 </resources>

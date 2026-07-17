@@ -2110,4 +2110,6 @@
     <string name="nuvio_enhanced_toast_backup_copied">Copia guardada en el portapapeles</string>
     <string name="nuvio_enhanced_toast_crash_copied">Informe de crash copiado al portapapeles</string>
     <string name="nuvio_enhanced_toast_no_email_app">No hay app de correo disponible</string>
+    <string name="player_random_next_enabled">Siguiente episodio aleatorio activado</string>
+    <string name="player_random_next_disabled">Siguiente episodio aleatorio desactivado</string>
 </resources>

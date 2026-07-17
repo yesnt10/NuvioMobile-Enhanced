@@ -1391,4 +1391,6 @@
     <string name="ai_chat_prompt_explain">O que devo saber antes de assistir?</string>
     <string name="ai_chat_prompt_similar">Recomende títulos parecidos</string>
     <string name="ai_chat_error">O assistente não conseguiu responder. Verifique a chave e tente novamente.</string>
+    <string name="player_random_next_enabled">Próximo episódio aleatório ativado</string>
+    <string name="player_random_next_disabled">Próximo episódio aleatório desativado</string>
 </resources>

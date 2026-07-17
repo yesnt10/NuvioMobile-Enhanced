@@ -1256,6 +1256,8 @@
     <string name="player_next_episode_finding_source">Finding source…</string>
     <string name="player_next_episode_playing_via_countdown">Playing via %1$s in %2$d…</string>
     <string name="player_next_episode_thumbnail">Next episode thumbnail</string>
+    <string name="player_random_next_enabled">Shuffle next enabled</string>
+    <string name="player_random_next_disabled">Shuffle next disabled</string>
     <string name="player_next_episode_unaired">Unaired</string>
     <string name="player_skip">Skip</string>
     <string name="player_skip_intro">Skip Intro</string>

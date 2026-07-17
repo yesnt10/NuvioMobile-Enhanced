@@ -1568,4 +1568,6 @@
     <string name="ai_chat_prompt_explain">Cosa dovrei sapere prima di guardarlo?</string>
     <string name="ai_chat_prompt_similar">Consiglia titoli simili</string>
     <string name="ai_chat_error">L’assistente non ha potuto rispondere. Controlla la chiave e riprova.</string>
+    <string name="player_random_next_enabled">Prossimo episodio casuale attivo</string>
+    <string name="player_random_next_disabled">Prossimo episodio casuale disattivato</string>
 </resources>

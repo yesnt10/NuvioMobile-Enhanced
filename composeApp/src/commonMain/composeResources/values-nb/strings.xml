@@ -1418,4 +1418,6 @@
     <string name="ai_chat_prompt_explain">Hva bør jeg vite før jeg ser den?</string>
     <string name="ai_chat_prompt_similar">Anbefal lignende titler</string>
     <string name="ai_chat_error">Assistenten kunne ikke svare. Sjekk nøkkelen og prøv igjen.</string>
+    <string name="player_random_next_enabled">Tilfeldig neste episode på</string>
+    <string name="player_random_next_disabled">Tilfeldig neste episode av</string>
 </resources>

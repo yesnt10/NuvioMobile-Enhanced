@@ -1492,4 +1492,6 @@
     <string name="ai_chat_prompt_explain">Apa yang perlu saya tahu sebelum menonton?</string>
     <string name="ai_chat_prompt_similar">Rekomendasikan judul serupa</string>
     <string name="ai_chat_error">Asisten tidak dapat menjawab. Periksa kunci dan coba lagi.</string>
+    <string name="player_random_next_enabled">Episode berikutnya acak aktif</string>
+    <string name="player_random_next_disabled">Episode berikutnya acak nonaktif</string>
 </resources>
