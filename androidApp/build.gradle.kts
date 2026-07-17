@@ -71,7 +71,7 @@ android {
     }
 
     defaultConfig {
-        applicationId = "com.nuvio.enhancedplus"
+        applicationId = "com.nuvio.enhanced"
         minSdk = libs.versions.android.minSdk.get().toInt()
         targetSdk = libs.versions.android.targetSdk.get().toInt()
         versionCode = releaseAppVersionCode
@@ -130,21 +130,12 @@ android {
         sourceCompatibility = JavaVersion.VERSION_11
         targetCompatibility = JavaVersion.VERSION_11
     }
-
-    splits {
-        abi {
-            isEnable = true
-            reset()
-            include("armeabi-v7a", "arm64-v8a")
-            isUniversalApk = false
-        }
-    }
 }
 
 androidComponents {
     onVariants(selector().withBuildType("debug")) { variant ->
         val debugApplicationId = providers.gradleProperty("nuvioDebugApplicationId")
-            .orElse("com.nuvio.enhancedplus")
+            .orElse("com.nuvio.enhanced")
         variant.applicationId.set(debugApplicationId)
     }
 }
