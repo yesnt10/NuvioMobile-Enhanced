@@ -27,19 +27,7 @@ NuvioMobile Enhanced is our tuned fork of NuvioMobile, built to keep pace with u
 
 The project stays close to the original codebase, but the enhanced branch is where we land improvements like the premium release calendar, richer AI replies, better live TV navigation, and smoother player interactions.
 
-Current enhanced release:
 
-- `v0.2.12 (87)`
-
-## Enhanced Highlights
-
-| Area | What improved |
-| --- | --- |
-| AI assistant | Gemini, OpenRouter, Cerebras, and Groq support, plus grounded web search and formatted markdown replies. |
-| Live TV | Functional M3U browsing, favorites, channel switching, category filters, XMLTV EPG, and a recent channel card. |
-| Player | Android libmpv playback engine, tap-to-seek, and more reliable progress sync. |
-| Library | A premium-looking release calendar and clearer status handling for current and future entries. |
-| App feel | More intentional spacing, safer month transitions, and less UI flicker in calendar-driven views. |
 
 ## Download
 
@@ -47,9 +35,6 @@ The fastest way to get the enhanced build is through GitHub Releases:
 
 - [Latest release](https://github.com/yesnt10/NuvioMobile-Enhanced/releases/latest)
 
-If you are checking a specific build, the current release line is:
-
-- `NuvioMobile Enhanced v0.2.12 (87)`
 
 ## What This Fork Is
 
