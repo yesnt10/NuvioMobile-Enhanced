@@ -17,6 +17,7 @@ import androidx.core.app.NotificationCompat
 import androidx.core.app.NotificationManagerCompat
 import androidx.core.content.ContextCompat
 import com.nuvio.app.core.deeplink.buildDownloadsDeepLinkUrl
+import com.nuvio.app.features.settings.AppIconPlatform
 import kotlinx.coroutines.runBlocking
 import nuvio.composeapp.generated.resources.*
 import org.jetbrains.compose.resources.getString

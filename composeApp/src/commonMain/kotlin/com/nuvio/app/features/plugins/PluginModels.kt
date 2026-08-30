@@ -3,6 +3,14 @@ package com.nuvio.app.features.plugins
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
 
+internal const val PLUGIN_REPOSITORY_REFRESH_INTERVAL_MS = 6 * 60 * 60 * 1_000L
+
+internal fun isPluginRepositoryRefreshDue(
+    lastUpdatedEpochMs: Long,
+    nowEpochMs: Long,
+): Boolean = lastUpdatedEpochMs <= 0L ||
+    nowEpochMs - lastUpdatedEpochMs >= PLUGIN_REPOSITORY_REFRESH_INTERVAL_MS
+
 @Serializable
 data class PluginManifest(
     val name: String,
@@ -136,8 +144,74 @@ internal data class StoredPluginScraper(
     val logo: String? = null,
     val contentLanguage: List<String> = emptyList(),
     val formats: List<String>? = null,
-    val code: String,
+    val code: String? = null,
 )
+
+internal data class RestoredPluginScraper(
+    val scraper: PluginScraper,
+    val requiresMigration: Boolean,
+)
+
+internal fun PluginsUiState.toStoredPluginsState(): StoredPluginsState =
+    StoredPluginsState(
+        pluginsEnabled = pluginsEnabled,
+        groupStreamsByRepository = groupStreamsByRepository,
+        repositories = repositories.map { repository ->
+            StoredPluginRepository(
+                manifestUrl = repository.manifestUrl,
+                name = repository.name,
+                description = repository.description,
+                version = repository.version,
+                scraperCount = repository.scraperCount,
+                lastUpdated = repository.lastUpdated,
+            )
+        },
+        scrapers = scrapers.map(PluginScraper::toStoredPluginScraper),
+    )
+
+internal fun PluginScraper.toStoredPluginScraper(): StoredPluginScraper =
+    StoredPluginScraper(
+        id = id,
+        repositoryUrl = repositoryUrl,
+        name = name,
+        description = description,
+        version = version,
+        filename = filename,
+        supportedTypes = supportedTypes,
+        enabled = enabled,
+        manifestEnabled = manifestEnabled,
+        hasSettings = hasSettings,
+        logo = logo,
+        contentLanguage = contentLanguage,
+        formats = formats,
+        code = null,
+    )
+
+internal fun StoredPluginScraper.restorePluginScraper(
+    loadCachedCode: (String) -> String?,
+): RestoredPluginScraper? {
+    val cachedCode = loadCachedCode(id)
+    val resolvedCode = cachedCode ?: code ?: return null
+    return RestoredPluginScraper(
+        scraper = PluginScraper(
+            id = id,
+            repositoryUrl = repositoryUrl,
+            name = name,
+            description = description,
+            version = version,
+            filename = filename,
+            supportedTypes = supportedTypes,
+            enabled = enabled,
+            manifestEnabled = manifestEnabled,
+            hasSettings = hasSettings,
+            logo = logo,
+            contentLanguage = contentLanguage,
+            formats = formats,
+            code = resolvedCode,
+        ),
+        requiresMigration = code != null,
+    )
+}
 
 internal fun normalizePluginType(value: String): String =
     when (value.lowercase()) {

@@ -462,7 +462,10 @@ object PlayerStreamsRepository {
 
                     val displayName = addon.addonName
                     val group = runCatchingUnlessCancelled {
-                        val payload = httpGetText(url)
+                        val payload = fetchAddonResponseText(
+                            url = url,
+                            forceRefresh = forceRefresh,
+                        )
                         StreamParser.parse(
                             payload = payload,
                             addonName = displayName,

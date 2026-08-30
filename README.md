@@ -19,6 +19,8 @@
     <a href="#download">Download</a> | <a href="#enhanced-highlights">Highlights</a> | <a href="#build-from-source">Build from source</a> | <a href="#credits">Credits</a>
   </p>
 
+  [Website](https://nuvio.tv) · [GitHub releases](https://github.com/NuvioMedia/NuvioMobile/releases/latest) · [Support Nuvio](https://nuvio.tv/support)
+
 </div>
 
 ## Overview
@@ -92,7 +94,7 @@ That is the style we will keep using for future enhanced builds.
 - Enhanced fork: [yesnt10/NuvioMobile-Enhanced](https://github.com/yesnt10/NuvioMobile-Enhanced)
 - Shared brand asset used here: [tapframe/NuvioTV](https://github.com/tapframe/NuvioTV)
 
-## Legal & DMCA
+iOS development requires macOS and Xcode.
 
 NuvioMobile Enhanced functions as a client-side interface for browsing metadata and playing media provided by user-installed extensions and/or user-provided sources. It is intended for content the user owns or is otherwise authorized to access.
 

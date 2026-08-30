@@ -68,6 +68,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.zIndex
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import co.touchlab.kermit.Logger
 import coil3.compose.AsyncImage
 import com.nuvio.app.core.build.AppFeaturePolicy
 import com.nuvio.app.core.build.TrailerPlaybackMode
@@ -97,6 +98,10 @@ import com.nuvio.app.features.details.components.TrailerPlayerPopup
 import com.nuvio.app.features.downloads.DownloadsRepository
 import com.nuvio.app.features.home.MetaPreview
 import com.nuvio.app.features.library.LibraryRepository
+import com.nuvio.app.features.library.PendingTrackingMembershipRemoval
+import com.nuvio.app.features.library.TrackingMembershipRemovalConfirmationHost
+import com.nuvio.app.features.library.executeTrackingMembershipOperation
+import com.nuvio.app.features.library.showTrackingMembershipRewriteFeedback
 import com.nuvio.app.features.library.toLibraryItem
 import com.nuvio.app.features.player.PlayerSettingsRepository
 import com.nuvio.app.features.settings.NuvioEnhancedSettingsRepository
@@ -109,14 +114,18 @@ import com.nuvio.app.features.trakt.TraktCommentReview
 import com.nuvio.app.features.trakt.TraktCommentsRepository
 import com.nuvio.app.features.trakt.TraktCommentsSettings
 import com.nuvio.app.features.trakt.TraktConnectionMode
-import com.nuvio.app.features.trakt.TraktListTab
-import com.nuvio.app.features.trakt.TraktSettingsRepository
+import com.nuvio.app.features.tracking.TrackingLibraryTab
+import com.nuvio.app.features.tracking.TrackingMembershipApplyResult
+import com.nuvio.app.features.tracking.toggleTrackingLibraryMembership
+import com.nuvio.app.features.tracking.TrackingSettingsRepository
+import com.nuvio.app.features.tracking.TrackingProviderId
 import com.nuvio.app.features.trailer.TrailerPlaybackResolver
 import com.nuvio.app.features.trailer.TrailerPlaybackSource
 import com.nuvio.app.features.watched.WatchedRepository
 import com.nuvio.app.features.watched.previousReleasedEpisodesBefore
 import com.nuvio.app.features.watched.releasedPlayableEpisodes
 import com.nuvio.app.features.watched.releasedEpisodesForSeason
+import com.nuvio.app.features.watched.watchedItemKey
 import com.nuvio.app.features.watchprogress.CurrentDateProvider
 import com.nuvio.app.features.watchprogress.WatchProgressEntry
 import com.nuvio.app.features.watchprogress.WatchProgressRepository
@@ -176,9 +185,9 @@ fun MetaDetailsScreen(
         TraktAuthRepository.ensureLoaded()
         TraktAuthRepository.uiState
     }.collectAsStateWithLifecycle()
-    val traktSettingsUiState by remember {
-        TraktSettingsRepository.ensureLoaded()
-        TraktSettingsRepository.uiState
+    val trackingSettingsUiState by remember {
+        TrackingSettingsRepository.ensureLoaded()
+        TrackingSettingsRepository.uiState
     }.collectAsStateWithLifecycle()
     val tmdbSettingsUiState by remember {
         TmdbSettingsRepository.ensureLoaded()
@@ -227,10 +236,14 @@ fun MetaDetailsScreen(
     var selectedComment by remember(type, id) { mutableStateOf<TraktCommentReview?>(null) }
     val detailsScope = rememberCoroutineScope()
     var showLibraryListPicker by remember(type, id) { mutableStateOf(false) }
-    var pickerTabs by remember(type, id) { mutableStateOf<List<TraktListTab>>(emptyList()) }
+    var pickerTabs by remember(type, id) { mutableStateOf<List<TrackingLibraryTab>>(emptyList()) }
     var pickerMembership by remember(type, id) { mutableStateOf<Map<String, Boolean>>(emptyMap()) }
     var pickerPending by remember(type, id) { mutableStateOf(false) }
     var pickerError by remember(type, id) { mutableStateOf<String?>(null) }
+    var pendingTrackingRemoval by remember(type, id) {
+        mutableStateOf<PendingTrackingMembershipRemoval?>(null)
+    }
+    val trackingListsUpdateFailedMessage = stringResource(Res.string.tracking_lists_update_failed)
     var episodeImdbRatings by remember(type, id) { mutableStateOf<Map<Pair<Int, Int>, Double>>(emptyMap()) }
     var deferredMetaWorkAllowed by remember(type, id) { mutableStateOf(false) }
     var showAiAssistant by remember(type, id) { mutableStateOf(false) }
@@ -424,7 +437,7 @@ fun MetaDetailsScreen(
                 val openLibraryListPicker = remember(meta) {
                     {
                         val libraryItem = meta.toLibraryItem(savedAtEpochMs = 0L)
-                        pickerTabs = LibraryRepository.libraryListTabs()
+                        pickerTabs = LibraryRepository.libraryListTabs(libraryItem)
                         pickerMembership = pickerTabs.associate { it.key to false }
                         pickerPending = true
                         pickerError = null
@@ -432,7 +445,7 @@ fun MetaDetailsScreen(
                         detailsScope.launch {
                             runCatching {
                                 val snapshot = LibraryRepository.getMembershipSnapshot(libraryItem)
-                                val tabs = LibraryRepository.libraryListTabs()
+                                val tabs = LibraryRepository.libraryListTabs(libraryItem)
                                 pickerTabs = tabs
                                 pickerMembership = tabs.associate { tab ->
                                     tab.key to (snapshot[tab.key] == true)
@@ -445,9 +458,44 @@ fun MetaDetailsScreen(
                         Unit
                     }
                 }
-                val toggleSaved = remember(meta) {
+                val toggleSaved = remember(meta, trackingListsUpdateFailedMessage) {
                     {
-                        LibraryRepository.toggleSaved(meta.toLibraryItem(savedAtEpochMs = 0L))
+                        val item = meta.toLibraryItem(savedAtEpochMs = 0L)
+                        detailsScope.launch {
+                            val toggleMembership: suspend (Set<TrackingProviderId>) ->
+                                TrackingMembershipApplyResult = { confirmedProviders ->
+                                LibraryRepository.toggleSaved(
+                                    item = item,
+                                    confirmedRemovalProviders = confirmedProviders,
+                                )
+                            }
+                            executeTrackingMembershipOperation(
+                                operation = { toggleMembership(emptySet()) },
+                                onSuccess = { result ->
+                                    if (result.requiresRemovalConfirmation) {
+                                        pendingTrackingRemoval = PendingTrackingMembershipRemoval(
+                                            itemTitle = item.name,
+                                            confirmations = result.requiredRemovalConfirmations,
+                                            retry = toggleMembership,
+                                            onApplied = ::showTrackingMembershipRewriteFeedback,
+                                            onFailure = { error ->
+                                                NuvioToastController.show(
+                                                    error.message ?: trackingListsUpdateFailedMessage,
+                                                )
+                                            },
+                                        )
+                                    } else {
+                                        showTrackingMembershipRewriteFeedback(result)
+                                    }
+                                },
+                                onFailure = { error ->
+                                    NuvioToastController.show(
+                                        error.message ?: trackingListsUpdateFailedMessage,
+                                    )
+                                },
+                            )
+                        }
+                        Unit
                     }
                 }
                 val toggleWatched = remember(metaPreview) {
@@ -485,12 +533,13 @@ fun MetaDetailsScreen(
                 val movieProgress = progressByVideoId[meta.id]
                     ?.takeUnless { it.isCompleted }
                 val cwPrefs by ContinueWatchingPreferencesRepository.uiState.collectAsStateWithLifecycle()
-                val seriesAction = remember(watchProgressUiState.entries, watchedUiState.items, meta, todayIsoDate, cwPrefs.upNextFromFurthestEpisode) {
+                val seriesAction = remember(watchProgressUiState.entries, watchedUiState.items, meta, todayIsoDate, cwPrefs.upNextFromFurthestEpisode, watchedUiState.watchedKeys) {
                     meta.seriesPrimaryAction(
                         entries = watchProgressUiState.entries,
                         watchedItems = watchedUiState.items,
                         todayIsoDate = todayIsoDate,
                         preferFurthestEpisode = cwPrefs.upNextFromFurthestEpisode,
+                        watchedKeys = watchedUiState.watchedKeys,
                     )
                 }
                 val seriesActionVideo = remember(seriesAction, meta.id, meta.videos) {
@@ -1431,7 +1480,7 @@ fun MetaDetailsScreen(
                             )
                         }
 
-                        TraktListPickerDialog(
+                        TrackingListPickerDialog(
                             visible = showLibraryListPicker,
                             title = meta.name,
                             tabs = pickerTabs,
@@ -1439,9 +1488,11 @@ fun MetaDetailsScreen(
                             isPending = pickerPending,
                             errorMessage = pickerError,
                             onToggle = { listKey ->
-                                pickerMembership = pickerMembership.toMutableMap().apply {
-                                    this[listKey] = !(this[listKey] == true)
-                                }
+                                pickerMembership = toggleTrackingLibraryMembership(
+                                    tabs = pickerTabs,
+                                    membership = pickerMembership,
+                                    key = listKey,
+                                )
                             },
                             onDismiss = {
                                 if (!pickerPending) {
@@ -1452,19 +1503,50 @@ fun MetaDetailsScreen(
                                 detailsScope.launch {
                                     pickerPending = true
                                     pickerError = null
-                                    runCatching {
+                                    val item = meta.toLibraryItem(savedAtEpochMs = 0L)
+                                    val desiredMembership = pickerMembership.toMap()
+                                    val applyMembership: suspend (Set<TrackingProviderId>) ->
+                                        TrackingMembershipApplyResult = { confirmedProviders ->
                                         LibraryRepository.applyMembershipChanges(
-                                            item = meta.toLibraryItem(savedAtEpochMs = 0L),
-                                            desiredMembership = pickerMembership,
+                                            item = item,
+                                            desiredMembership = desiredMembership,
+                                            confirmedRemovalProviders = confirmedProviders,
                                         )
-                                    }.onSuccess {
-                                        showLibraryListPicker = false
-                                    }.onFailure { error ->
-                                        pickerError = error.message ?: getString(Res.string.trakt_lists_update_failed)
                                     }
+                                    val completeMembershipUpdate: suspend (TrackingMembershipApplyResult) -> Unit = { result ->
+                                        showTrackingMembershipRewriteFeedback(result)
+                                        showLibraryListPicker = false
+                                    }
+                                    executeTrackingMembershipOperation(
+                                        operation = { applyMembership(emptySet()) },
+                                        onSuccess = { result ->
+                                            if (result.requiresRemovalConfirmation) {
+                                                pendingTrackingRemoval = PendingTrackingMembershipRemoval(
+                                                    itemTitle = item.name,
+                                                    confirmations = result.requiredRemovalConfirmations,
+                                                    retry = applyMembership,
+                                                    onApplied = completeMembershipUpdate,
+                                                    onFailure = { error ->
+                                                        pickerError = error.message
+                                                            ?: trackingListsUpdateFailedMessage
+                                                    },
+                                                )
+                                            } else {
+                                                completeMembershipUpdate(result)
+                                            }
+                                        },
+                                        onFailure = { error ->
+                                            pickerError = error.message ?: trackingListsUpdateFailedMessage
+                                        },
+                                    )
                                     pickerPending = false
                                 }
                             },
+                        )
+
+                        TrackingMembershipRemovalConfirmationHost(
+                            pending = pendingTrackingRemoval,
+                            onPendingChange = { pendingTrackingRemoval = it },
                         )
 
                         selectedComment?.let { comment ->
@@ -1927,8 +2009,8 @@ private fun ConfiguredMetaSections(
                             },
                             isActive = isWatched,
                             onClick = onWatchedClick,
-                        ),
-                        DetailSecondaryAction(
+                        ))
+                        add(DetailSecondaryAction(
                             label = if (isSaved) {
                                 stringResource(Res.string.hero_remove_from_library)
                             } else {
@@ -1942,8 +2024,8 @@ private fun ConfiguredMetaSections(
                             isActive = isSaved,
                             onClick = onSaveClick,
                             onLongClick = onSaveLongClick,
-                        ),
-                    ),
+                        ))
+                    },
                     isTablet = isTablet,
                     onPlayClick = onPrimaryPlayClick,
                     onPlayLongClick = if (showManualPlayOption) onPrimaryPlayLongClick else null,

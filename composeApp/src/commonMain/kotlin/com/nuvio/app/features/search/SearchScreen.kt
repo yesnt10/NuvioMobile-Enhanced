@@ -19,6 +19,7 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.border
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.lazy.LazyListState
 import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.rounded.Close
@@ -96,6 +97,7 @@ import org.jetbrains.compose.resources.stringResource
 @Composable
 fun SearchScreen(
     modifier: Modifier = Modifier,
+    listState: LazyListState = rememberLazyListState(),
     onPosterClick: ((MetaPreview) -> Unit)? = null,
     onPosterLongClick: ((MetaPreview) -> Unit)? = null,
     onPersonClick: ((TmdbPersonSearchResult) -> Unit)? = null,
@@ -132,7 +134,6 @@ fun SearchScreen(
     var query by rememberSaveable { mutableStateOf("") }
     var lastRequestedQuery by rememberSaveable { mutableStateOf<String?>(null) }
     var observedOfflineState by remember { mutableStateOf(false) }
-    val listState = rememberLazyListState()
     val discoverInFocus by remember(query, listState) {
         derivedStateOf {
             query.isBlank() && listState.firstVisibleItemIndex > 0
@@ -223,11 +224,15 @@ fun SearchScreen(
 
                 val normalizedQuery = query.trim()
                 if (normalizedQuery.isBlank()) {
-                    SearchRepository.refreshDiscover(addonsUiState.addons)
+                    SearchRepository.refreshDiscover(
+                        addons = addonsUiState.addons,
+                        forceRefresh = true,
+                    )
                 } else {
                     SearchRepository.search(
                         query = normalizedQuery,
                         addons = addonsUiState.addons,
+                        forceRefresh = true,
                     )
                 }
             }
@@ -320,7 +325,10 @@ fun SearchScreen(
                     onGenreSelected = SearchRepository::selectDiscoverGenre,
                     onRetry = {
                         NetworkStatusRepository.requestRefresh(force = true)
-                        SearchRepository.refreshDiscover(addonsUiState.addons)
+                        SearchRepository.refreshDiscover(
+                            addons = addonsUiState.addons,
+                            forceRefresh = true,
+                        )
                     },
                     watchedKeys = watchedUiState.watchedKeys,
                     fullyWatchedSeriesKeys = fullyWatchedSeriesKeys,
@@ -335,7 +343,6 @@ fun SearchScreen(
                         items(2) {
                             HomeSkeletonRow(
                                 modifier = Modifier.padding(horizontal = homeSectionPadding),
-                                showHeaderAccent = !homeCatalogSettingsUiState.hideCatalogUnderline,
                             )
                         }
                     }
@@ -344,7 +351,6 @@ fun SearchScreen(
                         items(2) {
                             HomeSkeletonRow(
                                 modifier = Modifier.padding(horizontal = homeSectionPadding),
-                                showHeaderAccent = !homeCatalogSettingsUiState.hideCatalogUnderline,
                             )
                         }
                     }
@@ -361,6 +367,7 @@ fun SearchScreen(
                                         SearchRepository.search(
                                             query = normalizedQuery,
                                             addons = addonsUiState.addons,
+                                            forceRefresh = true,
                                         )
                                     }
                                 },
@@ -397,7 +404,6 @@ fun SearchScreen(
                             item(key = "search_loading_more") {
                                 HomeSkeletonRow(
                                     modifier = Modifier.padding(horizontal = homeSectionPadding),
-                                    showHeaderAccent = !homeCatalogSettingsUiState.hideCatalogUnderline,
                                 )
                             }
                         }
@@ -657,21 +663,6 @@ private fun SearchRecentRow(
         horizontalArrangement = Arrangement.spacedBy(8.dp),
         verticalAlignment = Alignment.CenterVertically,
     ) {
-        Box(
-            modifier = Modifier
-                .background(
-                    color = MaterialTheme.colorScheme.surface,
-                    shape = RoundedCornerShape(999.dp),
-                )
-                .padding(8.dp),
-            contentAlignment = Alignment.Center,
-        ) {
-            Icon(
-                imageVector = Icons.Rounded.History,
-                contentDescription = null,
-                tint = MaterialTheme.colorScheme.onSurfaceVariant,
-            )
-        }
         Text(
             text = query,
             modifier = Modifier.weight(1f),

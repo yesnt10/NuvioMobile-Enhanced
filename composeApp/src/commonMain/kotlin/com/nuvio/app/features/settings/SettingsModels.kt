@@ -183,7 +183,8 @@ internal enum class SettingsPage(
         parentPage = Integrations,
     ),
     TraktAuthentication(
-        titleRes = Res.string.compose_settings_page_trakt,
+        // Keep the enum name for saved navigation-state compatibility.
+        titleRes = Res.string.compose_settings_page_tracking,
         category = SettingsCategory.Account,
         parentPage = Integrations,
     ),

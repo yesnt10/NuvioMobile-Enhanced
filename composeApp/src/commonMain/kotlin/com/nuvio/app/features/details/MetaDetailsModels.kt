@@ -62,6 +62,7 @@ data class MetaTrailer(
     val publishedAt: String? = null,
     val seasonNumber: Int? = null,
     val displayName: String? = null,
+    val iso6391: String? = null,
 )
 
 data class MetaPerson(
@@ -94,6 +95,7 @@ data class MetaVideo(
     val episode: Int? = null,
     val overview: String? = null,
     val runtime: Int? = null,
+    val rating: Double? = null,
     val streams: List<StreamItem> = emptyList(),
 )
 

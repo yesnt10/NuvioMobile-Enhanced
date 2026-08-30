@@ -12,6 +12,7 @@ import nuvio.composeapp.generated.resources.Res
 import nuvio.composeapp.generated.resources.network_empty_response_body
 import nuvio.composeapp.generated.resources.network_request_failed_http
 import org.jetbrains.compose.resources.getString
+import okhttp3.Cache
 import okhttp3.ResponseBody
 import okhttp3.MediaType.Companion.toMediaType
 import okhttp3.OkHttpClient
@@ -19,6 +20,7 @@ import okhttp3.Request
 import okhttp3.RequestBody.Companion.toRequestBody
 import java.net.Proxy
 import java.io.ByteArrayOutputStream
+import java.io.File
 import java.io.InputStream
 import kotlin.text.Charsets
 import java.util.concurrent.TimeUnit

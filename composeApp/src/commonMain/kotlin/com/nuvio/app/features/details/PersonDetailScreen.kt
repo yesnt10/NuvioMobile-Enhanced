@@ -73,6 +73,7 @@ import com.nuvio.app.core.ui.PlatformBackHandler
 import com.nuvio.app.core.ui.nuvio
 import com.nuvio.app.core.ui.rememberPosterCardStyleUiState
 import com.nuvio.app.features.details.components.DetailPosterRailSection
+import com.nuvio.app.features.details.components.ExpandableDescription
 import com.nuvio.app.features.home.MetaPreview
 import com.nuvio.app.features.home.components.HomePosterCard
 import com.nuvio.app.features.home.stableKey
@@ -794,12 +795,11 @@ private fun PersonIdentitySidebar(
             )
             Column(verticalArrangement = Arrangement.spacedBy(9.dp)) {
                 SidebarLabel(text = stringResource(Res.string.person_detail_biography))
-                Text(
+                ExpandableDescription(
                     text = biography,
                     style = MaterialTheme.typography.bodyMedium.copy(lineHeight = 22.sp),
                     color = MaterialTheme.colorScheme.onSurfaceVariant,
-                    maxLines = 12,
-                    overflow = TextOverflow.Ellipsis,
+                    collapsedMaxLines = 12,
                 )
             }
         }
@@ -969,14 +969,13 @@ private fun HeroSection(
         // Biography
         person.biography?.let { bio ->
             Spacer(modifier = Modifier.height(12.dp))
-            Text(
+            ExpandableDescription(
                 text = bio,
                 style = MaterialTheme.typography.bodyMedium.copy(
                     lineHeight = 20.sp,
                 ),
                 color = MaterialTheme.colorScheme.onSurfaceVariant,
-                maxLines = 8,
-                overflow = TextOverflow.Ellipsis,
+                collapsedMaxLines = 8,
                 modifier = Modifier.fillMaxWidth(),
             )
         }

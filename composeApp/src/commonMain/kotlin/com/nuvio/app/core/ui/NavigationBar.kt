@@ -200,6 +200,7 @@ private class NuvioNavigationBarScopeImpl(
         label: String?,
     ) {
         val tokens = MaterialTheme.nuvio
+        val palette = ThemeColors.getColorPalette(MaterialTheme.appTheme)
         val iconColor by animateColorAsState(
             targetValue = if (selected) tokens.colors.accent else tokens.colors.textMuted,
             label = "nav_icon_color",
@@ -225,10 +226,12 @@ private class NuvioNavigationBarScopeImpl(
                 horizontalAlignment = Alignment.CenterHorizontally,
             ) {
                 Icon(
-                    modifier = Modifier.size(28.dp),
+                    modifier = Modifier
+                        .size(28.dp)
+                        .then(if (selected) Modifier.gradientMask(palette.accentBrush()) else Modifier),
                     imageVector = icon,
                     contentDescription = contentDescription,
-                    tint = iconColor,
+                    tint = if (selected) Color.White else iconColor,
                 )
                 NavItemLabel(label = label, labelFraction = labelFraction, iconColor = iconColor, selected = selected)
             }
@@ -245,6 +248,7 @@ private class NuvioNavigationBarScopeImpl(
         label: String?,
     ) {
         val tokens = MaterialTheme.nuvio
+        val palette = ThemeColors.getColorPalette(MaterialTheme.appTheme)
         val iconColor by animateColorAsState(
             targetValue = if (selected) tokens.colors.accent else tokens.colors.textMuted,
             label = "nav_icon_color",
@@ -270,10 +274,12 @@ private class NuvioNavigationBarScopeImpl(
                 horizontalAlignment = Alignment.CenterHorizontally,
             ) {
                 Icon(
-                    modifier = Modifier.size(28.dp),
+                    modifier = Modifier
+                        .size(28.dp)
+                        .then(if (selected) Modifier.gradientMask(palette.accentBrush()) else Modifier),
                     painter = painterResource(icon),
                     contentDescription = contentDescription,
-                    tint = iconColor,
+                    tint = if (selected) Color.White else iconColor,
                 )
                 NavItemLabel(label = label, labelFraction = labelFraction, iconColor = iconColor, selected = selected)
             }
@@ -385,6 +391,7 @@ private class NuvioClassicNavigationBarScopeImpl(
         label: String?,
     ) {
         val tokens = MaterialTheme.nuvio
+        val palette = ThemeColors.getColorPalette(MaterialTheme.appTheme)
         val iconColor by animateColorAsState(
             targetValue = if (selected) tokens.colors.accent else tokens.colors.textMuted,
             label = "classic_nav_icon_color",
@@ -403,10 +410,11 @@ private class NuvioClassicNavigationBarScopeImpl(
                         onClick = onClick,
                     )
                     .padding(NuvioTokens.Space.s10)
-                    .size(tokens.components.navIconSize),
+                    .size(tokens.components.navIconSize)
+                    .then(if (selected) Modifier.gradientMask(palette.accentBrush()) else Modifier),
                 imageVector = icon,
                 contentDescription = contentDescription,
-                tint = iconColor,
+                tint = if (selected) Color.White else iconColor,
             )
         }
     }
@@ -421,6 +429,7 @@ private class NuvioClassicNavigationBarScopeImpl(
         label: String?,
     ) {
         val tokens = MaterialTheme.nuvio
+        val palette = ThemeColors.getColorPalette(MaterialTheme.appTheme)
         val iconColor by animateColorAsState(
             targetValue = if (selected) tokens.colors.accent else tokens.colors.textMuted,
             label = "classic_nav_icon_color",
@@ -439,10 +448,11 @@ private class NuvioClassicNavigationBarScopeImpl(
                         onClick = onClick,
                     )
                     .padding(NuvioTokens.Space.s10)
-                    .size(tokens.components.navIconSize),
+                    .size(tokens.components.navIconSize)
+                    .then(if (selected) Modifier.gradientMask(palette.accentBrush()) else Modifier),
                 painter = painterResource(icon),
                 contentDescription = contentDescription,
-                tint = iconColor,
+                tint = if (selected) Color.White else iconColor,
             )
         }
     }

@@ -87,19 +87,6 @@ abstract class GenerateRuntimeConfigsTask : DefaultTask() {
             )
         }
 
-        outDir.resolve("com/nuvio/app/core/sync").apply {
-            mkdirs()
-            resolve("RealtimeSyncConfig.kt").writeText(
-                """
-                |package com.nuvio.app.core.sync
-                |
-                |object RealtimeSyncConfig {
-                |    const val ENABLED = ${realtimeSyncEnabled.get()}
-                |}
-                """.trimMargin()
-            )
-        }
-
         outDir.resolve("com/nuvio/app/features/tmdb/TmdbConfig.kt").delete()
 
         outDir.resolve("com/nuvio/app/features/trakt").apply {
@@ -200,6 +187,7 @@ abstract class GenerateRuntimeConfigsTask : DefaultTask() {
                 |
                 |object CommunityConfig {
                 |    const val CONTRIBUTIONS_URL = "${props.getProperty("CONTRIBUTIONS_URL", "")}" 
+                |    const val SUPPORTERS_WALL_URL = "${props.getProperty("SUPPORTERS_WALL_URL", "https://nuvio.tv/api/supporters/wall")}"
                 |    const val DONATIONS_BASE_URL = "${props.getProperty("DONATIONS_BASE_URL", "")}" 
                 |    const val DONATIONS_DONATE_URL = "${props.getProperty("DONATIONS_DONATE_URL", "")}" 
                 |}
@@ -414,6 +402,9 @@ kotlin {
                         extraOpts("-libraryPath", nuvioEngineSliceDirectory.absolutePath)
                     }
                 }
+                configureEach {
+                    extraOpts("-Xccall-mode", "direct")
+                }
             }
 
             if (iosDistribution == "full") {
@@ -507,11 +498,19 @@ kotlin {
                 }
             }
         }
+        val androidHostTest by getting {
+            if (androidDistribution == "full") {
+                kotlin.srcDir(project.file("src/androidFullHostTest/kotlin"))
+            }
+        }
         commonMain.dependencies {
             implementation("io.coil-kt.coil3:coil-compose:${libs.versions.coil.get()}") {
                 exclude(group = "org.jetbrains.skiko", module = "skiko")
             }
             implementation("io.coil-kt.coil3:coil-network-ktor3:${libs.versions.coil.get()}") {
+                exclude(group = "org.jetbrains.skiko", module = "skiko")
+            }
+            implementation("io.coil-kt.coil3:coil-network-cache-control:${libs.versions.coil.get()}") {
                 exclude(group = "org.jetbrains.skiko", module = "skiko")
             }
             implementation("io.coil-kt.coil3:coil-svg:${libs.versions.coil.get()}") {
@@ -537,7 +536,7 @@ kotlin {
             implementation(libs.supabase.postgrest)
             implementation(libs.supabase.auth)
             implementation(libs.supabase.functions)
-            implementation(libs.supabase.realtime)
+            implementation(libs.supabase.storage)
             implementation(libs.reorderable)
         }
         commonTest.dependencies {

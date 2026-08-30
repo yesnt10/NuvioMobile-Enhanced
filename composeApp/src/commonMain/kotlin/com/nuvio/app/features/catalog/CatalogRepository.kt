@@ -45,14 +45,22 @@ object CatalogRepository {
             fetchInternalLibrary(request)
             return
         }
-        fetchPage(request = request, reset = true)
+        fetchPage(
+            request = request,
+            reset = true,
+            forceRefresh = force,
+        )
     }
 
     fun loadMore() {
         val request = activeRequest ?: return
         val current = _uiState.value
         if (current.isLoading || current.nextSkip == null) return
-        fetchPage(request = request, reset = false)
+        fetchPage(
+            request = request,
+            reset = false,
+            forceRefresh = false,
+        )
     }
 
     fun clear() {
@@ -129,6 +137,7 @@ object CatalogRepository {
     private fun fetchPage(
         request: CatalogRequest,
         reset: Boolean,
+        forceRefresh: Boolean,
     ) {
         activeJob?.cancel()
         val current = _uiState.value
@@ -150,6 +159,7 @@ object CatalogRepository {
                         catalogId = target.catalogId,
                         genre = target.genre,
                         skip = requestedSkip.takeIf { it > 0 },
+                        forceRefresh = forceRefresh,
                     )
 
                     is CatalogTarget.CollectionSource -> fetchCollectionSourcePage(

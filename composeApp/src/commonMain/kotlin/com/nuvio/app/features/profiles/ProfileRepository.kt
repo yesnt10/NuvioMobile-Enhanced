@@ -6,6 +6,7 @@ import com.nuvio.app.core.auth.AuthState
 import com.nuvio.app.core.auth.isAnonymous
 import com.nuvio.app.core.network.SupabaseProvider
 import com.nuvio.app.core.sync.putSyncOriginClientId
+import com.nuvio.app.core.tracking.ensureTrackingProvidersRegistered
 import com.nuvio.app.features.addons.AddonRepository
 import com.nuvio.app.features.collection.CollectionMobileSettingsRepository
 import com.nuvio.app.features.collection.CollectionRepository
@@ -448,6 +449,7 @@ object ProfileRepository {
             val result = SupabaseProvider.client.postgrest.rpc("verify_profile_pin", params)
             result.decodeSingle<PinVerifyResult>().also { verifyResult ->
                 if (verifyResult.unlocked) {
+                    pullProfiles()
                     rememberVerifiedPin(profileIndex = profileIndex, pin = pin)
                 }
             }

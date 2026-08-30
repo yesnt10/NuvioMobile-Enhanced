@@ -32,7 +32,7 @@ import com.nuvio.app.features.tmdb.TmdbSettingsRepository
 import com.nuvio.app.features.trakt.TraktCommentsStorage
 import com.nuvio.app.features.trakt.TraktCommentsSettings
 import com.nuvio.app.features.trakt.TraktSettingsStorage
-import com.nuvio.app.features.trakt.TraktSettingsRepository
+import com.nuvio.app.features.tracking.TrackingSettingsRepository
 import com.nuvio.app.features.watchprogress.ContinueWatchingPreferencesStorage
 import com.nuvio.app.features.watchprogress.ContinueWatchingPreferencesRepository
 import io.github.jan.supabase.postgrest.postgrest
@@ -88,6 +88,7 @@ object ProfileSettingsSync {
     fun startObserving() {
         if (observeJob?.isActive == true) return
         ensureRepositoriesLoaded()
+        ProviderCredentialSync.startObserving()
         observeLocalChangesAndPush()
     }
 
@@ -212,7 +213,7 @@ object ProfileSettingsSync {
             MetaScreenSettingsRepository.uiState.map { "meta" },
             CollectionMobileSettingsRepository.uiState.map { "collection_mobile_settings" },
             ContinueWatchingPreferencesRepository.uiState.map { "continue_watching" },
-            TraktSettingsRepository.uiState.map { "trakt_settings" },
+            TrackingSettingsRepository.uiState.map { "trakt_settings" },
             TraktCommentsSettings.enabled.map { "trakt_comments" },
             EpisodeReleaseNotificationsRepository.uiState.map { "episode_release_alerts" },
             NuvioEnhancedSettingsRepository.uiState.map { "nuvio_enhanced" },
@@ -256,9 +257,18 @@ object ProfileSettingsSync {
                 posterCardStyleSettingsPayload = PosterCardStyleStorage.loadPayload().orEmpty().trim(),
                 playerSettings = PlayerSettingsStorage.exportToSyncPayload(),
                 streamBadgeSettings = StreamBadgeSettingsStorage.exportToSyncPayload(),
-                debridSettings = DebridSettingsStorage.exportToSyncPayload(),
-                tmdbSettings = TmdbSettingsStorage.exportToSyncPayload(),
-                mdbListSettings = MdbListSettingsStorage.exportToSyncPayload(),
+                debridSettings = withoutProfileCredentials(
+                    PROFILE_DEBRID_SETTINGS_FEATURE,
+                    DebridSettingsStorage.exportToSyncPayload(),
+                ),
+                tmdbSettings = withoutProfileCredentials(
+                    PROFILE_TMDB_SETTINGS_FEATURE,
+                    TmdbSettingsStorage.exportToSyncPayload(),
+                ),
+                mdbListSettings = withoutProfileCredentials(
+                    PROFILE_MDBLIST_SETTINGS_FEATURE,
+                    MdbListSettingsStorage.exportToSyncPayload(),
+                ),
                 metaScreenSettingsPayload = MetaScreenSettingsStorage.loadPayload().orEmpty().trim(),
                 collectionMobileSettingsPayload = CollectionMobileSettingsStorage.loadPayload().orEmpty().trim(),
                 continueWatchingSettingsPayload = ContinueWatchingPreferencesStorage.loadPayload().orEmpty().trim(),
@@ -286,13 +296,31 @@ object ProfileSettingsSync {
         StreamBadgeSettingsStorage.replaceFromSyncPayload(blob.features.streamBadgeSettings)
         StreamBadgeSettingsRepository.onProfileChanged()
 
-        DebridSettingsStorage.replaceFromSyncPayload(blob.features.debridSettings)
+        DebridSettingsStorage.replaceFromSyncPayload(
+            preservingLocalProfileCredentials(
+                PROFILE_DEBRID_SETTINGS_FEATURE,
+                blob.features.debridSettings,
+                DebridSettingsStorage.exportToSyncPayload(),
+            ),
+        )
         DebridSettingsRepository.onProfileChanged()
 
-        TmdbSettingsStorage.replaceFromSyncPayload(blob.features.tmdbSettings)
+        TmdbSettingsStorage.replaceFromSyncPayload(
+            preservingLocalProfileCredentials(
+                PROFILE_TMDB_SETTINGS_FEATURE,
+                blob.features.tmdbSettings,
+                TmdbSettingsStorage.exportToSyncPayload(),
+            ),
+        )
         TmdbSettingsRepository.onProfileChanged()
 
-        MdbListSettingsStorage.replaceFromSyncPayload(blob.features.mdbListSettings)
+        MdbListSettingsStorage.replaceFromSyncPayload(
+            preservingLocalProfileCredentials(
+                PROFILE_MDBLIST_SETTINGS_FEATURE,
+                blob.features.mdbListSettings,
+                MdbListSettingsStorage.exportToSyncPayload(),
+            ),
+        )
         MdbListMetadataService.clearCache()
         MdbListSettingsRepository.onProfileChanged()
 
@@ -306,7 +334,7 @@ object ProfileSettingsSync {
         ContinueWatchingPreferencesRepository.onProfileChanged()
 
         TraktSettingsStorage.savePayload(blob.features.traktSettingsPayload)
-        TraktSettingsRepository.onProfileChanged()
+        TrackingSettingsRepository.onProfileChanged()
 
         TraktCommentsStorage.replaceFromSyncPayload(blob.features.traktCommentsSettings)
         TraktCommentsSettings.onProfileChanged()
@@ -331,7 +359,7 @@ object ProfileSettingsSync {
         MetaScreenSettingsRepository.ensureLoaded()
         CollectionMobileSettingsRepository.ensureLoaded()
         ContinueWatchingPreferencesRepository.ensureLoaded()
-        TraktSettingsRepository.ensureLoaded()
+        TrackingSettingsRepository.ensureLoaded()
         TraktCommentsSettings.ensureLoaded()
         EpisodeReleaseNotificationsRepository.ensureLoaded()
         NuvioEnhancedSettingsRepository.ensureLoaded()

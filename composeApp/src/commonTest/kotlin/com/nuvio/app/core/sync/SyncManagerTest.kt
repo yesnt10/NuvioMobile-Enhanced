@@ -14,6 +14,7 @@ class SyncManagerTest {
     fun `source prerequisites finish before source dependent pulls`() = runBlocking {
         val events = mutableListOf<String>()
         var profileSettingsApplied = false
+        var credentialsApplied = false
 
         runOrderedProfileSync(
             profileId = 7,
@@ -27,12 +28,19 @@ class SyncManagerTest {
                     profileSettingsApplied = true
                     events += "settings:end"
                 },
+                syncProviderCredentials = {
+                    assertTrue(profileSettingsApplied)
+                    credentialsApplied = true
+                    events += "credentials"
+                },
                 pullLibrary = {
                     assertTrue(profileSettingsApplied)
+                    assertTrue(credentialsApplied)
                     events += "library"
                 },
                 refreshActiveWatchSource = {
                     assertTrue(profileSettingsApplied)
+                    assertTrue(credentialsApplied)
                     events += "active-watch-source"
                 },
                 pullCollections = { events += "collections" },
@@ -42,6 +50,9 @@ class SyncManagerTest {
         )
 
         val lastPrerequisite = events.indexOf("settings:end")
+        assertTrue(events.indexOf("addons") > lastPrerequisite)
+        assertTrue(events.indexOf("plugins") > lastPrerequisite)
+        assertTrue(events.indexOf("credentials") > lastPrerequisite)
         assertTrue(events.indexOf("library") > lastPrerequisite)
         assertTrue(events.indexOf("active-watch-source") > lastPrerequisite)
         assertEquals(1, events.count { it == "active-watch-source" })
@@ -60,6 +71,7 @@ class SyncManagerTest {
 
         assertTrue("plugins" !in events)
         assertTrue(events.indexOf("settings") < events.indexOf("library"))
+        assertTrue(events.indexOf("credentials") < events.indexOf("library"))
         assertTrue(events.indexOf("settings") < events.indexOf("active-watch-source"))
     }
 
@@ -118,6 +130,59 @@ class SyncManagerTest {
     }
 
     @Test
+    fun `full request replaces activity request for the same profile`() = runBlocking {
+        val gate = ProfileSyncRequestGate()
+        val activityStarted = CompletableDeferred<Unit>()
+        val activityCancelled = CompletableDeferred<Unit>()
+        val fullCompleted = CompletableDeferred<Unit>()
+
+        gate.launch(this, profileId = 1, kind = ProfileSyncRequestKind.Activity) {
+            activityStarted.complete(Unit)
+            try {
+                CompletableDeferred<Unit>().await()
+            } finally {
+                activityCancelled.complete(Unit)
+            }
+        }
+        activityStarted.await()
+
+        val replacement = gate.launch(this, profileId = 1, kind = ProfileSyncRequestKind.Full) {
+            fullCompleted.complete(Unit)
+        }
+
+        assertEquals(ProfileSyncRequestResult.Replaced, replacement)
+        activityCancelled.await()
+        fullCompleted.await()
+        gate.cancel()
+    }
+
+    @Test
+    fun `activity sync runs only requested domains`() = runBlocking {
+        val events = mutableListOf<String>()
+        val operations = ProfileActivitySyncOperations(
+            pullLibrary = { events += "library" },
+            pullWatchActivity = { events += "watch" },
+        )
+
+        val libraryOnly = runActivityProfileSync(
+            profileId = 1,
+            pullLibrary = true,
+            pullWatchActivity = false,
+            operations = operations,
+        )
+        val watchOnly = runActivityProfileSync(
+            profileId = 1,
+            pullLibrary = false,
+            pullWatchActivity = true,
+            operations = operations,
+        )
+
+        assertTrue(libraryOnly.succeeded)
+        assertTrue(watchOnly.succeeded)
+        assertEquals(listOf("library", "watch"), events)
+    }
+
+    @Test
     fun `failed step is reported by ordered sync result`() = runBlocking {
         val result = runOrderedProfileSync(
             profileId = 3,
@@ -132,30 +197,36 @@ class SyncManagerTest {
     }
 
     @Test
-    fun `realtime invalidation queued during active sync runs once afterwards`() = runBlocking {
-        val gate = ProfileSyncRequestGate()
-        val firstStarted = CompletableDeferred<Unit>()
-        val releaseFirst = CompletableDeferred<Unit>()
-        val replayCompleted = CompletableDeferred<Unit>()
-        var runCount = 0
+    fun `failed profile sync does not advance foreground freshness`() {
+        val previous = ProfilePullFreshness(
+            profileId = 3,
+            completedAtEpochMs = 1_000L,
+        )
+        val failed = previous.recordIfSuccessful(
+            profileId = 3,
+            completedAtEpochMs = 2_000L,
+            result = ProfileSyncResult(setOf(ProfileSyncStep.ActiveWatchSource)),
+        )
+        val succeeded = previous.recordIfSuccessful(
+            profileId = 3,
+            completedAtEpochMs = 2_000L,
+            result = ProfileSyncResult(emptySet()),
+        )
 
-        gate.launch(this, profileId = 1) {
-            runCount += 1
-            firstStarted.complete(Unit)
-            releaseFirst.await()
-        }
-        firstStarted.await()
-
-        val queued = gate.launch(this, profileId = 1, queueIfCoalesced = true) {
-            runCount += 1
-            replayCompleted.complete(Unit)
-        }
-
-        assertEquals(ProfileSyncRequestResult.Coalesced, queued)
-        releaseFirst.complete(Unit)
-        replayCompleted.await()
-        assertEquals(2, runCount)
-        gate.cancel()
+        assertEquals(previous, failed)
+        assertEquals(2_000L, succeeded.completedAtEpochMs)
+        assertFalse(
+            ProfilePullFreshness()
+                .recordIfSuccessful(
+                    profileId = 3,
+                    completedAtEpochMs = 2_000L,
+                    result = ProfileSyncResult(setOf(ProfileSyncStep.ActiveWatchSource)),
+                )
+                .isRecent(profileId = 3, nowEpochMs = 2_001L, minIntervalMs = 1_000L),
+        )
+        assertTrue(
+            succeeded.isRecent(profileId = 3, nowEpochMs = 2_001L, minIntervalMs = 1_000L),
+        )
     }
 
     private fun recordingOperations(events: MutableList<String>): ProfileSyncOperations =
@@ -163,6 +234,7 @@ class SyncManagerTest {
             pullAddons = { events += "addons" },
             pullPlugins = { events += "plugins" },
             pullProfileSettings = { events += "settings" },
+            syncProviderCredentials = { events += "credentials" },
             pullLibrary = { events += "library" },
             refreshActiveWatchSource = { events += "active-watch-source" },
             pullCollections = { events += "collections" },

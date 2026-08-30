@@ -275,6 +275,7 @@ actual fun PlatformPlayerSurface(
                     fontFamily = style.toIosMpvSubtitleFont(),
                     fontDirectory = style.customFontDirectory(),
                     subPos = style.toMpvSubtitlePosition(),
+                    stripSdh = style.stripSdh,
                 )
             }
         }
@@ -446,7 +447,7 @@ private fun SubtitleStyleState.toMpvSubtitlePosition(): Int =
     (100 - (bottomOffset / 2)).coerceIn(0, 150)
 
 private fun SubtitleStyleState.toMpvSubtitleFontSize(): Float =
-    (fontSizeSp * 3f).coerceIn(24f, 96f)
+    (fontSizeSp * 3f).coerceIn(18f, 96f)
 
 private fun SubtitleFontFamily.toIosMpvSubtitleFont(): String =
     when (this) {

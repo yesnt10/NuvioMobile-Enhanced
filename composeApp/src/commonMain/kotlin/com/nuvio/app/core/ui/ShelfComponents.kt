@@ -96,7 +96,6 @@ fun <T> NuvioShelfSection(
             NuvioShelfSectionHeader(
                 title = title,
                 modifier = Modifier.padding(horizontal = headerHorizontalPadding),
-                showAccent = showHeaderAccent,
                 onViewAllClick = onViewAllClick,
                 viewAllPillSize = viewAllPillSize,
             )
@@ -255,7 +254,6 @@ fun NuvioPosterCard(
 private fun NuvioShelfSectionHeader(
     title: String,
     modifier: Modifier = Modifier,
-    showAccent: Boolean = true,
     onViewAllClick: (() -> Unit)? = null,
     viewAllPillSize: NuvioViewAllPillSize = NuvioViewAllPillSize.Default,
 ) {
@@ -287,18 +285,6 @@ private fun NuvioShelfSectionHeader(
                 onClick = onViewAllClick,
                 size = viewAllPillSize,
                 modifier = viewAllPlaceholderModifier,
-            )
-        }
-        if (showAccent) {
-            Box(
-                modifier = Modifier
-                    .padding(top = NuvioTokens.Space.s6)
-                    .width(NuvioTokens.Space.s64 - NuvioTokens.Space.s4)
-                    .height(NuvioTokens.Space.s4)
-                    .background(
-                        color = tokens.colors.accent,
-                        shape = tokens.shapes.chip,
-                    ),
             )
         }
     }

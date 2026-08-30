@@ -59,7 +59,6 @@ import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.saveable.rememberSaveable
@@ -467,6 +466,11 @@ fun App() {
             .memoryCachePolicy(CachePolicy.ENABLED)
             .components {
                 add(SvgDecoder.Factory())
+                add(
+                    coil3.network.ktor3.KtorNetworkFetcherFactory(
+                        cacheStrategy = { coil3.network.cachecontrol.CacheControlCacheStrategy() },
+                    ),
+                )
             }
             .configurePlatformImageLoader()
             .build()

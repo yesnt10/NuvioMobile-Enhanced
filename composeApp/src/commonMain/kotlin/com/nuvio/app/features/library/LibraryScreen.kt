@@ -52,6 +52,7 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.LinearProgressIndicator
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -86,6 +87,7 @@ import com.nuvio.app.core.i18n.localizedByteUnit
 import com.nuvio.app.core.network.NetworkCondition
 import com.nuvio.app.core.network.NetworkStatusRepository
 import com.nuvio.app.core.ui.DisintegratingContainer
+import com.nuvio.app.core.ui.DisintegrationRequest
 import com.nuvio.app.core.ui.NuvioDropdownChip
 import com.nuvio.app.core.ui.NuvioDropdownOption
 import com.nuvio.app.core.ui.NuvioScreen
@@ -214,6 +216,7 @@ fun LibraryScreen(
     var releaseRadarDetailsByKey by remember { mutableStateOf<Map<String, MetaDetails>>(emptyMap()) }
     var selectedProviderId by rememberSaveable { mutableStateOf<String?>(null) }
     var selectedTypeName by rememberSaveable { mutableStateOf<String?>(null) }
+    var cloudSearchQuery by rememberSaveable { mutableStateOf("") }
     val selectedType = remember(selectedTypeName) {
         selectedTypeName?.let { runCatching { CloudLibraryItemType.valueOf(it) }.getOrNull() }
     }
@@ -224,11 +227,14 @@ fun LibraryScreen(
     val retryLibraryLoad: () -> Unit = {
         NetworkStatusRepository.requestRefresh(force = true)
         coroutineScope.launch {
-            LibraryRepository.pullFromServer(ProfileRepository.activeProfileId)
+            LibraryRepository.pullFromServer(
+                profileId = ProfileRepository.activeProfileId,
+                refreshIntent = TrackingRefreshIntent.USER_INITIATED,
+            )
         }
     }
 
-    LaunchedEffect(networkStatusUiState.condition, isTraktSource) {
+    LaunchedEffect(networkStatusUiState.condition, isRemoteSource) {
         when (networkStatusUiState.condition) {
             NetworkCondition.NoInternet,
             NetworkCondition.ServersUnreachable,
@@ -239,7 +245,7 @@ fun LibraryScreen(
             NetworkCondition.Online -> {
                 if (!observedOfflineState) return@LaunchedEffect
                 observedOfflineState = false
-                if (isTraktSource) {
+                if (isRemoteSource) {
                     coroutineScope.launch {
                         LibraryRepository.pullFromServer(ProfileRepository.activeProfileId)
                     }
@@ -428,10 +434,12 @@ fun LibraryScreen(
                         NuvioScreenHeader(
                             title = if (sourceMode == LibraryViewMode.Cloud) {
                                 stringResource(Res.string.library_title)
-                            } else if (isTraktSource) {
-                                stringResource(Res.string.library_trakt_title)
                             } else {
-                                stringResource(Res.string.library_title)
+                                when (uiState.sourceMode) {
+                                    LibrarySourceMode.LOCAL -> stringResource(Res.string.library_title)
+                                    LibrarySourceMode.TRAKT -> stringResource(Res.string.library_trakt_title)
+                                    LibrarySourceMode.SIMKL -> stringResource(Res.string.library_simkl_title)
+                                }
                             },
                             modifier = Modifier.padding(horizontal = 16.dp),
                             actions = {
@@ -470,6 +478,11 @@ fun LibraryScreen(
                     selectedProviderId = selectedProviderId,
                     selectedType = selectedType,
                     selectedCloudItemKey = selectedCloudItemKey,
+                    searchQuery = cloudSearchQuery,
+                    onSearchQueryChange = {
+                        cloudSearchQuery = it
+                        selectedCloudItemKey = null
+                    },
                     onProviderSelected = {
                         selectedProviderId = it
                         selectedTypeName = null
@@ -544,10 +557,10 @@ fun LibraryScreen(
                             } else {
                                 HomeEmptyStateCard(
                                     modifier = Modifier.padding(horizontal = 16.dp),
-                                    title = if (isTraktSource) {
-                                        stringResource(Res.string.library_trakt_load_failed)
-                                    } else {
-                                        stringResource(Res.string.library_load_failed)
+                                    title = when (uiState.sourceMode) {
+                                        LibrarySourceMode.LOCAL -> stringResource(Res.string.library_load_failed)
+                                        LibrarySourceMode.TRAKT -> stringResource(Res.string.library_trakt_load_failed)
+                                        LibrarySourceMode.SIMKL -> stringResource(Res.string.library_simkl_load_failed)
                                     },
                                     message = uiState.errorMessage.orEmpty(),
                                     actionLabel = stringResource(Res.string.action_retry),
@@ -559,7 +572,7 @@ fun LibraryScreen(
 
                     uiState.sections.isEmpty() -> {
                         item {
-                            if (networkStatusUiState.isOfflineLike && isTraktSource) {
+                            if (networkStatusUiState.isOfflineLike && isRemoteSource) {
                                 NuvioNetworkOfflineCard(
                                     condition = networkStatusUiState.condition,
                                     modifier = Modifier.padding(horizontal = 16.dp),
@@ -568,15 +581,15 @@ fun LibraryScreen(
                             } else {
                                 HomeEmptyStateCard(
                                     modifier = Modifier.padding(horizontal = 16.dp),
-                                    title = if (isTraktSource) {
-                                        stringResource(Res.string.library_trakt_empty_title)
-                                    } else {
-                                        stringResource(Res.string.library_empty_title)
+                                    title = when (uiState.sourceMode) {
+                                        LibrarySourceMode.LOCAL -> stringResource(Res.string.library_empty_title)
+                                        LibrarySourceMode.TRAKT -> stringResource(Res.string.library_trakt_empty_title)
+                                        LibrarySourceMode.SIMKL -> stringResource(Res.string.library_simkl_empty_title)
                                     },
-                                    message = if (isTraktSource) {
-                                        stringResource(Res.string.library_trakt_empty_message)
-                                    } else {
-                                        stringResource(Res.string.library_empty_message)
+                                    message = when (uiState.sourceMode) {
+                                        LibrarySourceMode.LOCAL -> stringResource(Res.string.library_empty_message)
+                                        LibrarySourceMode.TRAKT -> stringResource(Res.string.library_trakt_empty_message)
+                                        LibrarySourceMode.SIMKL -> stringResource(Res.string.library_simkl_empty_message)
                                     },
                                 )
                             }
@@ -1281,6 +1294,8 @@ private fun LazyListScope.cloudLibraryContent(
     selectedProviderId: String?,
     selectedType: CloudLibraryItemType?,
     selectedCloudItemKey: String?,
+    searchQuery: String,
+    onSearchQueryChange: (String) -> Unit,
     onProviderSelected: (String?) -> Unit,
     onTypeSelected: (CloudLibraryItemType?) -> Unit,
     onItemSelected: (CloudLibraryItem) -> Unit,
@@ -1326,8 +1341,19 @@ private fun LazyListScope.cloudLibraryContent(
                 .distinct()
                 .sortedBy { type -> type.ordinal }
             val effectiveSelectedType = selectedType?.takeIf { type -> type in availableTypes }
-            val filteredItems = providerItems
+            val typeFilteredItems = providerItems
                 .filter { item -> effectiveSelectedType == null || item.type == effectiveSelectedType }
+            // Local filter over the already-loaded library. Matches the item name or any of its
+            // file names, since the useful identifier is often in the filename, not the title.
+            val trimmedQuery = searchQuery.trim()
+            val filteredItems = if (trimmedQuery.isEmpty()) {
+                typeFilteredItems
+            } else {
+                typeFilteredItems.filter { item ->
+                    item.name.contains(trimmedQuery, ignoreCase = true) ||
+                        item.files.any { file -> file.name.contains(trimmedQuery, ignoreCase = true) }
+                }
+            }
             val selectedItem = filteredItems.firstOrNull { it.stableKey == selectedCloudItemKey }
 
             if (selectedItem != null) {
@@ -1349,6 +1375,14 @@ private fun LazyListScope.cloudLibraryContent(
                         onTypeSelected = onTypeSelected,
                         onRefresh = onRefresh,
                         modifier = Modifier.padding(horizontal = 16.dp),
+                    )
+                }
+
+                item(key = "cloud-library-search") {
+                    CloudLibrarySearchField(
+                        query = searchQuery,
+                        onQueryChange = onSearchQueryChange,
+                        modifier = Modifier.padding(horizontal = 16.dp, vertical = 8.dp),
                     )
                 }
 
@@ -1393,6 +1427,38 @@ private fun LazyListScope.cloudLibraryContent(
             }
         }
     }
+}
+
+@Composable
+private fun CloudLibrarySearchField(
+    query: String,
+    onQueryChange: (String) -> Unit,
+    modifier: Modifier = Modifier,
+) {
+    OutlinedTextField(
+        value = query,
+        onValueChange = onQueryChange,
+        modifier = modifier.fillMaxWidth(),
+        singleLine = true,
+        shape = RoundedCornerShape(12.dp),
+        placeholder = { Text(stringResource(Res.string.cloud_library_search_label)) },
+        leadingIcon = {
+            Icon(
+                imageVector = Icons.Rounded.Search,
+                contentDescription = null,
+            )
+        },
+        trailingIcon = {
+            if (query.isNotEmpty()) {
+                IconButton(onClick = { onQueryChange("") }) {
+                    Icon(
+                        imageVector = Icons.Rounded.Close,
+                        contentDescription = stringResource(Res.string.compose_search_clear),
+                    )
+                }
+            }
+        },
+    )
 }
 
 private fun LazyListScope.cloudLibrarySkeletonItems() {
@@ -3318,7 +3384,6 @@ private fun LazyListScope.librarySections(
             entries = section.previewEntries,
             headerHorizontalPadding = 16.dp,
             rowContentPadding = PaddingValues(horizontal = 16.dp),
-            showHeaderAccent = showHeaderAccent,
             onViewAllClick = section.source
                 ?.takeIf { it.items.size > LIBRARY_SECTION_PREVIEW_LIMIT }
                 ?.let { source -> onSectionViewAllClick?.let { { it(source) } } },
@@ -3338,6 +3403,7 @@ private fun LazyListScope.librarySections(
                     isWatched = WatchingState.isPosterWatched(
                         watchedKeys = watchedKeys,
                         item = posterItem,
+                        fullyWatchedSeriesKeys = fullyWatchedSeriesKeys,
                     ),
                     onClick = if (entry.exiting) null else onPosterClick?.let { { it(item) } },
                     onLongClick = if (entry.exiting || entrySource == null) {
@@ -3384,45 +3450,36 @@ private class LibraryExitingEntry(
     val index: Int,
 )
 
-private fun libraryGlobalKey(sectionType: String, item: LibraryItem): String =
-    "$sectionType|${item.type}|${item.id}"
-
 private class LibraryDisintegrationHolder {
-    private val exiting = LinkedHashMap<String, LibraryExitingEntry>()
-    private var previous = LinkedHashMap<String, LibraryExitingEntry>()
-    private var invalidations by mutableStateOf(0)
+    private val tracker = ScopedDisintegrationTracker<LibrarySourceMode, String, LibraryExitingEntry> { entry ->
+        librarySectionItemKey(entry.sectionType, entry.item)
+    }
 
     fun onExited(globalKey: String) {
-        if (exiting.remove(globalKey) != null) invalidations++
+        tracker.onDisintegrated(globalKey)
     }
 
     fun reset() {
-        exiting.clear()
-        previous = LinkedHashMap()
+        tracker.reset()
     }
 
-    fun sync(sections: List<LibrarySection>, previewLimit: Int): List<LibraryDisplaySection> {
-        @Suppress("UNUSED_EXPRESSION")
-        invalidations
-
-        val current = LinkedHashMap<String, LibraryExitingEntry>()
+    fun sync(
+        sourceMode: LibrarySourceMode,
+        sections: List<LibrarySection>,
+        previewLimit: Int,
+        request: DisintegrationRequest<String>?,
+    ): List<LibraryDisplaySection> {
+        val current = ArrayList<LibraryExitingEntry>()
         sections.forEach { section ->
             section.items.take(previewLimit).forEachIndexed { index, item ->
-                val key = libraryGlobalKey(section.type, item)
-                current[key] = LibraryExitingEntry(item, section.type, section.displayTitle, index)
+                current += LibraryExitingEntry(item, section.type, section.displayTitle, index)
             }
         }
-        for ((key, info) in previous) {
-            if (key !in current && key !in exiting) {
-                exiting[key] = info
-            }
-        }
-        for (key in current.keys) {
-            exiting.remove(key)
-        }
-        previous = current
-
-        val exitingBySection = exiting.values.groupBy { it.sectionType }
+        val exitingBySection = tracker.sync(sourceMode, current, request)
+            .asSequence()
+            .filter { entry -> entry.exiting }
+            .map { entry -> entry.item }
+            .groupBy { entry -> entry.sectionType }
         val seenTypes = HashSet<String>(sections.size)
         val result = ArrayList<LibraryDisplaySection>(sections.size + 1)
 
@@ -3431,14 +3488,14 @@ private class LibraryDisintegrationHolder {
             val entries = ArrayList<LibraryDisplayEntry>(previewLimit + 1)
             section.items.take(previewLimit).forEach { item ->
                 entries += LibraryDisplayEntry(
-                    globalKey = libraryGlobalKey(section.type, item),
+                    globalKey = librarySectionItemKey(section.type, item),
                     item = item,
                     section = section,
                     exiting = false,
                 )
             }
             exitingBySection[section.type]?.sortedBy { it.index }?.forEach { ex ->
-                val key = libraryGlobalKey(section.type, ex.item)
+                val key = librarySectionItemKey(section.type, ex.item)
                 if (entries.none { it.globalKey == key }) {
                     entries.add(
                         ex.index.coerceIn(0, entries.size),
@@ -3453,7 +3510,7 @@ private class LibraryDisintegrationHolder {
             if (type in seenTypes) continue
             val sorted = list.sortedBy { it.index }
             val entries = sorted.map { ex ->
-                LibraryDisplayEntry(libraryGlobalKey(type, ex.item), ex.item, section = null, exiting = true)
+                LibraryDisplayEntry(librarySectionItemKey(type, ex.item), ex.item, section = null, exiting = true)
             }
             result += LibraryDisplaySection(null, type, sorted.first().sectionTitle, entries)
         }

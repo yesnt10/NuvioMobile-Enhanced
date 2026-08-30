@@ -50,6 +50,7 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Slider
 import androidx.compose.material3.SliderDefaults
+import androidx.compose.material3.SliderState
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -72,6 +73,7 @@ import com.nuvio.app.core.ui.AppIconResource
 import com.nuvio.app.core.ui.NuvioBackButton
 import com.nuvio.app.core.ui.NuvioLoadingIndicator
 import com.nuvio.app.core.ui.appIconPainter
+import com.nuvio.app.core.ui.gradientMask
 import com.nuvio.app.core.ui.nuvioTypeScale
 import nuvio.composeapp.generated.resources.*
 import org.jetbrains.compose.resources.stringResource
@@ -932,6 +934,33 @@ private fun Modifier.tapToSeekOnTimeline(
                 onSeek((durationMs * targetFraction).roundToLong().coerceIn(0L, durationMs))
             }
         }
+    }
+}
+
+@Composable
+private fun PlayerProgressTrack(sliderState: SliderState) {
+    val palette = ThemeColors.getColorPalette(MaterialTheme.appTheme)
+    val inactiveTrackColors = SliderDefaults.colors(
+        activeTrackColor = Color.Transparent,
+        disabledActiveTrackColor = Color.Transparent,
+    )
+    val activeTrackColors = SliderDefaults.colors(
+        activeTrackColor = Color.White,
+        inactiveTrackColor = Color.Transparent,
+        disabledActiveTrackColor = Color.White,
+        disabledInactiveTrackColor = Color.Transparent,
+    )
+
+    Box {
+        SliderDefaults.Track(
+            sliderState = sliderState,
+            colors = inactiveTrackColors,
+        )
+        SliderDefaults.Track(
+            sliderState = sliderState,
+            modifier = Modifier.gradientMask(palette.accentBrush()),
+            colors = activeTrackColors,
+        )
     }
 }
 

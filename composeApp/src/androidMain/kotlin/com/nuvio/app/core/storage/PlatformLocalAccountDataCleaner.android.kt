@@ -19,6 +19,8 @@ internal actual object PlatformLocalAccountDataCleaner {
         "nuvio_mdblist_settings",
         "nuvio_auth",
         "nuvio_trakt_auth",
+        "nuvio_simkl_auth",
+        "nuvio_simkl_sync",
         "nuvio_trakt_library",
         "nuvio_trakt_settings",
         "nuvio_watched",
@@ -29,9 +31,11 @@ internal actual object PlatformLocalAccountDataCleaner {
         "nuvio_episode_release_notifications",
         "nuvio_episode_release_notifications_platform",
         "nuvio_watch_progress",
+        "nuvio_discover_selection",
         "nuvio_collection_mobile_settings",
         "nuvio_collections",
         "nuvio_plugins",
+        "nuvio_member_access",
     )
 
     private var appContext: Context? = null
@@ -48,5 +52,6 @@ internal actual object PlatformLocalAccountDataCleaner {
                 .clear()
                 .apply()
         }
+        context.filesDir.resolve("nuvio_plugin_scrapers").deleteRecursively()
     }
 }

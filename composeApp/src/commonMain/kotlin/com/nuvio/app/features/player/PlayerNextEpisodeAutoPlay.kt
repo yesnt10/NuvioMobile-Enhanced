@@ -68,7 +68,8 @@ internal fun CoroutineScope.launchPlayerNextEpisodeAutoPlay(
 
     val bingeGroupOnlyManualMode =
         shouldAutoSelectInManualMode &&
-            !settings.streamAutoPlayNextEpisodeEnabled &&
+            (!settings.streamAutoPlayNextEpisodeEnabled ||
+                !settings.streamAutoPlayNextEpisodeFallbackEnabled) &&
             settings.streamAutoPlayPreferBingeGroup
 
     val effectiveMode = if (shouldAutoSelectInManualMode) {

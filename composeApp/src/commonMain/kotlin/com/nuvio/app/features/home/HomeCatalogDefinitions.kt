@@ -130,4 +130,19 @@ private fun buildHomeCatalogDescriptorSignature(
         })
     }
 
+    fun add(value: Boolean) {
+        mix(if (value) 1 else 0)
+    }
+
+    fun add(value: Int?) {
+        mix(value ?: Int.MIN_VALUE)
+    }
+
+    fun value(): String = hash.toULong().toString(16)
+
+    private fun mix(value: Int) {
+        hash = (hash xor value.toLong()) * 1099511628211L
+    }
+}
+
 internal fun String.displayLabel(): String = localizedMediaTypeLabel(this)
