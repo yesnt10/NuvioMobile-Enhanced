@@ -441,6 +441,7 @@ private fun BoxScope.RenderPlaybackOverlays(
         },
         onDismissNextEpisode = {
             nextEpisodeAutoPlayJob?.cancel()
+            nextEpisodeCardDismissed = true
             showNextEpisodeCard = false
             nextEpisodeAutoPlaySearching = false
             nextEpisodeAutoPlaySourceName = null

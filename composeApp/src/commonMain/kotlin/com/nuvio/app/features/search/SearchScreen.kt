@@ -12,19 +12,12 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.layout.width
-import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.foundation.shape.CircleShape
-import androidx.compose.foundation.border
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.lazy.LazyListState
 import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.rounded.Close
-import androidx.compose.material.icons.rounded.DeleteSweep
-import androidx.compose.material.icons.rounded.History
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
@@ -40,17 +33,12 @@ import androidx.compose.runtime.snapshotFlow
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.Alignment
-import androidx.compose.ui.draw.clip
 import androidx.compose.ui.focus.FocusRequester
 import androidx.compose.ui.focus.focusRequester
-import androidx.compose.ui.layout.ContentScale
-import androidx.compose.ui.text.style.TextAlign
-import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
-import coil3.compose.AsyncImage
 import com.nuvio.app.core.network.NetworkCondition
 import com.nuvio.app.core.network.NetworkStatusRepository
 import com.nuvio.app.core.ui.NuvioInputField
@@ -60,15 +48,16 @@ import com.nuvio.app.core.ui.NuvioScreenHeader
 import com.nuvio.app.core.ui.nuvioConsumePointerEvents
 import com.nuvio.app.core.ui.withDuplicateSafeLazyKeys
 import com.nuvio.app.features.addons.AddonRepository
-import com.nuvio.app.features.addons.enabledAddons
-import com.nuvio.app.features.cloudstream.CloudStreamRepository
+import com.nuvio.app.features.addons.firstEnabledManifestError
+import com.nuvio.app.features.addons.hasPendingEnabledManifests
 import com.nuvio.app.features.home.HomeCatalogSettingsRepository
 import com.nuvio.app.features.home.MetaPreview
+import com.nuvio.app.features.home.buildAddonCatalogRefreshSignature
 import com.nuvio.app.features.home.components.HomeCatalogRowSection
 import com.nuvio.app.features.home.components.HomeEmptyStateCard
 import com.nuvio.app.features.home.components.homeSectionHorizontalPaddingForWidth
 import com.nuvio.app.features.home.components.HomeSkeletonRow
-import com.nuvio.app.features.tmdb.TmdbPersonSearchResult
+import com.nuvio.app.features.home.components.posterGridColumnCountForWidth
 import com.nuvio.app.features.watched.WatchedRepository
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.Flow
@@ -77,6 +66,7 @@ import kotlinx.coroutines.flow.emptyFlow
 import kotlinx.coroutines.flow.filter
 import kotlinx.coroutines.flow.map
 import nuvio.composeapp.generated.resources.Res
+import nuvio.composeapp.generated.resources.action_retry
 import nuvio.composeapp.generated.resources.compose_nav_search
 import nuvio.composeapp.generated.resources.compose_search_clear
 import nuvio.composeapp.generated.resources.compose_search_discover_title
@@ -88,7 +78,6 @@ import nuvio.composeapp.generated.resources.compose_search_empty_no_results_mess
 import nuvio.composeapp.generated.resources.compose_search_empty_no_results_title
 import nuvio.composeapp.generated.resources.compose_search_empty_no_search_catalogs_message
 import nuvio.composeapp.generated.resources.compose_search_empty_no_search_catalogs_title
-import nuvio.composeapp.generated.resources.compose_search_people_title
 import nuvio.composeapp.generated.resources.compose_search_placeholder
 import nuvio.composeapp.generated.resources.compose_search_recent_searches
 import nuvio.composeapp.generated.resources.compose_search_remove_recent_search
@@ -100,7 +89,6 @@ fun SearchScreen(
     listState: LazyListState = rememberLazyListState(),
     onPosterClick: ((MetaPreview) -> Unit)? = null,
     onPosterLongClick: ((MetaPreview) -> Unit)? = null,
-    onPersonClick: ((TmdbPersonSearchResult) -> Unit)? = null,
     searchFocusRequestCount: Int = 0,
     scrollToTopRequests: Flow<Unit> = emptyFlow(),
 ) {
@@ -114,13 +102,11 @@ fun SearchScreen(
 
     LaunchedEffect(Unit) {
         AddonRepository.initialize()
-        CloudStreamRepository.initialize()
         WatchedRepository.ensureLoaded()
         SearchHistoryRepository.ensureLoaded()
     }
 
     val addonsUiState by AddonRepository.uiState.collectAsStateWithLifecycle()
-    val cloudStreamUiState by CloudStreamRepository.uiState.collectAsStateWithLifecycle()
     val uiState by SearchRepository.uiState.collectAsStateWithLifecycle()
     val discoverUiState by SearchRepository.discoverUiState.collectAsStateWithLifecycle()
     val homeCatalogSettingsUiState by remember {
@@ -146,27 +132,10 @@ fun SearchScreen(
         }
     }
 
-    val addonRefreshKey = remember(addonsUiState.addons, cloudStreamUiState.registryRevision) {
-        addonsUiState.addons.enabledAddons().mapNotNull { addon ->
-            val manifest = addon.manifest ?: return@mapNotNull null
-            buildString {
-                append(manifest.transportUrl)
-                append(':')
-                append(manifest.catalogs.joinToString(separator = ",") { catalog ->
-                    val extra = catalog.extra.joinToString(separator = "&") { property ->
-                        buildString {
-                            append(property.name)
-                            append(':')
-                            append(property.isRequired)
-                            append(':')
-                            append(property.options.joinToString(separator = "|"))
-                        }
-                    }
-                    "${catalog.type}:${catalog.id}:$extra"
-                })
-            }
-        } + "cloudstream:${cloudStreamUiState.registryRevision}:${cloudStreamUiState.plugins.count { it.isRunnable }}"
+    val addonRefreshKey = remember(addonsUiState.addons) {
+        buildAddonCatalogRefreshSignature(addonsUiState.addons)
     }
+    val addonManifestsLoading = addonsUiState.addons.hasPendingEnabledManifests()
 
     LaunchedEffect(addonRefreshKey, homeCatalogSettingsUiState.hideUnreleasedContent) {
         SearchRepository.refreshDiscover(addonsUiState.addons)
@@ -202,11 +171,11 @@ fun SearchScreen(
             }
     }
 
-    LaunchedEffect(query, lastRequestedQuery, uiState.isLoading, uiState.sections, uiState.people) {
+    LaunchedEffect(query, lastRequestedQuery, uiState.isLoading, uiState.sections) {
         val normalizedQuery = query.trim()
         if (normalizedQuery.isBlank()) return@LaunchedEffect
         if (lastRequestedQuery != normalizedQuery) return@LaunchedEffect
-        if (uiState.isLoading || (uiState.sections.isEmpty() && uiState.people.isEmpty())) return@LaunchedEffect
+        if (uiState.isLoading || uiState.sections.isEmpty()) return@LaunchedEffect
         SearchHistoryRepository.recordSearch(normalizedQuery)
     }
 
@@ -247,7 +216,7 @@ fun SearchScreen(
         modifier = modifier.fillMaxSize(),
     ) {
         val discoverColumns = remember(maxWidth) {
-            discoverColumnCountForWidth(maxWidth)
+            posterGridColumnCountForWidth(maxWidth)
         }
         val homeSectionPadding = remember(maxWidth) {
             homeSectionHorizontalPaddingForWidth(maxWidth.value)
@@ -312,12 +281,12 @@ fun SearchScreen(
                         recentSearches = recentSearches,
                         onSearchPress = { recentQuery -> query = recentQuery },
                         onRemoveSearch = SearchHistoryRepository::removeSearch,
-                        onClearAll = SearchHistoryRepository::clearAll,
                     )
                 }
             }
                 discoverContent(
                     state = discoverUiState,
+                    isSourceLoading = addonManifestsLoading,
                     columns = discoverColumns,
                     networkCondition = networkStatusUiState.condition,
                     onTypeSelected = SearchRepository::selectDiscoverType,
@@ -325,10 +294,14 @@ fun SearchScreen(
                     onGenreSelected = SearchRepository::selectDiscoverGenre,
                     onRetry = {
                         NetworkStatusRepository.requestRefresh(force = true)
-                        SearchRepository.refreshDiscover(
-                            addons = addonsUiState.addons,
-                            forceRefresh = true,
-                        )
+                        if (addonsUiState.addons.firstEnabledManifestError() != null) {
+                            AddonRepository.refreshAll()
+                        } else {
+                            SearchRepository.refreshDiscover(
+                                addons = addonsUiState.addons,
+                                forceRefresh = true,
+                            )
+                        }
                     },
                     watchedKeys = watchedUiState.watchedKeys,
                     fullyWatchedSeriesKeys = fullyWatchedSeriesKeys,
@@ -347,7 +320,7 @@ fun SearchScreen(
                         }
                     }
 
-                    uiState.isLoading && uiState.sections.isEmpty() && uiState.people.isEmpty() -> {
+                    (uiState.isLoading || addonManifestsLoading) && uiState.sections.isEmpty() -> {
                         items(2) {
                             HomeSkeletonRow(
                                 modifier = Modifier.padding(horizontal = homeSectionPadding),
@@ -355,7 +328,7 @@ fun SearchScreen(
                         }
                     }
 
-                    uiState.sections.isEmpty() && uiState.people.isEmpty() -> {
+                    uiState.sections.isEmpty() -> {
                         item {
                             SearchEmptyStateCard(
                                 reason = uiState.emptyStateReason,
@@ -364,11 +337,15 @@ fun SearchScreen(
                                 onRetry = {
                                     if (normalizedQuery.isNotBlank()) {
                                         NetworkStatusRepository.requestRefresh(force = true)
-                                        SearchRepository.search(
-                                            query = normalizedQuery,
-                                            addons = addonsUiState.addons,
-                                            forceRefresh = true,
-                                        )
+                                        if (addonsUiState.addons.firstEnabledManifestError() != null) {
+                                            AddonRepository.refreshAll()
+                                        } else {
+                                            SearchRepository.search(
+                                                query = normalizedQuery,
+                                                addons = addonsUiState.addons,
+                                                forceRefresh = true,
+                                            )
+                                        }
                                     }
                                 },
                                 modifier = Modifier.padding(horizontal = homeSectionPadding),
@@ -391,15 +368,6 @@ fun SearchScreen(
                                 onPosterLongClick = onPosterLongClick,
                             )
                         }
-                        if (uiState.people.isNotEmpty()) {
-                            item(key = "search_people") {
-                                SearchPeopleSection(
-                                    people = uiState.people,
-                                    onPersonClick = onPersonClick,
-                                    modifier = Modifier.padding(bottom = 12.dp),
-                                )
-                            }
-                        }
                         if (uiState.isLoading) {
                             item(key = "search_loading_more") {
                                 HomeSkeletonRow(
@@ -414,142 +382,6 @@ fun SearchScreen(
     }
 }
 
-private fun discoverColumnCountForWidth(screenWidth: Dp): Int =
-    when {
-        screenWidth >= 1400.dp -> 7
-        screenWidth >= 1200.dp -> 6
-        screenWidth >= 1000.dp -> 5
-        screenWidth >= 840.dp -> 4
-        else -> 3
-    }
-
-@Composable
-private fun SearchPeopleSection(
-    people: List<TmdbPersonSearchResult>,
-    onPersonClick: ((TmdbPersonSearchResult) -> Unit)?,
-    modifier: Modifier = Modifier,
-) {
-    Column(
-        modifier = modifier.fillMaxWidth(),
-        verticalArrangement = Arrangement.spacedBy(10.dp),
-    ) {
-        Column(
-            modifier = Modifier.padding(horizontal = 16.dp),
-            verticalArrangement = Arrangement.spacedBy(7.dp),
-        ) {
-            Text(
-                text = stringResource(Res.string.compose_search_people_title),
-                style = MaterialTheme.typography.titleLarge,
-                color = MaterialTheme.colorScheme.onBackground,
-                fontWeight = FontWeight.SemiBold,
-                maxLines = 1,
-                overflow = TextOverflow.Ellipsis,
-            )
-            Box(
-                modifier = Modifier
-                    .width(94.dp)
-                    .height(5.dp)
-                    .background(
-                        color = MaterialTheme.colorScheme.primary,
-                        shape = RoundedCornerShape(999.dp),
-                    ),
-            )
-        }
-        LazyRow(
-            modifier = Modifier.fillMaxWidth(),
-            horizontalArrangement = Arrangement.spacedBy(18.dp),
-            contentPadding = androidx.compose.foundation.layout.PaddingValues(horizontal = 16.dp),
-        ) {
-            items(
-                items = people,
-                key = { person -> person.id },
-            ) { person ->
-                SearchPersonCard(
-                    person = person,
-                    onClick = if (onPersonClick == null) null else {
-                        { onPersonClick(person) }
-                    },
-                )
-            }
-        }
-    }
-}
-
-@Composable
-private fun SearchPersonCard(
-    person: TmdbPersonSearchResult,
-    onClick: (() -> Unit)?,
-    modifier: Modifier = Modifier,
-) {
-    Column(
-            modifier = modifier
-            .width(116.dp)
-            .then(
-                if (onClick != null) {
-                    Modifier.clickable(onClick = onClick)
-                } else {
-                    Modifier
-                },
-            ),
-        horizontalAlignment = Alignment.CenterHorizontally,
-        verticalArrangement = Arrangement.spacedBy(5.dp),
-    ) {
-        Box(
-            modifier = Modifier
-                .size(86.dp)
-                .clip(CircleShape)
-                .background(MaterialTheme.colorScheme.surfaceContainerHigh)
-                .border(
-                    width = 1.dp,
-                    color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.32f),
-                    shape = CircleShape,
-                ),
-            contentAlignment = Alignment.Center,
-        ) {
-            if (!person.photo.isNullOrBlank()) {
-                AsyncImage(
-                    model = person.photo,
-                    contentDescription = person.name,
-                    modifier = Modifier.fillMaxSize(),
-                    contentScale = ContentScale.Crop,
-                )
-            } else {
-                Text(
-                    text = personInitials(person.name),
-                    style = MaterialTheme.typography.titleLarge,
-                    color = MaterialTheme.colorScheme.onSurface,
-                    fontWeight = FontWeight.Bold,
-                    maxLines = 1,
-                )
-            }
-        }
-        Text(
-            text = person.name,
-            style = MaterialTheme.typography.titleSmall,
-            color = MaterialTheme.colorScheme.onBackground,
-            fontWeight = FontWeight.SemiBold,
-            maxLines = 2,
-            overflow = TextOverflow.Ellipsis,
-            textAlign = TextAlign.Center,
-        )
-        Text(
-            text = person.knownForDepartment ?: person.knownFor.firstOrNull() ?: "Acting",
-            style = MaterialTheme.typography.labelMedium,
-            color = MaterialTheme.colorScheme.onSurfaceVariant,
-            maxLines = 1,
-            overflow = TextOverflow.Ellipsis,
-            textAlign = TextAlign.Center,
-        )
-    }
-}
-
-private fun personInitials(name: String): String =
-    name.split(' ')
-        .filter { it.isNotBlank() }
-        .take(2)
-        .joinToString("") { it.take(1).uppercase() }
-        .ifBlank { "?" }
-
 @Composable
 private fun SearchEmptyStateCard(
     reason: SearchEmptyStateReason?,
@@ -558,7 +390,10 @@ private fun SearchEmptyStateCard(
     onRetry: (() -> Unit)? = null,
     modifier: Modifier = Modifier,
 ) {
-    if (networkCondition == NetworkCondition.NoInternet || networkCondition == NetworkCondition.ServersUnreachable) {
+    if (
+        reason == SearchEmptyStateReason.RequestFailed &&
+        (networkCondition == NetworkCondition.NoInternet || networkCondition == NetworkCondition.ServersUnreachable)
+    ) {
         NuvioNetworkOfflineCard(
             condition = networkCondition,
             modifier = modifier,
@@ -596,6 +431,12 @@ private fun SearchEmptyStateCard(
         modifier = modifier,
         title = title,
         message = message,
+        actionLabel = if (reason == SearchEmptyStateReason.RequestFailed) {
+            stringResource(Res.string.action_retry)
+        } else {
+            null
+        },
+        onActionClick = if (reason == SearchEmptyStateReason.RequestFailed) onRetry else null,
     )
 }
 
@@ -604,7 +445,6 @@ private fun SearchRecentSection(
     recentSearches: List<String>,
     onSearchPress: (String) -> Unit,
     onRemoveSearch: (String) -> Unit,
-    onClearAll: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
     Column(
@@ -613,24 +453,11 @@ private fun SearchRecentSection(
             .padding(horizontal = 16.dp, vertical = 4.dp),
         verticalArrangement = Arrangement.spacedBy(4.dp),
     ) {
-        Row(
-            modifier = Modifier.fillMaxWidth(),
-            horizontalArrangement = Arrangement.SpaceBetween,
-            verticalAlignment = Alignment.CenterVertically,
-        ) {
-            Text(
-                text = stringResource(Res.string.compose_search_recent_searches),
-                style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.SemiBold),
-                color = MaterialTheme.colorScheme.onBackground,
-            )
-            IconButton(onClick = onClearAll) {
-                Icon(
-                    imageVector = Icons.Rounded.DeleteSweep,
-                    contentDescription = stringResource(Res.string.compose_search_clear),
-                    tint = MaterialTheme.colorScheme.onSurfaceVariant,
-                )
-            }
-        }
+        Text(
+            text = stringResource(Res.string.compose_search_recent_searches),
+            style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.SemiBold),
+            color = MaterialTheme.colorScheme.onBackground,
+        )
         Spacer(modifier = Modifier.height(4.dp))
         recentSearches.forEach { recentQuery ->
             SearchRecentRow(

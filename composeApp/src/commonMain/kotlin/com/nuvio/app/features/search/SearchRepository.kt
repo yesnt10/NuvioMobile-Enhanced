@@ -6,6 +6,8 @@ import com.nuvio.app.features.addons.AddonCatalog
 import com.nuvio.app.features.addons.AddonExtraProperty
 import com.nuvio.app.features.addons.ManagedAddon
 import com.nuvio.app.features.addons.enabledAddons
+import com.nuvio.app.features.addons.firstEnabledManifestError
+import com.nuvio.app.features.addons.hasPendingEnabledManifests
 import com.nuvio.app.features.catalog.CATALOG_PAGE_SIZE
 import com.nuvio.app.features.catalog.CatalogPage
 import com.nuvio.app.features.catalog.CatalogTarget
@@ -14,37 +16,22 @@ import com.nuvio.app.features.catalog.fetchCatalogPage
 import com.nuvio.app.features.catalog.mergeCatalogItems
 import com.nuvio.app.features.catalog.nextCatalogPaginationState
 import com.nuvio.app.features.catalog.supportsPagination
-import com.nuvio.app.features.cloudstream.CloudStreamPluginItem
-import com.nuvio.app.features.cloudstream.CloudStreamRepository
-import com.nuvio.app.features.cloudstream.CloudStreamSearchRouteIndex
-import com.nuvio.app.features.cloudstream.toMetaPreview
 import com.nuvio.app.features.home.HomeCatalogSettingsRepository
 import com.nuvio.app.features.home.HomeCatalogSection
 import com.nuvio.app.features.home.MetaPreview
 import com.nuvio.app.features.home.filterReleasedItems
-import com.nuvio.app.features.tmdb.TmdbService
-import com.nuvio.app.features.tmdb.TmdbSettingsRepository
 import com.nuvio.app.features.watchprogress.CurrentDateProvider
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.SupervisorJob
-import kotlinx.coroutines.async
-import kotlinx.coroutines.awaitAll
 import kotlinx.coroutines.channels.Channel
-import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
-import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.joinAll
 import kotlinx.coroutines.launch
-import kotlinx.coroutines.sync.Mutex
-import kotlinx.coroutines.sync.Semaphore
-import kotlinx.coroutines.sync.withLock
-import kotlinx.coroutines.sync.withPermit
-import kotlinx.coroutines.withTimeoutOrNull
 import nuvio.composeapp.generated.resources.*
 import org.jetbrains.compose.resources.getString
 
@@ -66,6 +53,7 @@ internal fun resolveDiscoverCatalog(
 private data class DiscoverRequestKey(
     val sources: List<DiscoverCatalogOption>,
     val hideUnreleasedContent: Boolean,
+    val hasPendingAddonManifests: Boolean,
 )
 
 object SearchRepository {
@@ -93,17 +81,22 @@ object SearchRepository {
             return
         }
 
-        CloudStreamRepository.initialize()
-        val cloudPlugins = if (normalizedQuery.length >= CLOUDSTREAM_SEARCH_MIN_QUERY_LENGTH) {
-            CloudStreamRepository.uiState.value.plugins.filter(CloudStreamPluginItem::isRunnable)
-        } else {
-            emptyList()
-        }
-        val activeAddons = addons.enabledAddons().filter { it.manifest != null }
-        if (activeAddons.isEmpty() && cloudPlugins.isEmpty()) {
+        val enabledAddons = addons.enabledAddons()
+        val hasPendingAddonManifests = enabledAddons.hasPendingEnabledManifests()
+        val addonManifestErrorMessage = enabledAddons.firstEnabledManifestError()
+        val activeAddons = enabledAddons.filter { it.manifest != null }
+        if (activeAddons.isEmpty()) {
             activeJob?.cancel()
             lastRequestKey = null
-            searchTmdbOnly(normalizedQuery, SearchEmptyStateReason.NoActiveAddons)
+            _uiState.value = SearchUiState(
+                isLoading = hasPendingAddonManifests,
+                emptyStateReason = when {
+                    hasPendingAddonManifests -> null
+                    addonManifestErrorMessage != null -> SearchEmptyStateReason.RequestFailed
+                    else -> SearchEmptyStateReason.NoActiveAddons
+                },
+                errorMessage = addonManifestErrorMessage,
+            )
             return
         }
 
@@ -111,10 +104,13 @@ object SearchRepository {
             addons = activeAddons,
             query = normalizedQuery,
         )
-        if (requests.isEmpty() && cloudPlugins.isEmpty()) {
+        if (requests.isEmpty()) {
             activeJob?.cancel()
             lastRequestKey = null
-            searchTmdbOnly(normalizedQuery, SearchEmptyStateReason.NoSearchCatalogs)
+            _uiState.value = SearchUiState(
+                isLoading = hasPendingAddonManifests,
+                emptyStateReason = if (hasPendingAddonManifests) null else SearchEmptyStateReason.NoSearchCatalogs,
+            )
             return
         }
 
@@ -123,9 +119,7 @@ object SearchRepository {
             append('|')
             append(HomeCatalogSettingsRepository.snapshot().hideUnreleasedContent)
             append('|')
-            append(CloudStreamRepository.uiState.value.registryRevision)
-            append('|')
-            append(cloudPlugins.joinToString(separator = ",") { it.metadata.id.value })
+            append(hasPendingAddonManifests)
             append('|')
             append(
                 requests.joinToString(separator = "|") { request ->
@@ -140,7 +134,6 @@ object SearchRepository {
         _uiState.value = SearchUiState(isLoading = true)
 
         activeJob = scope.launch {
-            val peopleDeferred = async { tmdbPeopleSearch(normalizedQuery) }
             val resultChannel = Channel<IndexedSearchResult>(Channel.UNLIMITED)
             val jobs = requests.mapIndexed { index, request ->
                 launch {
@@ -190,114 +183,19 @@ object SearchRepository {
 
             val completedResults = results.filterNotNull()
             val sections = results.orderedSections()
-            val cloudSections = cloudSearchSections(normalizedQuery, cloudPlugins) { section ->
-                _uiState.update { current ->
-                    current.copy(
-                        isLoading = true,
-                        sections = (current.sections + section).distinctBy(HomeCatalogSection::key),
-                    )
-                }
-            }
             val firstFailure = completedResults.firstNotNullOfOrNull { it.error?.message }
             val allFailed = completedResults.isNotEmpty() && completedResults.all { it.error != null }
-            val providerSections = sections + cloudSections
-            val fallbackSections = if (providerSections.isEmpty() || (allFailed && cloudSections.isEmpty())) {
-                tmdbSearchSection(normalizedQuery)?.let(::listOf).orEmpty()
-            } else {
-                emptyList()
-            }
-            val finalSections = providerSections + fallbackSections
-            val people = peopleDeferred.await()
 
             _uiState.value = SearchUiState(
-                isLoading = false,
-                sections = finalSections,
-                people = people,
+                isLoading = sections.isEmpty() && hasPendingAddonManifests,
+                sections = sections,
                 emptyStateReason = when {
-                    finalSections.isNotEmpty() || people.isNotEmpty() -> null
+                    sections.isNotEmpty() -> null
+                    hasPendingAddonManifests -> null
                     allFailed -> SearchEmptyStateReason.RequestFailed
                     else -> SearchEmptyStateReason.NoResults
                 },
                 errorMessage = if (allFailed) firstFailure else null,
-            )
-        }
-    }
-
-    private suspend fun cloudSearchSections(
-        query: String,
-        plugins: List<CloudStreamPluginItem>,
-        onSection: (HomeCatalogSection) -> Unit,
-    ): List<HomeCatalogSection> = coroutineScope {
-        val semaphore = Semaphore(CLOUDSTREAM_SEARCH_CONCURRENCY)
-        val sectionMutex = Mutex()
-        val sectionsByProviderId = mutableMapOf<String, HomeCatalogSection>()
-
-        plugins.map { plugin ->
-            async {
-                val section = semaphore.withPermit {
-                    withTimeoutOrNull(CLOUDSTREAM_SEARCH_PROVIDER_TIMEOUT_MS) {
-                        plugin.toCloudSearchSection(query)
-                    }
-                } ?: return@async
-
-                sectionMutex.withLock {
-                    sectionsByProviderId[plugin.metadata.id.value] = section
-                }
-                onSection(section)
-            }
-        }.awaitAll()
-
-        // Preserve repository order in the stable/final state even though sections are
-        // displayed progressively in network completion order while the search runs.
-        plugins.mapNotNull { plugin -> sectionsByProviderId[plugin.metadata.id.value] }
-    }
-
-    private suspend fun CloudStreamPluginItem.toCloudSearchSection(
-        query: String,
-    ): HomeCatalogSection? {
-        val result = CloudStreamRepository.search(query, metadata.id.value)
-            .firstOrNull()
-            ?.getOrNull()
-            .orEmpty()
-        if (result.isEmpty()) return null
-        CloudStreamSearchRouteIndex.remember(
-            providerId = metadata.id.value,
-            query = query,
-            items = result,
-        )
-        val previews = result.map { it.toMetaPreview() }
-        val contentType = result.first().type.nuvioType
-        return HomeCatalogSection(
-            key = "cloudstream:${metadata.id.storageKey}:search:${query.lowercase()}",
-            title = "${metadata.name} · CloudStream",
-            subtitle = metadata.language?.uppercase() ?: "CloudStream",
-            addonName = metadata.name,
-            target = CatalogTarget.CloudStream(
-                providerId = metadata.id.value,
-                categoryName = "search",
-                searchQuery = query,
-                contentType = contentType,
-                supportsPagination = false,
-            ),
-            items = previews,
-            availableItemCount = previews.size,
-            hasMore = false,
-        )
-    }
-
-    private fun searchTmdbOnly(query: String, fallbackReason: SearchEmptyStateReason) {
-        activeJob?.cancel()
-        _uiState.value = SearchUiState(isLoading = true)
-        activeJob = scope.launch {
-            val sectionDeferred = async { tmdbSearchSection(query) }
-            val peopleDeferred = async { tmdbPeopleSearch(query) }
-            val section = sectionDeferred.await()
-            val people = peopleDeferred.await()
-            _uiState.value = SearchUiState(
-                isLoading = false,
-                sections = section?.let(::listOf).orEmpty(),
-                people = people,
-                emptyStateReason = if (section != null || people.isNotEmpty()) null else fallbackReason,
             )
         }
     }
@@ -322,14 +220,23 @@ object SearchRepository {
         addons: List<ManagedAddon>,
         forceRefresh: Boolean = false,
     ) {
-        val activeAddons = addons.enabledAddons().filter { it.manifest != null }
+        val enabledAddons = addons.enabledAddons()
+        val hasPendingAddonManifests = enabledAddons.hasPendingEnabledManifests()
+        val addonManifestErrorMessage = enabledAddons.firstEnabledManifestError()
+        val activeAddons = enabledAddons.filter { it.manifest != null }
         if (activeAddons.isEmpty()) {
             activeDiscoverJob?.cancel()
             discoverSources = emptyList()
             lastDiscoverRequestKey = null
             log.d { "Discover refresh aborted: no active addons" }
             _discoverUiState.value = DiscoverUiState(
-                emptyStateReason = DiscoverEmptyStateReason.NoActiveAddons,
+                isLoading = hasPendingAddonManifests,
+                emptyStateReason = when {
+                    hasPendingAddonManifests -> null
+                    addonManifestErrorMessage != null -> DiscoverEmptyStateReason.RequestFailed
+                    else -> DiscoverEmptyStateReason.NoActiveAddons
+                },
+                errorMessage = addonManifestErrorMessage,
             )
             return
         }
@@ -340,6 +247,7 @@ object SearchRepository {
         val requestKey = DiscoverRequestKey(
             sources = sources,
             hideUnreleasedContent = hideUnreleasedContent,
+            hasPendingAddonManifests = hasPendingAddonManifests,
         )
         if (canReuseRequestState(forceRefresh, requestKey, lastDiscoverRequestKey)) {
             log.d {
@@ -355,7 +263,8 @@ object SearchRepository {
             activeDiscoverJob?.cancel()
             log.d { "Discover refresh found no compatible discover catalogs" }
             _discoverUiState.value = DiscoverUiState(
-                emptyStateReason = DiscoverEmptyStateReason.NoDiscoverCatalogs,
+                isLoading = hasPendingAddonManifests,
+                emptyStateReason = if (hasPendingAddonManifests) null else DiscoverEmptyStateReason.NoDiscoverCatalogs,
             )
             return
         }
@@ -563,34 +472,10 @@ object SearchRepository {
         )
     }
 
-    private suspend fun tmdbSearchSection(query: String): HomeCatalogSection? {
-        val settings = TmdbSettingsRepository.snapshot()
-        if (!settings.enabled || settings.apiKey.isBlank()) return null
-        val items = TmdbService.search(query)
-        if (items.isEmpty()) return null
-        return HomeCatalogSection(
-            key = "tmdb:search:${query.lowercase()}",
-            title = getString(Res.string.search_tmdb_fallback_title),
-            subtitle = getString(Res.string.search_tmdb_fallback_subtitle),
-            addonName = "TMDB",
-            target = CatalogTarget.Library(
-                contentType = "movie",
-                sectionType = "tmdb_search",
-            ),
-            items = items,
-            availableItemCount = items.size,
-            hasMore = false,
-        )
-    }
-
-    private suspend fun tmdbPeopleSearch(query: String) =
-        if (TmdbSettingsRepository.snapshot().enabled) {
-            TmdbService.searchPeople(query)
-        } else {
-            emptyList()
-        }
-
-    private fun loadDiscoverFeed(reset: Boolean) {
+    private fun loadDiscoverFeed(
+        reset: Boolean,
+        forceRefresh: Boolean,
+    ) {
         activeDiscoverJob?.cancel()
         val current = _discoverUiState.value
         val selectedCatalog = current.selectedCatalog ?: return
@@ -766,7 +651,3 @@ private fun String.typeSortKey(): String =
         "anime" -> "2_anime"
         else -> "9_$this"
     }
-
-private const val CLOUDSTREAM_SEARCH_MIN_QUERY_LENGTH = 3
-private const val CLOUDSTREAM_SEARCH_CONCURRENCY = 8
-private const val CLOUDSTREAM_SEARCH_PROVIDER_TIMEOUT_MS = 15_000L

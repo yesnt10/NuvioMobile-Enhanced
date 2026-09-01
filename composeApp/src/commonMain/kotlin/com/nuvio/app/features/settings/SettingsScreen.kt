@@ -62,10 +62,14 @@ import com.nuvio.app.core.ui.PosterCardStyleRepository
 import com.nuvio.app.core.ui.PosterCardStyleUiState
 import com.nuvio.app.features.collection.CollectionRepository
 import com.nuvio.app.features.addons.enabledAddons
+import com.nuvio.app.features.addons.firstEnabledManifestError
+import com.nuvio.app.features.addons.hasPendingEnabledManifests
+import com.nuvio.app.features.addons.isWaitingForFirstEnabledManifest
 import com.nuvio.app.features.debrid.DebridSettings
 import com.nuvio.app.features.debrid.DebridSettingsRepository
 import com.nuvio.app.features.home.HomeCatalogSettingsItem
 import com.nuvio.app.features.home.HomeCatalogSettingsRepository
+import com.nuvio.app.features.home.buildAddonCatalogRefreshSignature
 import com.nuvio.app.features.mdblist.MdbListSettings
 import com.nuvio.app.features.mdblist.MdbListSettingsRepository
 import com.nuvio.app.features.notifications.EpisodeReleaseNotificationsRepository
@@ -191,21 +195,10 @@ fun SettingsScreen(
             AddonRepository.uiState
         }.collectAsStateWithLifecycle()
         val homescreenCatalogRefreshKey = remember(addonsUiState.addons) {
-            val enabledAddons = addonsUiState.addons.enabledAddons()
-            val allManifestsSettled = enabledAddons.isNotEmpty() &&
-                enabledAddons.none { it.isRefreshing }
-            if (!allManifestsSettled) return@remember emptyList<String>()
-            enabledAddons.mapNotNull { addon ->
-                val manifest = addon.manifest ?: return@mapNotNull null
-                buildString {
-                    append(manifest.transportUrl)
-                    append(':')
-                    append(manifest.catalogs.joinToString(separator = ",") { catalog ->
-                        "${catalog.type}:${catalog.id}:${catalog.extra.count { it.isRequired }}"
-                    })
-                }
-            }
+            buildAddonCatalogRefreshSignature(addonsUiState.addons)
         }
+        val addonManifestsLoading = addonsUiState.addons.hasPendingEnabledManifests()
+        val addonManifestErrorMessage = addonsUiState.addons.firstEnabledManifestError()
         val homescreenSettingsUiState by remember {
             HomeCatalogSettingsRepository.snapshot()
             HomeCatalogSettingsRepository.uiState
@@ -232,8 +225,10 @@ fun SettingsScreen(
         }.collectAsStateWithLifecycle()
 
         LaunchedEffect(homescreenCatalogRefreshKey) {
-            if (homescreenCatalogRefreshKey.isEmpty()) return@LaunchedEffect
-            HomeCatalogSettingsRepository.syncCatalogs(addonsUiState.addons.enabledAddons())
+            val enabledAddons = addonsUiState.addons.enabledAddons()
+            if (!enabledAddons.isWaitingForFirstEnabledManifest()) {
+                HomeCatalogSettingsRepository.syncCatalogs(enabledAddons)
+            }
         }
 
         LaunchedEffect(Unit) {
@@ -340,6 +335,8 @@ fun SettingsScreen(
                 homescreenShowCatalogType = homescreenSettingsUiState.showCatalogType,
                 homescreenHideUnreleasedContent = homescreenSettingsUiState.hideUnreleasedContent,
                 homescreenItems = homescreenSettingsUiState.items,
+                homescreenCatalogLoading = addonManifestsLoading,
+                homescreenCatalogErrorMessage = addonManifestErrorMessage,
                 metaScreenSettingsUiState = metaScreenSettingsUiState,
                 continueWatchingPreferencesUiState = continueWatchingPreferencesUiState,
                 posterCardStyleUiState = posterCardStyleUiState,
@@ -406,6 +403,8 @@ fun SettingsScreen(
                 homescreenShowCatalogType = homescreenSettingsUiState.showCatalogType,
                 homescreenHideUnreleasedContent = homescreenSettingsUiState.hideUnreleasedContent,
                 homescreenItems = homescreenSettingsUiState.items,
+                homescreenCatalogLoading = addonManifestsLoading,
+                homescreenCatalogErrorMessage = addonManifestErrorMessage,
                 metaScreenSettingsUiState = metaScreenSettingsUiState,
                 continueWatchingPreferencesUiState = continueWatchingPreferencesUiState,
                 posterCardStyleUiState = posterCardStyleUiState,
@@ -483,6 +482,8 @@ private fun MobileSettingsScreen(
     homescreenShowCatalogType: Boolean,
     homescreenHideUnreleasedContent: Boolean,
     homescreenItems: List<HomeCatalogSettingsItem>,
+    homescreenCatalogLoading: Boolean,
+    homescreenCatalogErrorMessage: String?,
     metaScreenSettingsUiState: MetaScreenSettingsUiState,
     continueWatchingPreferencesUiState: ContinueWatchingPreferencesUiState,
     posterCardStyleUiState: PosterCardStyleUiState,
@@ -749,6 +750,8 @@ private fun MobileSettingsScreen(
                     showCatalogType = homescreenShowCatalogType,
                     hideUnreleasedContent = homescreenHideUnreleasedContent,
                     items = homescreenItems,
+                    isCatalogLoading = homescreenCatalogLoading,
+                    catalogErrorMessage = homescreenCatalogErrorMessage,
                 )
                 SettingsPage.MetaScreen -> metaScreenSettingsContent(
                     isTablet = false,
@@ -884,6 +887,8 @@ private fun TabletSettingsScreen(
     homescreenShowCatalogType: Boolean,
     homescreenHideUnreleasedContent: Boolean,
     homescreenItems: List<HomeCatalogSettingsItem>,
+    homescreenCatalogLoading: Boolean,
+    homescreenCatalogErrorMessage: String?,
     metaScreenSettingsUiState: MetaScreenSettingsUiState,
     continueWatchingPreferencesUiState: ContinueWatchingPreferencesUiState,
     posterCardStyleUiState: PosterCardStyleUiState,
@@ -1198,6 +1203,8 @@ private fun TabletSettingsScreen(
                         showCatalogType = homescreenShowCatalogType,
                         hideUnreleasedContent = homescreenHideUnreleasedContent,
                         items = homescreenItems,
+                        isCatalogLoading = homescreenCatalogLoading,
+                        catalogErrorMessage = homescreenCatalogErrorMessage,
                     )
                     SettingsPage.MetaScreen -> metaScreenSettingsContent(
                         isTablet = true,

@@ -1638,7 +1638,7 @@ private class NuvioLibmpvView(
                 hasActiveSubtitle: Boolean,
                 useCustomSubtitles: Boolean,
             ) {
-                if (hasActiveSubtitle || useCustomSubtitles) {
+                if ((hasActiveSubtitle || useCustomSubtitles) && autoSelectionApplied) {
                     return
                 }
                 val languages = listOfNotNull(
@@ -2103,7 +2103,7 @@ private fun ExoPlayer.applySubtitleTrackPreferences(
     hasActiveSubtitle: Boolean,
     useCustomSubtitles: Boolean,
 ) {
-    if (hasActiveSubtitle || useCustomSubtitles) {
+    if ((hasActiveSubtitle || useCustomSubtitles) && autoSelectionApplied) {
         return
     }
 

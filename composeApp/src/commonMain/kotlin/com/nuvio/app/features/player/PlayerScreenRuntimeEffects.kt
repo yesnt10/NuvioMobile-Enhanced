@@ -3,7 +3,10 @@ package com.nuvio.app.features.player
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
-import com.nuvio.app.core.ui.AppSystemUiController
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import com.nuvio.app.features.details.MetaDetailsRepository
 import com.nuvio.app.features.p2p.P2pSettingsRepository
 import com.nuvio.app.features.p2p.P2pStreamRequest
@@ -33,10 +36,6 @@ internal fun PlayerScreenRuntime.BindPlayerRuntimeEffects() {
         if (currentFeedback != null) {
             renderedGestureFeedback = currentFeedback
         }
-    }
-
-    LaunchedEffect(playerController, playerSettingsUiState.volumeBoostPercent) {
-        playerController?.setVolumeBoost(playerSettingsUiState.volumeBoostPercent / 100f)
     }
 
     LaunchedEffect(parentMetaType, parentMetaId) {
@@ -75,8 +74,6 @@ internal fun PlayerScreenRuntime.BindPlayerRuntimeEffects() {
         credentialRefreshAttemptedSourceUrl = null
         initialLoadCompleted = false
         lastProgressPersistEpochMs = 0L
-        lastProgressRemoteSyncEpochMs = 0L
-        lastProgressRemoteSyncPositionMs = 0L
         previousIsPlaying = false
         pendingSeekScrobbleRestart = false
         seekProgressSyncJob?.cancel()
@@ -85,68 +82,19 @@ internal fun PlayerScreenRuntime.BindPlayerRuntimeEffects() {
         accumulatedSeekResetJob = null
         accumulatedSeekState = null
         speedBoostRestoreSpeed = null
-        trackPreferenceRestoreApplied = false
         preferredAudioSelectionApplied = false
         preferredSubtitleSelectionApplied = false
         isUserExplicitSubtitleSelection = false
         hasScannedTextTracksOnce = false
+        selectedSubtitleIndex = -1
+        selectedAddonSubtitleId = null
+        useCustomSubtitles = false
         showSourcesPanel = false
         showEpisodesPanel = false
-        showQualityPanel = false
-        showLiveTvChannelsPanel = false
         episodeStreamsPanelState = EpisodeStreamsPanelState()
-        preloadedNextEpisodeVideoId = null
         PlayerStreamsRepository.clearEpisodeStreams()
         SubtitleRepository.clear()
         WatchProgressRepository.ensureLoaded()
-    }
-
-    LaunchedEffect(activeSourceUrl, activeSourceAudioUrl, activeSourceHeaders, activeStreamType, activeTorrentInfoHash) {
-        val resolvingSourceUrl = activeSourceUrl
-        val resolvingAudioUrl = activeSourceAudioUrl
-        val resolvingHeaders = activeSourceHeaders
-        val resolvingStreamType = activeStreamType
-        val resolvingTorrentInfoHash = activeTorrentInfoHash
-        val shouldInspectHls = resolvingTorrentInfoHash == null &&
-            resolvingAudioUrl == null &&
-            (resolvingStreamType.equals("hls", ignoreCase = true) || resolvingSourceUrl.contains(".m3u8", ignoreCase = true))
-
-        selectedPlayerQualityId = null
-        showQualityPanel = false
-        activePlaybackSourceUrl = if (shouldInspectHls) null else resolvingSourceUrl
-        playerQualityState = PlayerQualitySelectionState(
-            isLoading = shouldInspectHls,
-            sourceUrl = resolvingSourceUrl,
-        )
-
-        if (!shouldInspectHls) {
-            return@LaunchedEffect
-        }
-
-        val resolved = runCatching {
-            PlayerQualityResolver.resolve(
-                sourceUrl = resolvingSourceUrl,
-                requestHeaders = resolvingHeaders,
-                forceHls = resolvingStreamType.equals("hls", ignoreCase = true),
-            )
-        }.getOrElse { error ->
-            PlayerQualitySelectionState(
-                sourceUrl = resolvingSourceUrl,
-                errorMessage = error.message ?: "Unable to inspect HLS quality variants.",
-            )
-        }
-
-        if (
-            activeSourceUrl != resolvingSourceUrl ||
-            activeSourceAudioUrl != resolvingAudioUrl ||
-            activeStreamType != resolvingStreamType ||
-            activeTorrentInfoHash != resolvingTorrentInfoHash
-        ) {
-            return@LaunchedEffect
-        }
-
-        playerQualityState = resolved
-        activePlaybackSourceUrl = resolved.playbackUrlFor(null) ?: resolvingSourceUrl
     }
 
     LaunchedEffect(
@@ -274,8 +222,6 @@ internal fun PlayerScreenRuntime.BindPlayerRuntimeEffects() {
         playerController,
         playerControllerSourceUrl,
         activeSourceUrl,
-        activePlaybackSourceUrl,
-        p2pResolvedSourceUrl,
         title,
         activeStreamTitle,
         activeSeasonNumber,
@@ -285,7 +231,7 @@ internal fun PlayerScreenRuntime.BindPlayerRuntimeEffects() {
         background,
     ) {
         val controller = playerController ?: return@LaunchedEffect
-        if (playerControllerSourceUrl != currentPlaybackSurfaceSourceUrl) return@LaunchedEffect
+        if (playerControllerSourceUrl != activeSourceUrl) return@LaunchedEffect
         controller.updateNowPlayingMetadata(buildNowPlayingInfo())
     }
 
@@ -334,8 +280,6 @@ internal fun PlayerScreenRuntime.BindPlayerRuntimeEffects() {
     LaunchedEffect(
         playerController,
         playerControllerSourceUrl,
-        activePlaybackSourceUrl,
-        p2pResolvedSourceUrl,
         playbackSnapshot.isLoading,
         playbackSnapshot.durationMs,
         activeInitialPositionMs,
@@ -343,7 +287,7 @@ internal fun PlayerScreenRuntime.BindPlayerRuntimeEffects() {
         initialSeekApplied,
     ) {
         val controller = playerController ?: return@LaunchedEffect
-        if (playerControllerSourceUrl != currentPlaybackSurfaceSourceUrl) return@LaunchedEffect
+        if (playerControllerSourceUrl != activeSourceUrl) return@LaunchedEffect
         if (initialSeekApplied || playbackSnapshot.isLoading) return@LaunchedEffect
 
         val progressFraction = activeInitialProgressFraction
@@ -395,47 +339,6 @@ internal fun PlayerScreenRuntime.BindPlayerRuntimeEffects() {
 
 @Composable
 private fun PlayerScreenRuntime.BindPlayerUiVisibilityEffects() {
-    val statusBarVisiblePreference = nuvioEnhancedSettingsUiState.statusBarVisible
-    DisposableEffect(statusBarVisiblePreference) {
-        onDispose {
-            AppSystemUiController.setStatusBarVisible(statusBarVisiblePreference)
-        }
-    }
-
-    LaunchedEffect(
-        statusBarVisiblePreference,
-        controlsVisible,
-        playerControlsLocked,
-        playbackSnapshot.isPlaying,
-        playbackSnapshot.isLoading,
-        showParentalGuide,
-        errorMessage,
-    ) {
-        if (!statusBarVisiblePreference) {
-            AppSystemUiController.setStatusBarVisible(false)
-            return@LaunchedEffect
-        }
-
-        val isActivelyWatching = playbackSnapshot.isPlaying &&
-            !playbackSnapshot.isLoading &&
-            errorMessage == null &&
-            !showParentalGuide
-
-        if (!isActivelyWatching) {
-            AppSystemUiController.setStatusBarVisible(true)
-            return@LaunchedEffect
-        }
-
-        if (!controlsVisible || playerControlsLocked) {
-            AppSystemUiController.setStatusBarVisible(false)
-            return@LaunchedEffect
-        }
-
-        AppSystemUiController.setStatusBarVisible(true)
-        delay(2_000)
-        AppSystemUiController.setStatusBarVisible(false)
-    }
-
     LaunchedEffect(
         controlsVisible,
         isScrubbingTimeline,
@@ -508,7 +411,6 @@ private fun PlayerScreenRuntime.BindPlayerUiVisibilityEffects() {
         }
         if (playbackSnapshot.isPlaying) {
             persistPlaybackProgressTick()
-            syncPlaybackProgressTick()
         }
     }
 }
@@ -541,6 +443,7 @@ private fun PlayerScreenRuntime.BindPlayerMetadataAndSkipEffects() {
         activeSkipInterval = null
         skipIntervalDismissed = false
         showNextEpisodeCard = false
+        nextEpisodeCardDismissed = false
         nextEpisodeAutoPlayJob?.cancel()
         nextEpisodeAutoPlaySearching = false
 
@@ -550,14 +453,15 @@ private fun PlayerScreenRuntime.BindPlayerMetadataAndSkipEffects() {
         if (season == null || episode == null || vid == null) return@LaunchedEffect
 
         launch {
+            val imdbFromContent = parentMetaId.takeIf { it.startsWith("tt") }
             val intervals = when {
                 vid.startsWith("mal:") -> {
                     val malId = vid.removePrefix("mal:").substringBefore(':')
-                    SkipIntroRepository.getSkipIntervalsForMal(malId = malId, episode = episode)
+                    SkipIntroRepository.getSkipIntervalsForMal(malId = malId, episode = episode, imdbId = imdbFromContent, imdbSeason = season, imdbEpisode = episode)
                 }
                 vid.startsWith("kitsu:") -> {
                     val kitsuId = vid.removePrefix("kitsu:").substringBefore(':')
-                    SkipIntroRepository.getSkipIntervalsForKitsu(kitsuId = kitsuId, episode = episode)
+                    SkipIntroRepository.getSkipIntervalsForKitsu(kitsuId = kitsuId, episode = episode, imdbId = imdbFromContent, imdbSeason = season, imdbEpisode = episode)
                 }
                 else -> SkipIntroRepository.getSkipIntervals(
                     imdbId = vid.substringBefore(':').takeIf { it.startsWith("tt") },
@@ -601,8 +505,6 @@ private fun PlayerScreenRuntime.BindPlayerMetadataAndSkipEffects() {
             videos = playerMetaVideos,
             currentSeason = curSeason,
             currentEpisode = curEpisode,
-            randomMode = randomEpisodeMode,
-            randomHistoryKey = parentMetaId,
         )
         val nextSeason = nextVideo?.season
         val nextEpisode = nextVideo?.episode
@@ -649,6 +551,7 @@ private fun PlayerScreenRuntime.BindPlayerMetadataAndSkipEffects() {
         playerSettingsUiState.nextEpisodeThresholdMode,
         playerSettingsUiState.nextEpisodeThresholdPercent,
         playerSettingsUiState.nextEpisodeThresholdMinutesBeforeEnd,
+        nextEpisodeCardDismissed,
     ) {
         if (nextEpisodeInfo == null || playbackSnapshot.durationMs <= 0L) {
             showNextEpisodeCard = false
@@ -662,8 +565,7 @@ private fun PlayerScreenRuntime.BindPlayerMetadataAndSkipEffects() {
             thresholdPercent = playerSettingsUiState.nextEpisodeThresholdPercent,
             thresholdMinutesBeforeEnd = playerSettingsUiState.nextEpisodeThresholdMinutesBeforeEnd,
         )
-        if (shouldShow && !showNextEpisodeCard) {
-            preloadNextEpisodeStreams()
+        if (shouldShow && !showNextEpisodeCard && !nextEpisodeCardDismissed) {
             showNextEpisodeCard = true
             if (playerSettingsUiState.streamAutoPlayNextEpisodeEnabled && nextEpisodeInfo?.hasAired == true) {
                 playNextEpisode()
@@ -673,9 +575,13 @@ private fun PlayerScreenRuntime.BindPlayerMetadataAndSkipEffects() {
         }
     }
 
-    LaunchedEffect(playbackSnapshot.isEnded, nextEpisodeInfo) {
-        if (playbackSnapshot.isEnded && nextEpisodeInfo != null && !showNextEpisodeCard) {
-            preloadNextEpisodeStreams()
+    LaunchedEffect(playbackSnapshot.isEnded, nextEpisodeInfo, nextEpisodeCardDismissed) {
+        if (
+            playbackSnapshot.isEnded &&
+            nextEpisodeInfo != null &&
+            !showNextEpisodeCard &&
+            !nextEpisodeCardDismissed
+        ) {
             showNextEpisodeCard = true
             if (playerSettingsUiState.streamAutoPlayNextEpisodeEnabled && nextEpisodeInfo?.hasAired == true) {
                 playNextEpisode()
@@ -761,8 +667,6 @@ internal fun PlayerScreenRuntime.tryRefreshCredentialedSourceAfterError(message:
         PlayerStreamsRepository.loadSources(
             type = type,
             videoId = currentVideoId,
-            parentMetaId = parentMetaId,
-            parentMetaType = parentMetaType,
             season = season,
             episode = episode,
             forceRefresh = true,
@@ -811,7 +715,6 @@ internal fun PlayerScreenRuntime.tryRefreshCredentialedSourceAfterError(message:
         activeSourceAudioUrl = null
         activeSourceHeaders = sanitizePlaybackHeaders(stream.behaviorHints.proxyHeaders?.request)
         activeSourceResponseHeaders = sanitizePlaybackResponseHeaders(stream.behaviorHints.proxyHeaders?.response)
-        activeExternalSubtitles = stream.externalSubtitles
         activeStreamType = stream.streamType
         activeStreamTitle = stream.streamLabel
         activeStreamSubtitle = stream.streamSubtitle
