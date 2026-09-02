@@ -19,10 +19,7 @@ import com.nuvio.app.features.streams.BingeGroupCacheRepository
 import com.nuvio.app.features.streams.StreamLinkCacheRepository
 import com.nuvio.app.features.streams.StreamItem
 import com.nuvio.app.features.streams.hasLikelyExpiringPlaybackCredentials
-import com.nuvio.app.features.tracking.TrackingScrobbleAction
 import com.nuvio.app.features.watchprogress.WatchProgressRepository
-import com.nuvio.app.features.watchprogress.buildPlaybackVideoId
-import com.nuvio.app.features.watching.application.WatchingState
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
@@ -75,7 +72,7 @@ internal fun PlayerScreenRuntime.BindPlayerRuntimeEffects() {
         initialLoadCompleted = false
         lastProgressPersistEpochMs = 0L
         previousIsPlaying = false
-        pendingSeekScrobbleRestart = false
+        pendingScrobbleStartAfterSeek = false
         seekProgressSyncJob?.cancel()
         seekProgressSyncJob = null
         accumulatedSeekResetJob?.cancel()
@@ -183,41 +180,6 @@ internal fun PlayerScreenRuntime.BindPlayerRuntimeEffects() {
         playerController?.applySubtitleStyle(subtitleStyle)
     }
 
-    val subtitlePreferenceKey = listOf(
-        playerSettingsUiState.preferredSubtitleLanguage,
-        playerSettingsUiState.secondaryPreferredSubtitleLanguage.orEmpty(),
-        subtitleStyle.useForcedSubtitles,
-    ).joinToString("|")
-    var lastSubtitlePreferenceKey by remember { mutableStateOf<String?>(null) }
-
-    LaunchedEffect(
-        playerController,
-        subtitlePreferenceKey,
-        preferredSubtitleSelectionApplied,
-        selectedSubtitleIndex,
-        selectedAddonSubtitleId,
-        useCustomSubtitles,
-    ) {
-        val controller = playerController ?: return@LaunchedEffect
-        val preferenceChanged = lastSubtitlePreferenceKey != null &&
-            lastSubtitlePreferenceKey != subtitlePreferenceKey
-        lastSubtitlePreferenceKey = subtitlePreferenceKey
-
-        controller.applySubtitlePreferences(
-            preferredLanguage = playerSettingsUiState.preferredSubtitleLanguage,
-            secondaryPreferredLanguage = playerSettingsUiState.secondaryPreferredSubtitleLanguage,
-            useForcedSubtitles = subtitleStyle.useForcedSubtitles,
-            autoSelectionApplied = preferredSubtitleSelectionApplied,
-            hasActiveSubtitle = selectedSubtitleIndex >= 0 || selectedAddonSubtitleId != null,
-            useCustomSubtitles = useCustomSubtitles,
-        )
-
-        if (preferenceChanged) {
-            preferredSubtitleSelectionApplied = false
-            refreshTracks()
-        }
-    }
-
     LaunchedEffect(
         playerController,
         playerControllerSourceUrl,
@@ -235,13 +197,11 @@ internal fun PlayerScreenRuntime.BindPlayerRuntimeEffects() {
         controller.updateNowPlayingMetadata(buildNowPlayingInfo())
     }
 
-    LaunchedEffect(
-        activeSourceUrl,
-        addonSubtitleFetchKey,
-        playerController,
-        playerControllerSourceUrl,
-    ) {
+    LaunchedEffect(activeSourceUrl, addonSubtitleFetchKey, playerSettingsUiState.addonSubtitleStartupMode) {
         val fetchKey = addonSubtitleFetchKey ?: return@LaunchedEffect
+        if (playerSettingsUiState.addonSubtitleStartupMode == AddonSubtitleStartupMode.FAST_STARTUP) {
+            return@LaunchedEffect
+        }
         if (autoFetchedAddonSubtitlesForKey == fetchKey) return@LaunchedEffect
         autoFetchedAddonSubtitlesForKey = fetchKey
         fetchAddonSubtitlesForActiveItem()
@@ -258,8 +218,6 @@ internal fun PlayerScreenRuntime.BindPlayerRuntimeEffects() {
         playbackSnapshot.isLoading,
         preferredAudioSelectionApplied,
         preferredSubtitleSelectionApplied,
-        addonSubtitles,
-        isLoadingAddonSubtitles,
     ) {
         if (playerController == null || playbackSnapshot.isLoading) {
             return@LaunchedEffect
@@ -384,26 +342,22 @@ private fun PlayerScreenRuntime.BindPlayerUiVisibilityEffects() {
         playbackSnapshot.durationMs,
     ) {
         if (playbackSnapshot.isEnded) {
-            flushWatchProgress(TrackingScrobbleAction.STOP)
+            flushWatchProgress()
             previousIsPlaying = false
-            pendingSeekScrobbleRestart = false
+            pendingScrobbleStartAfterSeek = false
             return@LaunchedEffect
         }
 
         if (previousIsPlaying && !playbackSnapshot.isPlaying && !playbackSnapshot.isLoading) {
-            pendingSeekScrobbleRestart = false
-            flushWatchProgress(TrackingScrobbleAction.PAUSE)
+            pendingScrobbleStartAfterSeek = false
+            flushWatchProgress()
         }
 
-        if (playbackSnapshot.isPlaying && pendingSeekScrobbleRestart) {
-            pendingSeekScrobbleRestart = false
-            if (hasRequestedScrobbleStartForCurrentItem) {
-                emitTrackingSeekScrobbleStart()
-            } else {
-                emitTrackingScrobbleStart()
-            }
+        if (playbackSnapshot.isPlaying && pendingScrobbleStartAfterSeek) {
+            pendingScrobbleStartAfterSeek = false
+            emitTraktScrobbleStart()
         } else if (!previousIsPlaying && playbackSnapshot.isPlaying) {
-            emitTrackingScrobbleStart()
+            emitTraktScrobbleStart()
         }
 
         if (!playbackSnapshot.isLoading) {
@@ -488,13 +442,7 @@ private fun PlayerScreenRuntime.BindPlayerMetadataAndSkipEffects() {
         }
     }
 
-    LaunchedEffect(
-        playerMetaVideos,
-        activeSeasonNumber,
-        activeEpisodeNumber,
-        watchProgressUiState.entries,
-        watchedUiState.watchedKeys,
-    ) {
+    LaunchedEffect(playerMetaVideos, activeSeasonNumber, activeEpisodeNumber) {
         if (!isSeries || playerMetaVideos.isEmpty()) {
             nextEpisodeInfo = null
             return@LaunchedEffect
@@ -509,23 +457,6 @@ private fun PlayerScreenRuntime.BindPlayerMetadataAndSkipEffects() {
         val nextSeason = nextVideo?.season
         val nextEpisode = nextVideo?.episode
         nextEpisodeInfo = if (nextVideo != null && nextSeason != null && nextEpisode != null) {
-            val playbackVideoId = buildPlaybackVideoId(
-                parentMetaId = parentMetaId,
-                seasonNumber = nextSeason,
-                episodeNumber = nextEpisode,
-                fallbackVideoId = nextVideo.id,
-            )
-            val isWatched = watchProgressUiState.progressForVideo(
-                videoId = playbackVideoId,
-                parentMetaId = parentMetaId,
-                seasonNumber = nextSeason,
-                episodeNumber = nextEpisode,
-            )?.isEffectivelyCompleted == true || WatchingState.isEpisodeWatched(
-                watchedKeys = watchedUiState.watchedKeys,
-                metaType = parentMetaType,
-                metaId = parentMetaId,
-                episode = nextVideo,
-            )
             NextEpisodeInfo(
                 videoId = nextVideo.id,
                 season = nextSeason,
@@ -535,7 +466,6 @@ private fun PlayerScreenRuntime.BindPlayerMetadataAndSkipEffects() {
                 overview = nextVideo.overview,
                 released = nextVideo.released,
                 hasAired = PlayerNextEpisodeRules.hasEpisodeAired(nextVideo.released),
-                isWatched = isWatched,
                 unairedMessage = if (!PlayerNextEpisodeRules.hasEpisodeAired(nextVideo.released)) {
                     "$airsPrefix ${nextVideo.released ?: tbaLabel}"
                 } else null,

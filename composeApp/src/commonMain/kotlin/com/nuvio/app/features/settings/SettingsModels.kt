@@ -35,6 +35,7 @@ import nuvio.composeapp.generated.resources.compose_settings_page_root
 import nuvio.composeapp.generated.resources.compose_settings_page_streams
 import nuvio.composeapp.generated.resources.compose_settings_page_supporters_contributors
 import nuvio.composeapp.generated.resources.compose_settings_page_tmdb_enrichment
+import nuvio.composeapp.generated.resources.compose_settings_page_telegram
 import nuvio.composeapp.generated.resources.compose_settings_page_trakt
 import nuvio.composeapp.generated.resources.profile_insights_favorite_people_title
 import nuvio.composeapp.generated.resources.settings_account
@@ -167,6 +168,11 @@ internal enum class SettingsPage(
         category = SettingsCategory.General,
         parentPage = Integrations,
     ),
+    Telegram(
+        titleRes = Res.string.compose_settings_page_telegram,
+        category = SettingsCategory.General,
+        parentPage = Integrations,
+    ),
     TmdbEnrichment(
         titleRes = Res.string.compose_settings_page_tmdb_enrichment,
         category = SettingsCategory.General,
@@ -183,8 +189,7 @@ internal enum class SettingsPage(
         parentPage = Integrations,
     ),
     TraktAuthentication(
-        // Keep the enum name for saved navigation-state compatibility.
-        titleRes = Res.string.compose_settings_page_tracking,
+        titleRes = Res.string.compose_settings_page_trakt,
         category = SettingsCategory.Account,
         parentPage = Integrations,
     ),

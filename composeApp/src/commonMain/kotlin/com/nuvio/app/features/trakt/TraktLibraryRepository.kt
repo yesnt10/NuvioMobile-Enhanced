@@ -197,6 +197,16 @@ object TraktLibraryRepository {
         return TraktMembershipSnapshot(listMembership = map)
     }
 
+    suspend fun toggleWatchlist(item: LibraryItem) {
+        ensureLoaded()
+        val snapshot = getMembershipSnapshot(item)
+        val currentlyInWatchlist = snapshot.listMembership[WATCHLIST_KEY] == true
+        val desired = snapshot.listMembership.toMutableMap().apply {
+            this[WATCHLIST_KEY] = !currentlyInWatchlist
+        }
+        applyMembershipChanges(item, TraktMembershipChanges(desiredMembership = desired))
+    }
+
     suspend fun applyMembershipChanges(item: LibraryItem, changes: TraktMembershipChanges) {
         ensureLoaded()
         val headers = TraktAuthRepository.authorizedHeaders() ?: return

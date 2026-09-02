@@ -6,6 +6,7 @@ import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.FlowRow
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.heightIn
@@ -38,6 +39,8 @@ import com.nuvio.app.core.ui.NuvioActionLabel
 import com.nuvio.app.core.ui.NuvioLoadingIndicator
 import com.nuvio.app.core.ui.NuvioToastController
 import com.nuvio.app.features.addons.AddonRepository
+import com.nuvio.app.features.home.CatalogPosterLayout
+import com.nuvio.app.features.home.CatalogPosterSize
 import com.nuvio.app.features.home.HomeCatalogSettingsItem
 import com.nuvio.app.features.home.HomeCatalogSettingsRepository
 import com.nuvio.app.features.home.components.HomeEmptyStateCard
@@ -50,7 +53,18 @@ import nuvio.composeapp.generated.resources.layout_catalog_type
 import nuvio.composeapp.generated.resources.layout_catalog_type_sub
 import nuvio.composeapp.generated.resources.settings_homescreen_empty_message
 import nuvio.composeapp.generated.resources.settings_homescreen_empty_title
+import nuvio.composeapp.generated.resources.settings_homescreen_hide_catalog_underline
+import nuvio.composeapp.generated.resources.settings_homescreen_hide_catalog_underline_description
 import nuvio.composeapp.generated.resources.settings_homescreen_keep_home_focused
+import nuvio.composeapp.generated.resources.settings_homescreen_catalog_columns
+import nuvio.composeapp.generated.resources.settings_homescreen_catalog_layout
+import nuvio.composeapp.generated.resources.settings_homescreen_catalog_layout_landscape
+import nuvio.composeapp.generated.resources.settings_homescreen_catalog_layout_portrait
+import nuvio.composeapp.generated.resources.settings_homescreen_catalog_size
+import nuvio.composeapp.generated.resources.settings_homescreen_catalog_size_compact
+import nuvio.composeapp.generated.resources.settings_homescreen_catalog_size_large
+import nuvio.composeapp.generated.resources.settings_homescreen_catalog_size_regular
+import nuvio.composeapp.generated.resources.settings_homescreen_catalog_view
 import nuvio.composeapp.generated.resources.settings_homescreen_limit_reached
 import nuvio.composeapp.generated.resources.settings_homescreen_load_failed_title
 import nuvio.composeapp.generated.resources.settings_homescreen_no_sources_selected
@@ -75,6 +89,10 @@ internal fun LazyListScope.homescreenSettingsContent(
     heroEnabled: Boolean,
     showCatalogType: Boolean,
     hideUnreleasedContent: Boolean,
+    hideCatalogUnderline: Boolean,
+    catalogColumnCount: Int,
+    catalogPosterSize: CatalogPosterSize,
+    catalogPosterLayout: CatalogPosterLayout,
     items: List<HomeCatalogSettingsItem>,
     isCatalogLoading: Boolean,
     catalogErrorMessage: String?,
@@ -101,22 +119,6 @@ internal fun LazyListScope.homescreenSettingsContent(
                     checked = heroEnabled,
                     isTablet = isTablet,
                     onCheckedChange = HomeCatalogSettingsRepository::setHeroEnabled,
-                )
-                SettingsGroupDivider(isTablet = isTablet)
-                SettingsSwitchRow(
-                    title = stringResource(Res.string.layout_catalog_type),
-                    description = stringResource(Res.string.layout_catalog_type_sub),
-                    checked = showCatalogType,
-                    isTablet = isTablet,
-                    onCheckedChange = HomeCatalogSettingsRepository::setShowCatalogType,
-                )
-                SettingsGroupDivider(isTablet = isTablet)
-                SettingsSwitchRow(
-                    title = stringResource(Res.string.layout_hide_unreleased),
-                    description = stringResource(Res.string.layout_hide_unreleased_sub),
-                    checked = hideUnreleasedContent,
-                    isTablet = isTablet,
-                    onCheckedChange = HomeCatalogSettingsRepository::setHideUnreleasedContent,
                 )
             }
         }
@@ -193,6 +195,103 @@ internal fun LazyListScope.homescreenSettingsContent(
                         NuvioToastController.show(pinToMoveToast)
                     },
                 )
+            }
+        }
+    }
+}
+
+@Composable
+private fun CatalogCustomizationSettings(
+    isTablet: Boolean,
+    columnCount: Int,
+    posterSize: CatalogPosterSize,
+    posterLayout: CatalogPosterLayout,
+) {
+    SettingsGroup(isTablet = isTablet) {
+        CatalogChoiceRow(
+            title = stringResource(Res.string.settings_homescreen_catalog_columns),
+            options = listOf(2, 3, 4, 5, 6),
+            selected = columnCount,
+            label = { it.toString() },
+            onSelected = HomeCatalogSettingsRepository::setCatalogColumnCount,
+        )
+        SettingsGroupDivider(isTablet = isTablet)
+        CatalogChoiceRow(
+            title = stringResource(Res.string.settings_homescreen_catalog_size),
+            options = CatalogPosterSize.entries,
+            selected = posterSize,
+            label = { size ->
+                when (size) {
+                    CatalogPosterSize.Compact -> stringResource(Res.string.settings_homescreen_catalog_size_compact)
+                    CatalogPosterSize.Regular -> stringResource(Res.string.settings_homescreen_catalog_size_regular)
+                    CatalogPosterSize.Large -> stringResource(Res.string.settings_homescreen_catalog_size_large)
+                }
+            },
+            onSelected = HomeCatalogSettingsRepository::setCatalogPosterSize,
+        )
+        SettingsGroupDivider(isTablet = isTablet)
+        CatalogChoiceRow(
+            title = stringResource(Res.string.settings_homescreen_catalog_layout),
+            options = CatalogPosterLayout.entries,
+            selected = posterLayout,
+            label = { layout ->
+                when (layout) {
+                    CatalogPosterLayout.Portrait -> stringResource(Res.string.settings_homescreen_catalog_layout_portrait)
+                    CatalogPosterLayout.Landscape -> stringResource(Res.string.settings_homescreen_catalog_layout_landscape)
+                }
+            },
+            onSelected = HomeCatalogSettingsRepository::setCatalogPosterLayout,
+        )
+    }
+}
+
+@Composable
+private fun <T> CatalogChoiceRow(
+    title: String,
+    options: List<T>,
+    selected: T,
+    label: @Composable (T) -> String,
+    onSelected: (T) -> Unit,
+) {
+    Column(
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(horizontal = 16.dp, vertical = 14.dp),
+        verticalArrangement = Arrangement.spacedBy(10.dp),
+    ) {
+        Text(
+            text = title,
+            style = MaterialTheme.typography.bodyLarge,
+            color = MaterialTheme.colorScheme.onSurface,
+            fontWeight = FontWeight.Medium,
+        )
+        FlowRow(
+            horizontalArrangement = Arrangement.spacedBy(8.dp),
+            verticalArrangement = Arrangement.spacedBy(8.dp),
+        ) {
+            options.forEach { option ->
+                val isSelected = option == selected
+                Surface(
+                    shape = MaterialTheme.shapes.large,
+                    color = if (isSelected) {
+                        MaterialTheme.colorScheme.primary
+                    } else {
+                        MaterialTheme.colorScheme.surfaceContainerHighest.copy(alpha = 0.72f)
+                    },
+                    contentColor = if (isSelected) {
+                        MaterialTheme.colorScheme.onPrimary
+                    } else {
+                        MaterialTheme.colorScheme.onSurface
+                    },
+                    modifier = Modifier.clickable { onSelected(option) },
+                ) {
+                    Text(
+                        text = label(option),
+                        modifier = Modifier.padding(horizontal = 14.dp, vertical = 8.dp),
+                        style = MaterialTheme.typography.labelLarge,
+                        fontWeight = FontWeight.SemiBold,
+                    )
+                }
             }
         }
     }

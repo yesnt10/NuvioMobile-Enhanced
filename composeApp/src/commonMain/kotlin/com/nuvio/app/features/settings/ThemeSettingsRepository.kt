@@ -10,12 +10,8 @@ import androidx.compose.ui.graphics.Color
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
-import kotlinx.coroutines.launch
 
 object ThemeSettingsRepository {
-    private val scope = CoroutineScope(SupervisorJob() + Dispatchers.Default)
-    private val _selectedThemePreference = MutableStateFlow<AppTheme?>(null)
-    val selectedThemePreference: StateFlow<AppTheme?> = _selectedThemePreference.asStateFlow()
     private val _selectedTheme = MutableStateFlow(AppTheme.WHITE)
     val selectedTheme: StateFlow<AppTheme> = _selectedTheme.asStateFlow()
 
@@ -41,10 +37,8 @@ object ThemeSettingsRepository {
     val navBarStyle: StateFlow<NavBarStyle> = _navBarStyle.asStateFlow()
 
     private var hasLoaded = false
-    private var observesMembership = false
 
     fun ensureLoaded() {
-        observeMembership()
         if (hasLoaded) return
         loadFromDisk()
     }
@@ -55,7 +49,6 @@ object ThemeSettingsRepository {
 
     fun clearLocalState() {
         hasLoaded = false
-        _selectedThemePreference.value = null
         _selectedTheme.value = AppTheme.WHITE
         _customThemeFirstColor.value = ThemeAccentColor.PINK.color
         _customThemeSecondColor.value = ThemeAccentColor.CYAN.color
@@ -92,8 +85,8 @@ object ThemeSettingsRepository {
 
     fun setTheme(theme: AppTheme) {
         ensureLoaded()
-        if (_selectedThemePreference.value == theme) return
-        _selectedThemePreference.value = theme
+        if (_selectedTheme.value == theme) return
+        _selectedTheme.value = theme
         ThemeSettingsStorage.saveSelectedTheme(theme.name)
         NativeTabBridge.publishAccentColor(theme.nativeTabAccentHex(_customThemeFirstColor.value))
     }
@@ -150,26 +143,6 @@ object ThemeSettingsRepository {
         if (_navBarStyle.value == style) return
         _navBarStyle.value = style
         ThemeSettingsStorage.saveNavBarStyle(style.key)
-    }
-
-    private fun observeMembership() {
-        if (observesMembership) return
-        observesMembership = true
-        MemberAccessRepository.ensureStarted()
-        scope.launch {
-            MemberAccessRepository.access.collect {
-                if (hasLoaded) applyEffectiveTheme()
-            }
-        }
-    }
-
-    private fun applyEffectiveTheme() {
-        val effective = resolveAppTheme(
-            selectedTheme = _selectedThemePreference.value,
-            entitlements = MemberAccessRepository.access.value.entitlements,
-        )
-        _selectedTheme.value = effective
-        NativeTabBridge.publishAccentColor(effective.nativeTabAccentHex())
     }
 }
 

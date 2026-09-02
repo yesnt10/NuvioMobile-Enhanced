@@ -1,7 +1,5 @@
 package com.nuvio.app.features.settings
 
-import com.nuvio.app.features.home.HomeReleaseRadarCategory
-import com.nuvio.app.features.home.HomeReleaseRadarItem
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -12,10 +10,6 @@ import kotlinx.serialization.json.Json
 
 internal data class NuvioEnhancedSettingsUiState(
     val enhancedHomeFeaturesEnabled: Boolean = true,
-    val nuvioConciergeEnabled: Boolean = true,
-    val smartResumeEnabled: Boolean = true,
-    val releaseRadarHomeSignalsEnabled: Boolean = true,
-    val profileStatsEnabled: Boolean = true,
     val liveTvEnabled: Boolean = true,
     val streamSourcePinningEnabled: Boolean = false,
     val backgroundStreamPrefetchEnabled: Boolean = false,
@@ -27,19 +21,12 @@ internal data class NuvioEnhancedSettingsUiState(
     val streamingShowcaseVideoPreviewSoundEnabled: Boolean = true,
     val compactHeroMetadata: Boolean = true,
     val showHeroRatings: Boolean = true,
-    val showHeroOverview: Boolean = false,
+    val showHeroOverview: Boolean = true,
+    val hideHomeReleaseDates: Boolean = false,
     val heroRefreshHapticsEnabled: Boolean = true,
-    val smartShelvesEnabled: Boolean = false,
-    val releaseRadarDigestEnabled: Boolean = false,
-    val quietHomeModeEnabled: Boolean = false,
-    val libraryHealthEnabled: Boolean = false,
     val statusBarVisible: Boolean = true,
     val playerStatusOverlayEnabled: Boolean = false,
-    val showContinueWatchingReadyBadge: Boolean = true,
     val selectedAppIconId: String = NuvioAppIconOption.Default.id,
-    val releaseRadarLibraryOnly: Boolean = true,
-    val releaseRadarWindowDays: Int = 30,
-    val releaseRadarContentFilter: NuvioReleaseRadarContentFilter = NuvioReleaseRadarContentFilter.All,
     val featureHighlightsEnabled: Boolean = true,
     val discordWelcomeSeen: Boolean = false,
     val seenFeatureIds: Set<String> = emptySet(),
@@ -62,32 +49,17 @@ internal enum class NuvioHeroArtworkSource {
     Poster,
 }
 
-internal enum class NuvioReleaseRadarContentFilter {
-    All,
-    Episodes,
-    Movies,
-}
-
 internal enum class NuvioEnhancedFeature(val id: String) {
     HomeExperienceControls("home_experience_controls"),
-    SmartResume2("smart_resume_2"),
     BackupImport("backup_import"),
     FeatureHighlights("feature_highlights"),
     LiveTvControls("live_tv_controls"),
-    ContactSupport("contact_support"),
     HeroExperienceControls("hero_experience_controls"),
-    ReleaseRadarFilters("release_radar_filters"),
     DetailExperienceControls("detail_experience_controls"),
     PlayerStatusOverlay("player_status_overlay"),
     StatusBarVisibility("status_bar_visibility"),
     AppIconPicker("app_icon_picker"),
-    NetworkControls("network_controls"),
     CommunityLinks("community_links"),
-    PremiumLabs("premium_labs"),
-    SmartShelfComposer("smart_shelf_composer"),
-    ReleaseRadarDigest("release_radar_digest"),
-    QuietHomeMode("quiet_home_mode"),
-    LibraryHealth("library_health"),
     StreamSourcePinning("stream_source_pinning"),
     BackgroundStreamPrefetch("background_stream_prefetch"),
     ContentWarnings("content_warnings"),
@@ -96,10 +68,6 @@ internal enum class NuvioEnhancedFeature(val id: String) {
 @Serializable
 private data class StoredNuvioEnhancedSettings(
     val enhancedHomeFeaturesEnabled: Boolean = true,
-    val nuvioConciergeEnabled: Boolean = true,
-    val smartResumeEnabled: Boolean = true,
-    val releaseRadarHomeSignalsEnabled: Boolean = true,
-    val profileStatsEnabled: Boolean = true,
     val liveTvEnabled: Boolean = true,
     val streamSourcePinningEnabled: Boolean = false,
     val backgroundStreamPrefetchEnabled: Boolean = false,
@@ -111,20 +79,13 @@ private data class StoredNuvioEnhancedSettings(
     val streamingShowcaseVideoPreviewSoundEnabled: Boolean = true,
     val compactHeroMetadata: Boolean = true,
     val showHeroRatings: Boolean = true,
-    val showHeroOverview: Boolean = false,
+    val showHeroOverview: Boolean = true,
+    val hideHomeReleaseDates: Boolean = false,
     val heroOverviewUserConfigured: Boolean = false,
     val heroRefreshHapticsEnabled: Boolean = true,
-    val smartShelvesEnabled: Boolean = false,
-    val releaseRadarDigestEnabled: Boolean = false,
-    val quietHomeModeEnabled: Boolean = false,
-    val libraryHealthEnabled: Boolean = false,
     val statusBarVisible: Boolean = true,
     val playerStatusOverlayEnabled: Boolean = false,
-    val showContinueWatchingReadyBadge: Boolean = true,
     val selectedAppIconId: String = NuvioAppIconOption.Default.id,
-    val releaseRadarLibraryOnly: Boolean = true,
-    val releaseRadarWindowDays: Int = 30,
-    val releaseRadarContentFilter: NuvioReleaseRadarContentFilter = NuvioReleaseRadarContentFilter.All,
     val featureHighlightsEnabled: Boolean = true,
     val discordWelcomeSeen: Boolean = false,
     val seenFeatureIds: Set<String> = emptySet(),
@@ -153,7 +114,7 @@ internal object NuvioEnhancedSettingsRepository {
                     if (decoded.heroOverviewUserConfigured) {
                         decoded
                     } else {
-                        decoded.copy(showHeroOverview = false)
+                        decoded.copy(showHeroOverview = true)
                     }
                 }
         } else {
@@ -186,22 +147,6 @@ internal object NuvioEnhancedSettingsRepository {
 
     fun setEnhancedHomeFeaturesEnabled(enabled: Boolean) = update {
         copy(enhancedHomeFeaturesEnabled = enabled)
-    }
-
-    fun setNuvioConciergeEnabled(enabled: Boolean) = update {
-        copy(nuvioConciergeEnabled = enabled)
-    }
-
-    fun setSmartResumeEnabled(enabled: Boolean) = update {
-        copy(smartResumeEnabled = enabled)
-    }
-
-    fun setReleaseRadarHomeSignalsEnabled(enabled: Boolean) = update {
-        copy(releaseRadarHomeSignalsEnabled = enabled)
-    }
-
-    fun setProfileStatsEnabled(enabled: Boolean) = update {
-        copy(profileStatsEnabled = enabled)
     }
 
     fun setLiveTvEnabled(enabled: Boolean) = update {
@@ -261,24 +206,12 @@ internal object NuvioEnhancedSettingsRepository {
         )
     }
 
+    fun setHideHomeReleaseDates(enabled: Boolean) = update {
+        copy(hideHomeReleaseDates = enabled)
+    }
+
     fun setHeroRefreshHapticsEnabled(enabled: Boolean) = update {
         copy(heroRefreshHapticsEnabled = enabled)
-    }
-
-    fun setSmartShelvesEnabled(enabled: Boolean) = update {
-        copy(smartShelvesEnabled = enabled)
-    }
-
-    fun setReleaseRadarDigestEnabled(enabled: Boolean) = update {
-        copy(releaseRadarDigestEnabled = enabled)
-    }
-
-    fun setQuietHomeModeEnabled(enabled: Boolean) = update {
-        copy(quietHomeModeEnabled = enabled)
-    }
-
-    fun setLibraryHealthEnabled(enabled: Boolean) = update {
-        copy(libraryHealthEnabled = enabled)
     }
 
     fun setPlayerStatusOverlayEnabled(enabled: Boolean) = update {
@@ -289,28 +222,12 @@ internal object NuvioEnhancedSettingsRepository {
         copy(statusBarVisible = visible)
     }
 
-    fun setShowContinueWatchingReadyBadge(enabled: Boolean) = update {
-        copy(showContinueWatchingReadyBadge = enabled)
-    }
-
     fun setSelectedAppIcon(option: NuvioAppIconOption): Boolean {
         val applied = NuvioAppIconSwitcher.apply(option.id)
         update {
             copy(selectedAppIconId = option.id)
         }
         return applied
-    }
-
-    fun setReleaseRadarLibraryOnly(enabled: Boolean) = update {
-        copy(releaseRadarLibraryOnly = enabled)
-    }
-
-    fun setReleaseRadarWindowDays(days: Int) = update {
-        copy(releaseRadarWindowDays = days.coerceIn(7, 45))
-    }
-
-    fun setReleaseRadarContentFilter(filter: NuvioReleaseRadarContentFilter) = update {
-        copy(releaseRadarContentFilter = filter)
     }
 
     fun setFeatureHighlightsEnabled(enabled: Boolean) = update {
@@ -348,10 +265,6 @@ internal object NuvioEnhancedSettingsRepository {
     private fun publish() {
         _uiState.value = NuvioEnhancedSettingsUiState(
             enhancedHomeFeaturesEnabled = stored.enhancedHomeFeaturesEnabled,
-            nuvioConciergeEnabled = stored.nuvioConciergeEnabled,
-            smartResumeEnabled = stored.smartResumeEnabled,
-            releaseRadarHomeSignalsEnabled = stored.releaseRadarHomeSignalsEnabled,
-            profileStatsEnabled = stored.profileStatsEnabled,
             liveTvEnabled = stored.liveTvEnabled,
             streamSourcePinningEnabled = stored.streamSourcePinningEnabled,
             backgroundStreamPrefetchEnabled = stored.backgroundStreamPrefetchEnabled,
@@ -364,18 +277,11 @@ internal object NuvioEnhancedSettingsRepository {
             compactHeroMetadata = stored.compactHeroMetadata,
             showHeroRatings = stored.showHeroRatings,
             showHeroOverview = stored.showHeroOverview,
+            hideHomeReleaseDates = stored.hideHomeReleaseDates,
             heroRefreshHapticsEnabled = stored.heroRefreshHapticsEnabled,
-            smartShelvesEnabled = stored.smartShelvesEnabled,
-            releaseRadarDigestEnabled = stored.releaseRadarDigestEnabled,
-            quietHomeModeEnabled = stored.quietHomeModeEnabled,
-            libraryHealthEnabled = stored.libraryHealthEnabled,
             statusBarVisible = stored.statusBarVisible,
             playerStatusOverlayEnabled = stored.playerStatusOverlayEnabled,
-            showContinueWatchingReadyBadge = stored.showContinueWatchingReadyBadge,
             selectedAppIconId = stored.selectedAppIconId,
-            releaseRadarLibraryOnly = stored.releaseRadarLibraryOnly,
-            releaseRadarWindowDays = stored.releaseRadarWindowDays.coerceIn(7, 45),
-            releaseRadarContentFilter = stored.releaseRadarContentFilter,
             featureHighlightsEnabled = stored.featureHighlightsEnabled,
             discordWelcomeSeen = stored.discordWelcomeSeen,
             seenFeatureIds = stored.seenFeatureIds,
@@ -386,26 +292,3 @@ internal object NuvioEnhancedSettingsRepository {
         NuvioEnhancedSettingsStorage.savePayload(json.encodeToString(stored))
     }
 }
-
-internal fun List<HomeReleaseRadarItem>.filteredByNuvioEnhancedReleaseRadar(
-    settings: NuvioEnhancedSettingsUiState,
-): List<HomeReleaseRadarItem> =
-    asSequence()
-        .filter { item ->
-            val days = item.daysFromToday ?: return@filter true
-            days in 0..settings.releaseRadarWindowDays.coerceIn(7, 45)
-        }
-        .filter { item ->
-            !settings.releaseRadarLibraryOnly ||
-                item.category != HomeReleaseRadarCategory.Catalog
-        }
-        .filter { item ->
-            when (settings.releaseRadarContentFilter) {
-                NuvioReleaseRadarContentFilter.All -> true
-                NuvioReleaseRadarContentFilter.Episodes ->
-                    item.category == HomeReleaseRadarCategory.Episode ||
-                        item.category == HomeReleaseRadarCategory.NextUp
-                NuvioReleaseRadarContentFilter.Movies -> item.category == HomeReleaseRadarCategory.Movie
-            }
-        }
-        .toList()

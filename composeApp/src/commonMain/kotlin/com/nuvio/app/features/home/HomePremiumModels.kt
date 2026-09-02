@@ -95,7 +95,6 @@ internal enum class HomeReleaseRadarCategory {
     Movie,
     Series,
     NextUp,
-    Catalog,
 }
 
 internal fun buildHomeConciergeState(
@@ -287,6 +286,7 @@ private fun String.isLiveTvConciergeValue(): Boolean {
         value.endsWith(".m3u8")
 }
 
+@Suppress("UNUSED_PARAMETER")
 internal fun buildHomeReleaseRadarItems(
     todayIsoDate: String,
     continueWatchingItems: List<ContinueWatchingItem>,
@@ -351,21 +351,6 @@ internal fun buildHomeReleaseRadarItems(
             }
             .forEach(::add)
 
-        catalogSections
-            .flatMap { section -> section.items }
-            .asSequence()
-            .distinctBy(MetaPreview::stableKey)
-            .mapNotNull { preview ->
-                val releaseIso = preview.releaseIsoDateOrNull() ?: return@mapNotNull null
-                val days = daysBetweenIsoDates(todayIsoDate, releaseIso) ?: return@mapNotNull null
-                if (days !in 0..HomeReleaseRadarUpcomingWindowDays) return@mapNotNull null
-                preview.toReleaseRadarItem(
-                    releaseIsoDate = releaseIso,
-                    daysFromToday = days,
-                    category = HomeReleaseRadarCategory.Catalog,
-                )
-            }
-            .forEach(::add)
     }
 
     return releaseItems
@@ -547,23 +532,6 @@ private fun LibraryItem.toReleaseRadarItem(
     )
 }
 
-private fun MetaPreview.toReleaseRadarItem(
-    releaseIsoDate: String,
-    daysFromToday: Int,
-    category: HomeReleaseRadarCategory,
-): HomeReleaseRadarItem =
-    HomeReleaseRadarItem(
-        key = "catalog:${stableKey()}:$releaseIsoDate",
-        title = name,
-        subtitle = conciergeMetaLine(),
-        imageUrl = firstNonBlank(banner, poster),
-        logoUrl = logo,
-        releaseIsoDate = releaseIsoDate,
-        daysFromToday = daysFromToday,
-        category = category,
-        preview = this,
-    )
-
 private fun ContinueWatchingItem.releaseIsoDateOrNull(): String? =
     released.releaseIsoDateOrNull()
 
@@ -602,7 +570,6 @@ private fun HomeReleaseRadarItem.releaseRadarSignalWeight(): Int =
         HomeReleaseRadarCategory.Episode -> 4
         HomeReleaseRadarCategory.Series -> 3
         HomeReleaseRadarCategory.Movie -> 2
-        HomeReleaseRadarCategory.Catalog -> 1
     }
 
 private fun String?.ratingScoreOrNull(): Double? {
@@ -682,4 +649,4 @@ private const val HomeSmartResumeQuickResumeMinutes = 75L
 private const val HomeSmartResumeContinueNowProgress = 0.70f
 internal const val HomeReleaseRadarUpcomingWindowDays = 45
 private const val HomeReleaseRadarRecentWindowDays = 7
-private const val HomeReleaseRadarItemLimit = 18
+private const val HomeReleaseRadarItemLimit = 30

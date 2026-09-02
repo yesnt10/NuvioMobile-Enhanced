@@ -11,7 +11,6 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyListScope
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.Sync
 import androidx.compose.material.icons.rounded.AccountCircle
 import androidx.compose.material.icons.rounded.AutoAwesome
 import androidx.compose.material.icons.rounded.Close
@@ -31,6 +30,7 @@ import androidx.compose.material.icons.rounded.PlayArrow
 import androidx.compose.material.icons.rounded.Search
 import androidx.compose.material.icons.rounded.Style
 import androidx.compose.material.icons.rounded.Tune
+import androidx.compose.material.icons.rounded.VisibilityOff
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
@@ -95,7 +95,7 @@ internal fun settingsSearchEntries(
     val advancedCategory = stringResource(SettingsCategory.Advanced.labelRes)
 
     val accountPage = stringResource(Res.string.compose_settings_page_account)
-    val trackingPage = stringResource(Res.string.compose_settings_page_tracking)
+    val traktPage = stringResource(Res.string.compose_settings_page_trakt)
     val layoutPage = stringResource(Res.string.compose_settings_page_appearance)
     val advancedPage = stringResource(Res.string.compose_settings_page_advanced)
     val contentDiscoveryPage = stringResource(Res.string.compose_settings_page_content_discovery)
@@ -203,11 +203,11 @@ internal fun settingsSearchEntries(
     )
     addPage(
         page = SettingsPage.TraktAuthentication,
-        key = "tracking",
-        title = trackingPage,
-        description = stringResource(Res.string.compose_settings_root_tracking_description),
+        key = "trakt",
+        title = traktPage,
+        description = stringResource(Res.string.compose_settings_root_trakt_description),
         category = accountCategory,
-        icon = Icons.Default.Sync,
+        icon = Icons.Rounded.Link,
     )
     addPage(
         page = SettingsPage.Appearance,
@@ -289,7 +289,6 @@ internal fun settingsSearchEntries(
         PlaybackSearchRow("nuvio-license", stringResource(Res.string.settings_licenses_attributions_nuvio_title), stringResource(Res.string.settings_licenses_attributions_nuvio_license)),
         PlaybackSearchRow("tmdb-attribution", stringResource(Res.string.settings_licenses_attributions_tmdb_title), stringResource(Res.string.settings_licenses_attributions_tmdb_body)),
         PlaybackSearchRow("trakt-attribution", stringResource(Res.string.settings_licenses_attributions_trakt_title), stringResource(Res.string.settings_licenses_attributions_trakt_body)),
-        PlaybackSearchRow("simkl-attribution", stringResource(Res.string.settings_licenses_attributions_simkl_title), stringResource(Res.string.settings_licenses_attributions_simkl_body)),
         PlaybackSearchRow("premiumize-attribution", stringResource(Res.string.settings_licenses_attributions_premiumize_title), stringResource(Res.string.settings_licenses_attributions_premiumize_body)),
         PlaybackSearchRow("torbox-attribution", stringResource(Res.string.settings_licenses_attributions_torbox_title), stringResource(Res.string.settings_licenses_attributions_torbox_body)),
         PlaybackSearchRow("mdblist-attribution", stringResource(Res.string.settings_licenses_attributions_mdblist_title), stringResource(Res.string.settings_licenses_attributions_mdblist_body)),
@@ -443,6 +442,16 @@ internal fun settingsSearchEntries(
     )
     addRow(
         page = SettingsPage.NuvioEnhanced,
+        key = "info-rich-hero",
+        title = stringResource(Res.string.nuvio_enhanced_hero_display_title),
+        description = stringResource(Res.string.nuvio_enhanced_hero_display_desc),
+        pageLabel = nuvioEnhancedPage,
+        section = stringResource(Res.string.nuvio_enhanced_section_hero_experience),
+        category = enhancedCategory,
+        icon = Icons.Rounded.AutoAwesome,
+    )
+    addRow(
+        page = SettingsPage.NuvioEnhanced,
         key = "hero-auto-scroll",
         title = stringResource(Res.string.settings_advanced_hero_auto_scroll),
         description = stringResource(Res.string.settings_advanced_hero_auto_scroll_description),
@@ -456,16 +465,6 @@ internal fun settingsSearchEntries(
         key = "hero-motion-preview",
         title = stringResource(Res.string.settings_advanced_hero_motion_preview),
         description = stringResource(Res.string.settings_advanced_hero_motion_preview_description),
-        pageLabel = nuvioEnhancedPage,
-        section = stringResource(Res.string.nuvio_enhanced_section_hero_experience),
-        category = enhancedCategory,
-        icon = Icons.Rounded.AutoAwesome,
-    )
-    addRow(
-        page = SettingsPage.NuvioEnhanced,
-        key = "streaming-showcase-hero",
-        title = stringResource(Res.string.nuvio_enhanced_showcase_hero_title),
-        description = stringResource(Res.string.nuvio_enhanced_showcase_hero_desc),
         pageLabel = nuvioEnhancedPage,
         section = stringResource(Res.string.nuvio_enhanced_section_hero_experience),
         category = enhancedCategory,
@@ -490,16 +489,6 @@ internal fun settingsSearchEntries(
         section = stringResource(Res.string.nuvio_enhanced_section_hero_experience),
         category = enhancedCategory,
         icon = Icons.Rounded.AutoAwesome,
-    )
-    addRow(
-        page = SettingsPage.NuvioEnhanced,
-        key = "network-dns-over-https",
-        title = stringResource(Res.string.settings_advanced_section_network),
-        description = stringResource(Res.string.settings_advanced_doh_description),
-        pageLabel = nuvioEnhancedPage,
-        section = stringResource(Res.string.nuvio_enhanced_section_network),
-        category = enhancedCategory,
-        icon = Icons.Rounded.Link,
     )
     addRow(
         page = SettingsPage.NuvioEnhanced,
@@ -553,13 +542,13 @@ internal fun settingsSearchEntries(
     )
     addRow(
         page = SettingsPage.NuvioEnhanced,
-        key = "enhanced-ready-badge",
-        title = stringResource(Res.string.settings_continue_watching_ready_badge_title),
-        description = stringResource(Res.string.settings_continue_watching_ready_badge_description),
+        key = "hide-home-release-dates",
+        title = stringResource(Res.string.nuvio_enhanced_hide_home_release_dates_title),
+        description = stringResource(Res.string.nuvio_enhanced_hide_home_release_dates_desc),
         pageLabel = nuvioEnhancedPage,
         section = stringResource(Res.string.nuvio_enhanced_section_app_experience),
         category = enhancedCategory,
-        icon = Icons.Rounded.AutoAwesome,
+        icon = Icons.Rounded.VisibilityOff,
     )
     if (!isIos) {
         addRow(
@@ -877,6 +866,7 @@ internal fun settingsSearchEntries(
         PlaybackSearchRow("home-hero", stringResource(Res.string.settings_homescreen_show_hero), stringResource(Res.string.settings_homescreen_show_hero_description)),
         PlaybackSearchRow("home-catalog-type", stringResource(Res.string.layout_catalog_type), stringResource(Res.string.layout_catalog_type_sub)),
         PlaybackSearchRow("home-hide-unreleased", stringResource(Res.string.layout_hide_unreleased), stringResource(Res.string.layout_hide_unreleased_sub)),
+        PlaybackSearchRow("home-hide-catalog-underline", stringResource(Res.string.settings_homescreen_hide_catalog_underline), stringResource(Res.string.settings_homescreen_hide_catalog_underline_description)),
         PlaybackSearchRow("home-hero-sources", stringResource(Res.string.settings_homescreen_section_hero_sources)),
         PlaybackSearchRow("home-catalogs", stringResource(Res.string.settings_homescreen_section_catalogs)),
     ).forEach { row ->
@@ -1018,20 +1008,10 @@ internal fun settingsSearchEntries(
     addRow(
         page = SettingsPage.TraktAuthentication,
         key = "trakt-authentication",
-        title = stringResource(Res.string.trakt_library_source_trakt),
+        title = stringResource(Res.string.settings_trakt_authentication),
         description = stringResource(Res.string.settings_trakt_intro_description),
-        pageLabel = trackingPage,
-        section = stringResource(Res.string.settings_tracking_services),
-        category = accountCategory,
-        icon = Icons.Rounded.Link,
-    )
-    addRow(
-        page = SettingsPage.TraktAuthentication,
-        key = "simkl-authentication",
-        title = stringResource(Res.string.tracking_source_simkl),
-        description = stringResource(Res.string.settings_simkl_sign_in_description),
-        pageLabel = trackingPage,
-        section = stringResource(Res.string.settings_tracking_services),
+        pageLabel = traktPage,
+        section = stringResource(Res.string.settings_trakt_authentication),
         category = accountCategory,
         icon = Icons.Rounded.Link,
     )
@@ -1047,8 +1027,8 @@ internal fun settingsSearchEntries(
             key = row.key,
             title = row.title,
             description = row.description,
-            pageLabel = trackingPage,
-            section = stringResource(Res.string.settings_tracking_features),
+            pageLabel = traktPage,
+            section = stringResource(Res.string.settings_trakt_features),
             category = accountCategory,
             icon = Icons.Rounded.Link,
         )

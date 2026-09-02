@@ -5,13 +5,19 @@ import android.content.Context
 import android.content.pm.PackageManager
 import android.os.Build
 
-internal actual object AppIconPlatform {
-    actual val requiresCloseConfirmation: Boolean = true
-
-    private const val launcherPackage = "com.nuvio.app.launcher"
-    private val launcherComponents = AppIconOption.entries.map { option ->
-        option.platformName to "$launcherPackage.${option.platformName ?: "AppIconDefault"}"
-    }
+internal object AppIconPlatform {
+    private const val aliasPackageName = "com.nuvio.enhanced"
+    private const val defaultAlias = "$aliasPackageName.IconDefault"
+    private val launcherComponents = listOf(
+        NuvioAppIconOption.Default.id to defaultAlias,
+        NuvioAppIconOption.Enhanced.id to "$aliasPackageName.IconEnhanced",
+        NuvioAppIconOption.Monochrome.id to "$aliasPackageName.IconMonochrome",
+        NuvioAppIconOption.Neon.id to "$aliasPackageName.IconNeon",
+        NuvioAppIconOption.Gear.id to "$aliasPackageName.IconGear",
+        NuvioAppIconOption.Chrome.id to "$aliasPackageName.IconChrome",
+        NuvioAppIconOption.Aurora.id to "$aliasPackageName.IconAurora",
+        NuvioAppIconOption.Emerald.id to "$aliasPackageName.IconEmerald",
+    )
 
     private var context: Context? = null
 
@@ -21,27 +27,18 @@ internal actual object AppIconPlatform {
         restoreDefaultIfNeeded(appContext)
     }
 
-    actual fun currentIconName(): String? {
+    fun currentIconName(): String? {
         val appContext = context ?: return null
         return currentIconName(appContext)
     }
 
     fun currentLauncherIconResource(context: Context): Int {
-        val option = AppIconOption.fromPlatformName(currentIconName(context))
-        val resourceName = if (option == AppIconOption.ORIGINAL) {
-            "ic_launcher"
-        } else {
-            "ic_launcher_${option.key}"
-        }
-        return context.resources
-            .getIdentifier(resourceName, "mipmap", context.packageName)
-            .takeIf { it != 0 }
-            ?: com.nuvio.app.R.mipmap.ic_launcher
+        return com.nuvio.app.R.mipmap.ic_launcher
     }
 
     fun currentLauncherComponent(context: Context): ComponentName {
-        val currentName = currentIconName(context)
-        val className = launcherComponents.first { it.first == currentName }.second
+        val currentName = currentIconName(context) ?: NuvioAppIconOption.Default.id
+        val className = launcherComponents.firstOrNull { it.first == currentName }?.second ?: defaultAlias
         return component(context, className)
     }
 
@@ -62,7 +59,7 @@ internal actual object AppIconPlatform {
         }
         if (hasEnabledComponent) return
 
-        val defaultClass = launcherComponents.first { it.first == null }.second
+        val defaultClass = defaultAlias
         if (
             packageManager.getComponentEnabledSetting(component(context, defaultClass)) !=
             PackageManager.COMPONENT_ENABLED_STATE_DISABLED
@@ -76,9 +73,9 @@ internal actual object AppIconPlatform {
         )
     }
 
-    actual suspend fun activateIcon(name: String?): Boolean {
+    suspend fun activateIcon(name: String?): Boolean {
         val appContext = context ?: return false
-        val selectedClass = launcherComponents.firstOrNull { it.first == name }?.second ?: return false
+        val selectedClass = launcherComponents.firstOrNull { it.first == name }?.second ?: defaultAlias
         val packageManager = appContext.packageManager
 
         return runCatching {

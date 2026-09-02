@@ -240,20 +240,21 @@ fun DetailSeriesContent(
                                     episodeNumber = episode.episode,
                                     fallbackVideoId = episode.id,
                                 )
+                                val isWatched = progressByVideoId[episodeVideoId]?.isEffectivelyCompleted == true ||
+                                    WatchingState.isEpisodeWatched(
+                                        watchedKeys = watchedKeys,
+                                        metaType = meta.type,
+                                        metaId = meta.id,
+                                        episode = episode,
+                                    )
                                 EpisodeListCard(
                                     video = episode,
                                     fallbackImage = meta.background ?: meta.poster,
                                     progressEntry = progressByVideoId[episodeVideoId],
-                                    imdbRating = episode.seasonEpisodeKey()?.let { episodeRatings[it] } ?: episode.rating,
-                                    isWatched = progressByVideoId[episodeVideoId]?.isEffectivelyCompleted == true ||
-                                        WatchingState.isEpisodeWatched(
-                                            watchedKeys = watchedKeys,
-                                            metaType = meta.type,
-                                            metaId = meta.id,
-                                            episode = episode,
-                                    ),
+                                    imdbRating = if (isWatched) episode.resolvedEpisodeRating(episodeRatings) else null,
+                                    isWatched = isWatched,
                                     blurUnwatchedEpisodes = blurUnwatchedEpisodes,
-                                    showEpisodeRatings = showEpisodeRatings,
+                                    showEpisodeRatings = showEpisodeRatings && isWatched,
                                     sizing = sizing,
                                     onClick = { onEpisodeClick?.invoke(episode) },
                                     onLongPress = { onEpisodeLongPress?.invoke(episode) },
@@ -322,19 +323,21 @@ internal fun DetailSeriesListEpisode(
             episodeNumber = episode.episode,
             fallbackVideoId = episode.id,
         )
+        val isWatched = progressByVideoId[episodeVideoId]?.isEffectivelyCompleted == true ||
+            WatchingState.isEpisodeWatched(
+                watchedKeys = watchedKeys,
+                metaType = meta.type,
+                metaId = meta.id,
+                episode = episode,
+            )
         EpisodeListCard(
             video = episode,
             fallbackImage = meta.background ?: meta.poster,
             progressEntry = progressByVideoId[episodeVideoId],
-            imdbRating = episode.seasonEpisodeKey()?.let { episodeRatings[it] } ?: episode.rating,
-            isWatched = progressByVideoId[episodeVideoId]?.isEffectivelyCompleted == true ||
-                WatchingState.isEpisodeWatched(
-                    watchedKeys = watchedKeys,
-                    metaType = meta.type,
-                    metaId = meta.id,
-                    episode = episode,
-                ),
+            imdbRating = if (isWatched) episode.resolvedEpisodeRating(episodeRatings) else null,
+            isWatched = isWatched,
             blurUnwatchedEpisodes = blurUnwatchedEpisodes,
+            showEpisodeRatings = isWatched,
             sizing = sizing,
             onClick = { onEpisodeClick?.invoke(episode) },
             onLongPress = { onEpisodeLongPress?.invoke(episode) },
@@ -753,20 +756,21 @@ private fun EpisodeHorizontalRow(
                 episodeNumber = episode.episode,
                 fallbackVideoId = episode.id,
             )
+            val isWatched = progressByVideoId[episodeVideoId]?.isEffectivelyCompleted == true ||
+                WatchingState.isEpisodeWatched(
+                    watchedKeys = watchedKeys,
+                    metaType = metaType,
+                    metaId = parentMetaId,
+                    episode = episode,
+                )
             EpisodeHorizontalCard(
                 video = episode,
                 fallbackImage = fallbackImage,
                 progressEntry = progressByVideoId[episodeVideoId],
-                imdbRating = episode.seasonEpisodeKey()?.let { episodeRatings[it] } ?: episode.rating,
-                isWatched = progressByVideoId[episodeVideoId]?.isEffectivelyCompleted == true ||
-                    WatchingState.isEpisodeWatched(
-                        watchedKeys = watchedKeys,
-                        metaType = metaType,
-                        metaId = parentMetaId,
-                        episode = episode,
-                ),
+                imdbRating = if (isWatched) episode.resolvedEpisodeRating(episodeRatings) else null,
+                isWatched = isWatched,
                 blurUnwatchedEpisodes = blurUnwatchedEpisodes,
-                showEpisodeRatings = showEpisodeRatings,
+                showEpisodeRatings = showEpisodeRatings && isWatched,
                 metrics = rowMetrics,
                 onClick = { onEpisodeClick?.invoke(episode) },
                 onLongPress = { onEpisodeLongPress?.invoke(episode) },
@@ -1505,6 +1509,9 @@ private fun MetaVideo.seasonEpisodeKey(): Pair<Int, Int>? {
     val episodeNumber = episode ?: return null
     return seasonNumber to episodeNumber
 }
+
+private fun MetaVideo.resolvedEpisodeRating(episodeRatings: Map<Pair<Int, Int>, Double>): Double? =
+    seasonEpisodeKey()?.let { episodeRatings[it] } ?: rating
 
 private fun formatEpisodeRating(rating: Double): String {
     val roundedTenths = (rating * 10.0).roundToInt()

@@ -17,6 +17,8 @@ internal expect object PlayerSettingsStorage {
     fun saveTouchGesturesEnabled(enabled: Boolean)
     fun loadRememberPlayerBrightnessEnabled(): Boolean?
     fun saveRememberPlayerBrightnessEnabled(enabled: Boolean)
+    fun loadRememberPlayerChoicesEnabled(): Boolean?
+    fun saveRememberPlayerChoicesEnabled(enabled: Boolean)
     fun loadRememberedPlayerBrightness(): Float?
     fun saveRememberedPlayerBrightness(level: Float)
     fun loadVolumeBoostPercent(): Int?
@@ -59,12 +61,14 @@ internal expect object PlayerSettingsStorage {
     fun saveSubtitleCustomFontPath(fontPath: String?)
     fun loadSubtitleBottomOffset(): Int?
     fun saveSubtitleBottomOffset(bottomOffset: Int)
-    fun loadSubtitleStripSdh(): Boolean?
-    fun saveSubtitleStripSdh(enabled: Boolean)
     fun loadSubtitleUseForcedSubtitles(): Boolean?
     fun saveSubtitleUseForcedSubtitles(enabled: Boolean)
     fun loadSubtitleShowOnlyPreferredLanguages(): Boolean?
     fun saveSubtitleShowOnlyPreferredLanguages(enabled: Boolean)
+    fun loadSubtitleStripSdh(): Boolean?
+    fun saveSubtitleStripSdh(enabled: Boolean)
+    fun loadAddonSubtitleStartupMode(): String?
+    fun saveAddonSubtitleStartupMode(mode: String)
     fun loadStreamReuseLastLinkEnabled(): Boolean?
     fun saveStreamReuseLastLinkEnabled(enabled: Boolean)
     fun loadStreamReuseLastLinkCacheHours(): Int?

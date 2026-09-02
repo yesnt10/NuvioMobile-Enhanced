@@ -104,6 +104,34 @@ abstract class GenerateRuntimeConfigsTask : DefaultTask() {
             )
         }
 
+        outDir.resolve("com/nuvio/app/features/telegram").apply {
+            mkdirs()
+            resolve("TelegramConfig.kt").writeText(
+                """
+                |package com.nuvio.app.features.telegram
+                |
+                |object TelegramConfig {
+                |    const val API_ID = ${props.getProperty("TELEGRAM_API_ID", "0").toIntOrNull() ?: 0}
+                |    const val API_HASH = "${props.getProperty("TELEGRAM_API_HASH", "")}"
+                |}
+                """.trimMargin()
+            )
+        }
+
+        outDir.resolve("com/nuvio/app/features/simkl").apply {
+            mkdirs()
+            resolve("SimklConfig.kt").writeText(
+                """
+                |package com.nuvio.app.features.simkl
+                |
+                |object SimklConfig {
+                |    const val CLIENT_ID = "${props.getProperty("SIMKL_CLIENT_ID", "")}"
+                |    const val APP_NAME = "${props.getProperty("SIMKL_APP_NAME", "NuvioMobile")}"
+                |}
+                """.trimMargin()
+            )
+        }
+
         val introDbApiUrl = props.getProperty("INTRODB_API_URL")
             ?.trim()
             ?.takeIf { it.isNotBlank() }
@@ -381,6 +409,8 @@ kotlin {
             "ios-arm64_x86_64-simulator"
         }
         val nuvioEngineSliceDirectory = nuvioEngineAppleFramework.resolve(nuvioEngineSlice)
+        val hasNuvioEngineSlice = nuvioEngineSliceDirectory.resolve("libCNuvioEngine.a").isFile
+        val useNuvioEngine = iosDistribution == "full" && hasNuvioEngineSlice
         iosTarget.compilations.getByName("main") {
             cinterops {
                 create("commoncrypto") {
@@ -395,7 +425,11 @@ kotlin {
                     defFile(project.file("src/nativeInterop/cinterop/iosappicon.def"))
                     compilerOpts("-I${project.projectDir}/src/nativeInterop/cinterop")
                 }
-                if (iosDistribution == "full" && nuvioEngineSliceDirectory.resolve("libCNuvioEngine.a").isFile) {
+                create("iostelegram") {
+                    defFile(project.file("src/nativeInterop/cinterop/iostelegram.def"))
+                    compilerOpts("-I${project.projectDir}/src/nativeInterop/cinterop")
+                }
+                if (useNuvioEngine) {
                     create("nuvioengine") {
                         defFile(project.file("src/nativeInterop/cinterop/nuvioengine.def"))
                         compilerOpts("-I${nuvioEngineSliceDirectory.resolve("Headers").absolutePath}")
@@ -409,6 +443,10 @@ kotlin {
 
             if (iosDistribution == "full") {
                 defaultSourceSet.kotlin.srcDir(fullCommonSourceDir)
+                if (!useNuvioEngine) {
+                    defaultSourceSet.kotlin.exclude("**/P2pStreamingEngine.ios.kt")
+                    defaultSourceSet.kotlin.srcDir(project.file("src/iosNoEngine/kotlin"))
+                }
             }
             defaultSourceSet.kotlin.srcDir(project.file(iosDistributionSourceDir))
             defaultSourceSet.dependencies {

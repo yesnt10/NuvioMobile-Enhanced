@@ -15,6 +15,8 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -32,7 +34,9 @@ import com.nuvio.app.core.ui.posterCardClickable
 import com.nuvio.app.core.ui.rememberPosterCardStyleUiState
 import com.nuvio.app.features.home.MetaPreview
 import com.nuvio.app.features.home.PosterShape
+import com.nuvio.app.features.settings.NuvioEnhancedSettingsRepository
 import com.nuvio.app.features.watching.application.WatchingState
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
 
 internal fun posterGridColumnCountForWidth(screenWidth: Dp): Int =
     when {
@@ -53,6 +57,10 @@ internal fun PosterGridRow(
     onPosterClick: ((MetaPreview) -> Unit)? = null,
     onPosterLongClick: ((MetaPreview) -> Unit)? = null,
 ) {
+    val enhancedSettings by remember {
+        NuvioEnhancedSettingsRepository.ensureLoaded()
+        NuvioEnhancedSettingsRepository.uiState
+    }.collectAsStateWithLifecycle()
     val posterCardStyle = rememberPosterCardStyleUiState()
 
     Row(
@@ -65,6 +73,7 @@ internal fun PosterGridRow(
                 item = item,
                 cornerRadiusDp = posterCardStyle.cornerRadiusDp,
                 hideLabels = posterCardStyle.hideLabelsEnabled,
+                hideReleaseDate = enhancedSettings.hideHomeReleaseDates,
                 modifier = Modifier.weight(1f),
                 isWatched = WatchingState.isPosterWatched(
                     watchedKeys = watchedKeys,
@@ -110,6 +119,7 @@ private fun PosterGridTile(
     item: MetaPreview,
     cornerRadiusDp: Int,
     hideLabels: Boolean,
+    hideReleaseDate: Boolean,
     modifier: Modifier = Modifier,
     isWatched: Boolean = false,
     onClick: (() -> Unit)? = null,
@@ -154,7 +164,11 @@ private fun PosterGridTile(
                 maxLines = 2,
                 overflow = TextOverflow.Ellipsis,
             )
-            val detail = item.releaseInfo?.let { formatReleaseDateForDisplay(it) }
+            val detail = if (hideReleaseDate) {
+                null
+            } else {
+                item.releaseInfo?.let { formatReleaseDateForDisplay(it) }
+            }
             if (detail != null) {
                 Text(
                     text = detail,
@@ -174,5 +188,5 @@ private fun PosterShape.posterGridAspectRatio(): Float =
     when (this) {
         PosterShape.Poster -> 0.68f
         PosterShape.Square -> 1f
-        PosterShape.Landscape -> 1.78f
+        PosterShape.Landscape -> 1.2f
     }

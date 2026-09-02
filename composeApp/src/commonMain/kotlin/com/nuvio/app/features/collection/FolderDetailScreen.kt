@@ -61,6 +61,7 @@ import com.nuvio.app.features.home.PosterShape
 import com.nuvio.app.features.home.canOpenCatalog
 import com.nuvio.app.features.home.stableKey
 import com.nuvio.app.features.home.components.HomeCatalogRowSection
+import com.nuvio.app.features.settings.NuvioEnhancedSettingsRepository
 import com.nuvio.app.features.watched.WatchedRepository
 import com.nuvio.app.features.watching.application.WatchingState
 import kotlinx.coroutines.flow.distinctUntilChanged
@@ -84,6 +85,10 @@ fun FolderDetailScreen(
     val watchedUiState by remember {
         WatchedRepository.ensureLoaded()
         WatchedRepository.uiState
+    }.collectAsState()
+    val enhancedSettings by remember {
+        NuvioEnhancedSettingsRepository.ensureLoaded()
+        NuvioEnhancedSettingsRepository.uiState
     }.collectAsState()
     val folder = uiState.folder
     val coverImageUrl = folder?.coverImageUrl?.takeIf { it.isNotBlank() }
@@ -171,6 +176,7 @@ fun FolderDetailScreen(
             FolderViewMode.TABBED_GRID -> TabbedGridContent(
                 uiState = uiState,
                 watchedKeys = watchedUiState.watchedKeys,
+                hideReleaseDates = enhancedSettings.hideHomeReleaseDates,
                 modifier = Modifier.weight(1f).then(contentModifier),
                 onTabSelected = { FolderDetailRepository.selectTab(it) },
                 onPosterClick = onPosterClick,
@@ -232,6 +238,7 @@ private fun FolderCoverImage(
 private fun TabbedGridContent(
     uiState: FolderDetailUiState,
     watchedKeys: Set<String>,
+    hideReleaseDates: Boolean,
     modifier: Modifier = Modifier,
     onTabSelected: (Int) -> Unit,
     onPosterClick: (MetaPreview) -> Unit,
@@ -317,7 +324,7 @@ private fun TabbedGridContent(
                                 title = item.name,
                                 imageUrl = item.poster,
                                 shape = NuvioPosterShape.Poster,
-                                detailLine = item.releaseInfo,
+                                detailLine = if (hideReleaseDates) null else item.releaseInfo,
                                 isWatched = WatchingState.isPosterWatched(
                                     watchedKeys = watchedKeys,
                                     item = item,

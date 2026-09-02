@@ -132,7 +132,10 @@ internal fun PlayerScreenContent(args: PlayerScreenArgs) {
                 args.parentMetaId,
             )?.videos ?: emptyList()
         }
-        if (runtime.lastSyncedSettingsResizeMode != playerSettingsUiState.resizeMode) {
+        if (
+            playerSettingsUiState.rememberPlayerChoicesEnabled &&
+            runtime.lastSyncedSettingsResizeMode != playerSettingsUiState.resizeMode
+        ) {
             runtime.resizeMode = playerSettingsUiState.resizeMode
             runtime.lastSyncedSettingsResizeMode = playerSettingsUiState.resizeMode
         }

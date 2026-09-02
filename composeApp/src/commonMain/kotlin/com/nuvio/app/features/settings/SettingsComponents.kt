@@ -241,7 +241,7 @@ internal fun SettingsSection(
 @Composable
 internal fun SettingsNavigationRow(
     title: String,
-    description: String?,
+    description: String,
     icon: ImageVector? = null,
     iconPainter: Painter? = null,
     enabled: Boolean = true,
@@ -314,18 +314,15 @@ internal fun SettingsNavigationRow(
                     title = title,
                     highlighted = highlighted,
                 )
-                if (!description.isNullOrBlank()) {
-                    Spacer(modifier = Modifier.height(2.dp))
-                    Text(
-                        text = description,
-                        style = MaterialTheme.typography.bodyMedium,
-                        color = tokens.colors.textMuted,
-                        modifier = Modifier.alpha(0.92f),
-                    )
-                }
+                Spacer(modifier = Modifier.height(2.dp))
+                Text(
+                    text = description,
+                    style = MaterialTheme.typography.bodyMedium,
+                    color = tokens.colors.textMuted,
+                    modifier = Modifier.alpha(0.92f),
+                )
             }
         }
-        trailingContent?.invoke(this)
     }
 }
 

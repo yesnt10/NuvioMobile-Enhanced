@@ -26,7 +26,9 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.rounded.AutoAwesome
 import androidx.compose.material.icons.rounded.Notifications
 import androidx.compose.material.icons.rounded.PlayArrow
+import androidx.compose.material.icons.rounded.Refresh
 import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -790,7 +792,9 @@ internal fun HomeReleaseRadarSection(
     items: List<HomeReleaseRadarItem>,
     modifier: Modifier = Modifier,
     sectionPadding: Dp? = null,
-    showDigest: Boolean = false,
+    windowDays: Int = 30,
+    isRefreshing: Boolean = false,
+    onRefresh: (() -> Unit)? = null,
     onPosterClick: ((MetaPreview) -> Unit)? = null,
     onContinueWatchingClick: ((ContinueWatchingItem) -> Unit)? = null,
 ) {
@@ -801,7 +805,9 @@ internal fun HomeReleaseRadarSection(
             items = items,
             modifier = modifier.fillMaxWidth(),
             sectionPadding = sectionPadding,
-            showDigest = showDigest,
+            windowDays = windowDays,
+            isRefreshing = isRefreshing,
+            onRefresh = onRefresh,
             onPosterClick = onPosterClick,
             onContinueWatchingClick = onContinueWatchingClick,
         )
@@ -811,7 +817,9 @@ internal fun HomeReleaseRadarSection(
                 items = items,
                 modifier = Modifier.fillMaxWidth(),
                 sectionPadding = homeSectionHorizontalPaddingForWidth(maxWidth.value),
-                showDigest = showDigest,
+                windowDays = windowDays,
+                isRefreshing = isRefreshing,
+                onRefresh = onRefresh,
                 onPosterClick = onPosterClick,
                 onContinueWatchingClick = onContinueWatchingClick,
             )
@@ -824,12 +832,13 @@ private fun HomeReleaseRadarSectionContent(
     items: List<HomeReleaseRadarItem>,
     modifier: Modifier,
     sectionPadding: Dp,
-    showDigest: Boolean,
+    windowDays: Int,
+    isRefreshing: Boolean,
+    onRefresh: (() -> Unit)?,
     onPosterClick: ((MetaPreview) -> Unit)?,
     onContinueWatchingClick: ((ContinueWatchingItem) -> Unit)?,
 ) {
     val tokens = MaterialTheme.nuvio
-    val digest = remember(items) { HomeReleaseRadarDigest.from(items) }
     Column(
         modifier = modifier,
         verticalArrangement = Arrangement.spacedBy(tokens.spacing.controlGap + NuvioTokens.Space.s2),
@@ -868,10 +877,24 @@ private fun HomeReleaseRadarSectionContent(
                             tint = tokens.colors.accent,
                         )
                         Text(
-                            text = stringResource(Res.string.home_release_radar_window),
+                            text = stringResource(Res.string.home_release_radar_window_days, windowDays),
                             style = MaterialTheme.typography.labelSmall,
                             color = tokens.colors.textPrimary,
                             maxLines = 1,
+                        )
+                    }
+                }
+                if (onRefresh != null) {
+                    IconButton(
+                        onClick = onRefresh,
+                        enabled = !isRefreshing,
+                        modifier = Modifier.size(32.dp),
+                    ) {
+                        Icon(
+                            imageVector = Icons.Rounded.Refresh,
+                            contentDescription = stringResource(Res.string.home_release_radar_refresh),
+                            modifier = Modifier.size(18.dp),
+                            tint = if (isRefreshing) tokens.colors.textMuted else tokens.colors.accent,
                         )
                     }
                 }
@@ -883,9 +906,6 @@ private fun HomeReleaseRadarSectionContent(
                 maxLines = 2,
                 overflow = TextOverflow.Ellipsis,
             )
-            if (showDigest) {
-                HomeReleaseRadarDigestRow(digest = digest)
-            }
             Box(
                 modifier = Modifier
                     .padding(top = 2.dp)
@@ -993,64 +1013,6 @@ private fun HomeReleaseRadarCard(
                 overflow = TextOverflow.Ellipsis,
             )
         }
-    }
-}
-
-@Composable
-private fun HomeReleaseRadarDigestRow(digest: HomeReleaseRadarDigest) {
-    Row(
-        modifier = Modifier.fillMaxWidth(),
-        horizontalArrangement = Arrangement.spacedBy(8.dp),
-        verticalAlignment = Alignment.CenterVertically,
-    ) {
-        HomeReleaseRadarDigestPill(
-            value = digest.todayCount,
-            label = stringResource(Res.string.home_release_radar_digest_today),
-            modifier = Modifier.weight(1f),
-        )
-        HomeReleaseRadarDigestPill(
-            value = digest.weekCount,
-            label = stringResource(Res.string.home_release_radar_digest_week),
-            modifier = Modifier.weight(1f),
-        )
-        HomeReleaseRadarDigestPill(
-            value = digest.profileSignalCount,
-            label = stringResource(Res.string.home_release_radar_digest_profile),
-            modifier = Modifier.weight(1f),
-        )
-    }
-}
-
-@Composable
-private fun HomeReleaseRadarDigestPill(
-    value: Int,
-    label: String,
-    modifier: Modifier = Modifier,
-) {
-    val tokens = MaterialTheme.nuvio
-    Row(
-        modifier = modifier
-            .clip(RoundedCornerShape(18.dp))
-            .background(tokens.colors.surface.copy(alpha = 0.72f))
-            .border(1.dp, tokens.colors.borderSubtle, RoundedCornerShape(18.dp))
-            .padding(horizontal = 10.dp, vertical = 9.dp),
-        horizontalArrangement = Arrangement.spacedBy(8.dp),
-        verticalAlignment = Alignment.CenterVertically,
-    ) {
-        Text(
-            text = value.toString(),
-            style = MaterialTheme.typography.titleMedium,
-            color = tokens.colors.textPrimary,
-            fontWeight = FontWeight.SemiBold,
-            maxLines = 1,
-        )
-        Text(
-            text = label,
-            style = MaterialTheme.typography.labelSmall,
-            color = tokens.colors.textMuted,
-            maxLines = 1,
-            overflow = TextOverflow.Ellipsis,
-        )
     }
 }
 
@@ -1188,7 +1150,6 @@ private fun HomeReleaseRadarCategory.localizedCategory(): String =
         HomeReleaseRadarCategory.Movie -> stringResource(Res.string.home_release_radar_category_movie)
         HomeReleaseRadarCategory.Series -> stringResource(Res.string.home_release_radar_category_series)
         HomeReleaseRadarCategory.NextUp -> stringResource(Res.string.home_release_radar_category_next_up)
-        HomeReleaseRadarCategory.Catalog -> stringResource(Res.string.home_release_radar_category_catalog)
     }
 
 @Composable
@@ -1213,22 +1174,3 @@ private fun HomeReleaseRadarItem.localizedRadarSignal(): String =
         (daysFromToday ?: Int.MAX_VALUE) in 1..7 -> stringResource(Res.string.home_release_radar_signal_week)
         else -> stringResource(Res.string.home_release_radar_signal_upcoming)
     }
-
-private data class HomeReleaseRadarDigest(
-    val todayCount: Int,
-    val weekCount: Int,
-    val profileSignalCount: Int,
-) {
-    companion object {
-        fun from(items: List<HomeReleaseRadarItem>): HomeReleaseRadarDigest =
-            HomeReleaseRadarDigest(
-                todayCount = items.count { item -> item.daysFromToday == 0 },
-                weekCount = items.count { item -> item.daysFromToday?.let { days -> days in 0..7 } == true },
-                profileSignalCount = items.count { item ->
-                    item.category == HomeReleaseRadarCategory.NextUp ||
-                        item.category == HomeReleaseRadarCategory.Episode ||
-                        item.category == HomeReleaseRadarCategory.Series
-                },
-            )
-    }
-}

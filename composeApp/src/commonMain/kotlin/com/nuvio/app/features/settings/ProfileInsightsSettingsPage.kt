@@ -68,15 +68,11 @@ import com.nuvio.app.core.ui.NuvioSurfaceCard
 import com.nuvio.app.core.ui.NuvioModalBottomSheet
 import com.nuvio.app.core.ui.nuvio
 import com.nuvio.app.features.home.MetaPreview
-import com.nuvio.app.features.home.buildHomeConciergeState
-import com.nuvio.app.features.home.buildHomeReleaseRadarItems
 import com.nuvio.app.features.home.components.CollectionCardRemoteImage
-import com.nuvio.app.features.home.components.HomeConciergeSection
 import com.nuvio.app.features.details.MetaDetailsRepository
 import com.nuvio.app.features.details.MetaDetails
 import com.nuvio.app.features.details.FavoritePerson
 import com.nuvio.app.features.details.FavoritePeopleRepository
-import com.nuvio.app.features.settings.filteredByNuvioEnhancedReleaseRadar
 import com.nuvio.app.features.library.LibraryItem
 import com.nuvio.app.features.library.LibraryRepository
 import com.nuvio.app.features.library.LibraryUiState
@@ -199,10 +195,6 @@ private fun ProfileInsightsBody(
         FavoritePeopleRepository.ensureLoaded()
         FavoritePeopleRepository.uiState
     }.collectAsStateWithLifecycle()
-    val nuvioEnhancedSettings by remember {
-        NuvioEnhancedSettingsRepository.ensureLoaded()
-        NuvioEnhancedSettingsRepository.uiState
-    }.collectAsStateWithLifecycle()
     val todayIsoDate = remember { CurrentDateProvider.todayIsoDate() }
 
     LaunchedEffect(Unit) {
@@ -291,59 +283,6 @@ private fun ProfileInsightsBody(
     LaunchedEffect(activeProfileIndex) {
         selectedInsightCollection = null
     }
-    val profileRadarItems = remember(
-        activeProfileIndex,
-        todayIsoDate,
-        continueWatchingItems,
-        libraryState.items,
-        nuvioEnhancedSettings,
-    ) {
-        if (!nuvioEnhancedSettings.releaseRadarHomeSignalsEnabled) {
-            emptyList()
-        } else {
-            runCatching {
-                buildHomeReleaseRadarItems(
-                    todayIsoDate = todayIsoDate,
-                    continueWatchingItems = continueWatchingItems,
-                    libraryItems = libraryState.items,
-                    catalogSections = emptyList(),
-                    resolvedLibraryDetails = emptyMap(),
-                ).filteredByNuvioEnhancedReleaseRadar(nuvioEnhancedSettings)
-            }.onFailure { error ->
-                profileInsightsLog.e(error) { "Failed to build profile radar items profile=$activeProfileIndex" }
-            }.getOrElse {
-                emptyList()
-            }
-        }
-    }
-    val conciergeState = remember(
-        activeProfileIndex,
-        profileName,
-        continueWatchingItems,
-        profileRadarItems,
-        libraryState.items,
-        nuvioEnhancedSettings,
-    ) {
-        if (!nuvioEnhancedSettings.enhancedHomeFeaturesEnabled || !nuvioEnhancedSettings.nuvioConciergeEnabled) {
-            null
-        } else {
-            runCatching {
-                buildHomeConciergeState(
-                    profileName = profileName,
-                    continueWatchingItems = continueWatchingItems,
-                    releaseRadarItems = profileRadarItems,
-                    libraryItems = libraryState.items,
-                    catalogSections = emptyList(),
-                    smartResumeEnabled = nuvioEnhancedSettings.smartResumeEnabled,
-                    releaseRadarEnabled = nuvioEnhancedSettings.releaseRadarHomeSignalsEnabled,
-                    profileStatsEnabled = nuvioEnhancedSettings.profileStatsEnabled,
-                )
-            }.onFailure { error ->
-                profileInsightsLog.e(error) { "Failed to build profile concierge state profile=$activeProfileIndex" }
-            }.getOrNull()
-        }
-    }
-
     Column(
         modifier = Modifier.fillMaxWidth(),
         verticalArrangement = Arrangement.spacedBy(if (isTablet) 18.dp else 14.dp),
@@ -406,19 +345,6 @@ private fun ProfileInsightsBody(
             isTablet = isTablet,
         ) {
             ProfileTasteCard(stats = stats)
-        }
-        if (conciergeState != null) {
-            SettingsSection(
-                title = "Nuvio Concierge",
-                isTablet = isTablet,
-            ) {
-                HomeConciergeSection(
-                    state = conciergeState,
-                    sectionPadding = 0.dp,
-                    onPosterClick = onPosterClick,
-                    onContinueWatchingClick = onContinueWatchingClick,
-                )
-            }
         }
     }
 

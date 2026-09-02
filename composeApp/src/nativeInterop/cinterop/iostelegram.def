@@ -1,0 +1,3 @@
+language = C
+headers = iostelegram_shim.h
+package = com.nuvio.app.features.telegram.iostelegram

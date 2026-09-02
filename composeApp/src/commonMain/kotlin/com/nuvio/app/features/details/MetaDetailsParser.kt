@@ -12,6 +12,7 @@ import kotlinx.serialization.json.JsonObject
 import kotlinx.serialization.json.JsonPrimitive
 import kotlinx.serialization.json.booleanOrNull
 import kotlinx.serialization.json.contentOrNull
+import kotlinx.serialization.json.doubleOrNull
 import kotlinx.serialization.json.intOrNull
 import kotlinx.serialization.json.longOrNull
 import kotlinx.serialization.json.jsonPrimitive
@@ -248,7 +249,7 @@ internal object MetaDetailsParser {
                 episode = video.int("episode"),
                 overview = video.string("overview") ?: video.string("description"),
                 runtime = video.int("runtime"),
-                rating = video.string("rating")?.trim()?.toDoubleOrNull()?.takeIf { it > 0.0 },
+                rating = video.rating("rating"),
                 streams = video.embeddedStreams(),
             )
         }
@@ -363,6 +364,15 @@ internal object MetaDetailsParser {
 
     private fun JsonObject.long(name: String): Long? =
         this[name]?.jsonPrimitive?.longOrNull
+
+    private fun JsonObject.rating(name: String): Double? =
+        this[name]
+            ?.jsonPrimitive
+            ?.let { primitive ->
+                primitive.doubleOrNull
+                    ?: primitive.contentOrNull?.trim()?.substringBefore('/')?.toDoubleOrNull()
+            }
+            ?.takeIf { it > 0.0 }
 }
 
 private fun JsonElement?.asJsonObjectOrNull(): JsonObject? = this as? JsonObject

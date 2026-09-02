@@ -52,7 +52,6 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.LinearProgressIndicator
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -87,7 +86,6 @@ import com.nuvio.app.core.i18n.localizedByteUnit
 import com.nuvio.app.core.network.NetworkCondition
 import com.nuvio.app.core.network.NetworkStatusRepository
 import com.nuvio.app.core.ui.DisintegratingContainer
-import com.nuvio.app.core.ui.DisintegrationRequest
 import com.nuvio.app.core.ui.NuvioDropdownChip
 import com.nuvio.app.core.ui.NuvioDropdownOption
 import com.nuvio.app.core.ui.NuvioScreen
@@ -116,16 +114,11 @@ import com.nuvio.app.features.downloads.downloadProgressInfoLines
 import com.nuvio.app.features.downloads.sortedForSeriesDownloads
 import com.nuvio.app.features.home.HomeCatalogSettingsRepository
 import com.nuvio.app.features.home.PosterShape
-import com.nuvio.app.features.home.buildHomeReleaseRadarItems
-import com.nuvio.app.features.home.homeRadarDetailsRequestKey
 import com.nuvio.app.features.home.libraryItemKeyForHomeRadar
 import com.nuvio.app.features.home.components.HomeEmptyStateCard
 import com.nuvio.app.features.home.components.HomePosterCard
-import com.nuvio.app.features.home.components.HomeReleaseRadarSection
 import com.nuvio.app.features.home.components.HomeSkeletonRow
 import com.nuvio.app.features.profiles.ProfileRepository
-import com.nuvio.app.features.settings.NuvioEnhancedSettingsRepository
-import com.nuvio.app.features.settings.filteredByNuvioEnhancedReleaseRadar
 import com.nuvio.app.features.watched.WatchedRepository
 import com.nuvio.app.features.watchprogress.CurrentDateProvider
 import com.nuvio.app.features.watching.application.WatchingState
@@ -179,10 +172,6 @@ fun LibraryScreen(
         HomeCatalogSettingsRepository.snapshot()
         HomeCatalogSettingsRepository.uiState
     }.collectAsStateWithLifecycle()
-    val nuvioEnhancedSettings by remember {
-        NuvioEnhancedSettingsRepository.ensureLoaded()
-        NuvioEnhancedSettingsRepository.uiState
-    }.collectAsStateWithLifecycle()
     val networkStatusUiState by NetworkStatusRepository.uiState.collectAsStateWithLifecycle()
     var observedOfflineState by remember { mutableStateOf(false) }
     var sourceModeName by rememberSaveable { mutableStateOf(LibraryViewMode.Saved.name) }
@@ -205,18 +194,15 @@ fun LibraryScreen(
     var releaseCalendarEvents by remember { mutableStateOf(releaseCalendarFallbackEvents) }
     var releaseCalendarLoading by remember { mutableStateOf(false) }
     var releaseCalendarLoadedKey by remember { mutableStateOf<String?>(null) }
-    val releaseRadarDetailsRequestKey = remember(uiState.items) { uiState.items.homeRadarDetailsRequestKey() }
     val releaseSupportProfileId = ProfileRepository.activeProfileId
-    val releaseSupportCacheKey = remember(releaseCalendarItemsKey, releaseRadarDetailsRequestKey) {
+    val releaseSupportCacheKey = remember(releaseCalendarItemsKey) {
         libraryReleaseSupportCacheKey(
             calendarItemsKey = releaseCalendarItemsKey,
-            radarDetailsRequestKey = releaseRadarDetailsRequestKey,
+            radarDetailsRequestKey = "",
         )
     }
-    var releaseRadarDetailsByKey by remember { mutableStateOf<Map<String, MetaDetails>>(emptyMap()) }
     var selectedProviderId by rememberSaveable { mutableStateOf<String?>(null) }
     var selectedTypeName by rememberSaveable { mutableStateOf<String?>(null) }
-    var cloudSearchQuery by rememberSaveable { mutableStateOf("") }
     val selectedType = remember(selectedTypeName) {
         selectedTypeName?.let { runCatching { CloudLibraryItemType.valueOf(it) }.getOrNull() }
     }
@@ -227,14 +213,11 @@ fun LibraryScreen(
     val retryLibraryLoad: () -> Unit = {
         NetworkStatusRepository.requestRefresh(force = true)
         coroutineScope.launch {
-            LibraryRepository.pullFromServer(
-                profileId = ProfileRepository.activeProfileId,
-                refreshIntent = TrackingRefreshIntent.USER_INITIATED,
-            )
+            LibraryRepository.pullFromServer(ProfileRepository.activeProfileId)
         }
     }
 
-    LaunchedEffect(networkStatusUiState.condition, isRemoteSource) {
+    LaunchedEffect(networkStatusUiState.condition, isTraktSource) {
         when (networkStatusUiState.condition) {
             NetworkCondition.NoInternet,
             NetworkCondition.ServersUnreachable,
@@ -245,7 +228,7 @@ fun LibraryScreen(
             NetworkCondition.Online -> {
                 if (!observedOfflineState) return@LaunchedEffect
                 observedOfflineState = false
-                if (isRemoteSource) {
+                if (isTraktSource) {
                     coroutineScope.launch {
                         LibraryRepository.pullFromServer(ProfileRepository.activeProfileId)
                     }
@@ -324,7 +307,7 @@ fun LibraryScreen(
         }
         releaseCalendarLoading = cachedPayload == null
         try {
-            val resolvedDetails = resolveLibraryReleaseRadarDetails(itemsSnapshot)
+            val resolvedDetails = resolveLibraryReleaseSupportDetails(itemsSnapshot)
             val nextDetails = if (cachedDetails.isNotEmpty()) {
                 cachedDetails + resolvedDetails
             } else {
@@ -344,58 +327,6 @@ fun LibraryScreen(
         }
     }
 
-    LaunchedEffect(sourceMode, releaseSupportProfileId, releaseSupportCacheKey) {
-        if (sourceMode == LibraryViewMode.Cloud || releaseRadarDetailsRequestKey.isBlank()) {
-            releaseRadarDetailsByKey = emptyMap()
-            return@LaunchedEffect
-        }
-        val itemsSnapshot = uiState.items
-        val cachedPayload = loadLibraryReleaseSupportCache(
-            profileId = releaseSupportProfileId,
-            cacheKey = releaseSupportCacheKey,
-        )
-        val cachedDetails = cachedPayload?.detailsByKey.orEmpty()
-        if (cachedDetails.isNotEmpty()) {
-            releaseRadarDetailsByKey = cachedDetails
-            if (cachedPayload?.isFresh() == true) {
-                return@LaunchedEffect
-            }
-        }
-        val resolvedDetails = withContext(Dispatchers.Default) {
-            resolveLibraryReleaseRadarDetails(itemsSnapshot)
-        }
-        val nextDetails = if (cachedDetails.isNotEmpty()) {
-            cachedDetails + resolvedDetails
-        } else {
-            resolvedDetails
-        }
-        if (nextDetails.isNotEmpty()) {
-            releaseRadarDetailsByKey = nextDetails
-            saveLibraryReleaseSupportCache(
-                profileId = releaseSupportProfileId,
-                cacheKey = releaseSupportCacheKey,
-                detailsByKey = nextDetails,
-            )
-        }
-    }
-
-    val todayIsoDate = CurrentDateProvider.todayIsoDate()
-    val releaseRadarItems = remember(
-        todayIsoDate,
-        uiState.items,
-        releaseRadarDetailsByKey,
-        nuvioEnhancedSettings,
-    ) {
-        buildHomeReleaseRadarItems(
-            todayIsoDate = todayIsoDate,
-            continueWatchingItems = emptyList(),
-            libraryItems = uiState.items,
-            catalogSections = emptyList(),
-            resolvedLibraryDetails = releaseRadarDetailsByKey,
-            includeRecentPastReleases = false,
-        ).filteredByNuvioEnhancedReleaseRadar(nuvioEnhancedSettings)
-    }
-
     val disintegration = remember { LibraryDisintegrationHolder() }
     val librarySectionsDisplay = if (
         sourceMode == LibraryViewMode.Saved && uiState.isLoaded && uiState.sections.isNotEmpty()
@@ -405,14 +336,6 @@ fun LibraryScreen(
         disintegration.reset()
         emptyList()
     }
-    val libraryHealthReport = remember(uiState.items, releaseRadarItems, todayIsoDate) {
-        buildLibraryHealthReport(
-            items = uiState.items,
-            releaseRadarItems = releaseRadarItems,
-            todayIsoDate = todayIsoDate,
-        )
-    }
-
     Box(modifier = modifier.fillMaxSize()) {
         NuvioScreen(
             modifier = Modifier
@@ -434,12 +357,10 @@ fun LibraryScreen(
                         NuvioScreenHeader(
                             title = if (sourceMode == LibraryViewMode.Cloud) {
                                 stringResource(Res.string.library_title)
+                            } else if (isTraktSource) {
+                                stringResource(Res.string.library_trakt_title)
                             } else {
-                                when (uiState.sourceMode) {
-                                    LibrarySourceMode.LOCAL -> stringResource(Res.string.library_title)
-                                    LibrarySourceMode.TRAKT -> stringResource(Res.string.library_trakt_title)
-                                    LibrarySourceMode.SIMKL -> stringResource(Res.string.library_simkl_title)
-                                }
+                                stringResource(Res.string.library_title)
                             },
                             modifier = Modifier.padding(horizontal = 16.dp),
                             actions = {
@@ -478,11 +399,6 @@ fun LibraryScreen(
                     selectedProviderId = selectedProviderId,
                     selectedType = selectedType,
                     selectedCloudItemKey = selectedCloudItemKey,
-                    searchQuery = cloudSearchQuery,
-                    onSearchQueryChange = {
-                        cloudSearchQuery = it
-                        selectedCloudItemKey = null
-                    },
                     onProviderSelected = {
                         selectedProviderId = it
                         selectedTypeName = null
@@ -557,10 +473,10 @@ fun LibraryScreen(
                             } else {
                                 HomeEmptyStateCard(
                                     modifier = Modifier.padding(horizontal = 16.dp),
-                                    title = when (uiState.sourceMode) {
-                                        LibrarySourceMode.LOCAL -> stringResource(Res.string.library_load_failed)
-                                        LibrarySourceMode.TRAKT -> stringResource(Res.string.library_trakt_load_failed)
-                                        LibrarySourceMode.SIMKL -> stringResource(Res.string.library_simkl_load_failed)
+                                    title = if (isTraktSource) {
+                                        stringResource(Res.string.library_trakt_load_failed)
+                                    } else {
+                                        stringResource(Res.string.library_load_failed)
                                     },
                                     message = uiState.errorMessage.orEmpty(),
                                     actionLabel = stringResource(Res.string.action_retry),
@@ -572,19 +488,27 @@ fun LibraryScreen(
 
                     uiState.sections.isEmpty() -> {
                         item {
-                            HomeEmptyStateCard(
-                                modifier = Modifier.padding(horizontal = 16.dp),
-                                title = when (uiState.sourceMode) {
-                                    LibrarySourceMode.LOCAL -> stringResource(Res.string.library_empty_title)
-                                    LibrarySourceMode.TRAKT -> stringResource(Res.string.library_trakt_empty_title)
-                                    LibrarySourceMode.SIMKL -> stringResource(Res.string.library_simkl_empty_title)
-                                },
-                                message = when (uiState.sourceMode) {
-                                    LibrarySourceMode.LOCAL -> stringResource(Res.string.library_empty_message)
-                                    LibrarySourceMode.TRAKT -> stringResource(Res.string.library_trakt_empty_message)
-                                    LibrarySourceMode.SIMKL -> stringResource(Res.string.library_simkl_empty_message)
-                                },
-                            )
+                            if (networkStatusUiState.isOfflineLike && isTraktSource) {
+                                NuvioNetworkOfflineCard(
+                                    condition = networkStatusUiState.condition,
+                                    modifier = Modifier.padding(horizontal = 16.dp),
+                                    onRetry = retryLibraryLoad,
+                                )
+                            } else {
+                                HomeEmptyStateCard(
+                                    modifier = Modifier.padding(horizontal = 16.dp),
+                                    title = if (isTraktSource) {
+                                        stringResource(Res.string.library_trakt_empty_title)
+                                    } else {
+                                        stringResource(Res.string.library_empty_title)
+                                    },
+                                    message = if (isTraktSource) {
+                                        stringResource(Res.string.library_trakt_empty_message)
+                                    } else {
+                                        stringResource(Res.string.library_empty_message)
+                                    },
+                                )
+                            }
                         }
                     }
 
@@ -598,31 +522,6 @@ fun LibraryScreen(
                             onPosterLongClick = onPosterLongClick,
                             onDisintegrated = disintegration::onExited,
                         )
-                        if (
-                            nuvioEnhancedSettings.enhancedHomeFeaturesEnabled &&
-                            nuvioEnhancedSettings.libraryHealthEnabled
-                        ) {
-                            item(key = LIBRARY_HEALTH_SECTION_KEY) {
-                                LibraryHealthCard(
-                                    report = libraryHealthReport,
-                                    modifier = Modifier.padding(horizontal = 16.dp, vertical = 6.dp),
-                                )
-                            }
-                        }
-                        if (releaseRadarItems.isNotEmpty()) {
-                            item(key = LIBRARY_RELEASE_RADAR_SECTION_KEY) {
-                                HomeReleaseRadarSection(
-                                    items = releaseRadarItems,
-                                    modifier = Modifier.padding(bottom = 12.dp),
-                                    sectionPadding = 16.dp,
-                                    showDigest = nuvioEnhancedSettings.releaseRadarDigestEnabled,
-                                    onPosterClick = onPosterClick?.let { posterClick ->
-                                        { preview -> posterClick(preview.toLibraryItem(savedAtEpochMs = 0L)) }
-                                    },
-                                    onContinueWatchingClick = null,
-                                )
-                            }
-                        }
                     }
                 }
             }
@@ -1286,8 +1185,6 @@ private fun LazyListScope.cloudLibraryContent(
     selectedProviderId: String?,
     selectedType: CloudLibraryItemType?,
     selectedCloudItemKey: String?,
-    searchQuery: String,
-    onSearchQueryChange: (String) -> Unit,
     onProviderSelected: (String?) -> Unit,
     onTypeSelected: (CloudLibraryItemType?) -> Unit,
     onItemSelected: (CloudLibraryItem) -> Unit,
@@ -1333,20 +1230,8 @@ private fun LazyListScope.cloudLibraryContent(
                 .distinct()
                 .sortedBy { type -> type.ordinal }
             val effectiveSelectedType = selectedType?.takeIf { type -> type in availableTypes }
-            val typeFilteredItems = providerItems
+            val filteredItems = providerItems
                 .filter { item -> effectiveSelectedType == null || item.type == effectiveSelectedType }
-            // Local filter over the already-loaded library. Matches the item name or any of its
-            // file names, since the useful identifier is often in the filename, not the title.
-            val trimmedQuery = searchQuery.trim()
-            val hasActiveFilter = selectedProviderId != null || effectiveSelectedType != null || trimmedQuery.isNotEmpty()
-            val filteredItems = if (trimmedQuery.isEmpty()) {
-                typeFilteredItems
-            } else {
-                typeFilteredItems.filter { item ->
-                    item.name.contains(trimmedQuery, ignoreCase = true) ||
-                        item.files.any { file -> file.name.contains(trimmedQuery, ignoreCase = true) }
-                }
-            }
             val selectedItem = filteredItems.firstOrNull { it.stableKey == selectedCloudItemKey }
 
             if (selectedItem != null) {
@@ -1371,54 +1256,31 @@ private fun LazyListScope.cloudLibraryContent(
                     )
                 }
 
-                item(key = "cloud-library-search") {
-                    CloudLibrarySearchField(
-                        query = searchQuery,
-                        onQueryChange = onSearchQueryChange,
-                        modifier = Modifier.padding(horizontal = 16.dp, vertical = 8.dp),
-                    )
-                }
-
-                val visibleProviderStates = uiState.providers.filter { providerState ->
-                    selectedProviderId == null || providerState.providerId == selectedProviderId
-                }
-                val failedProviderStates = visibleProviderStates.filter { providerState ->
-                    !providerState.errorMessage.isNullOrBlank() && providerState.items.isEmpty()
-                }
-                failedProviderStates.forEach { providerState ->
-                    item(key = "cloud-error-${providerState.providerId}") {
-                        HomeEmptyStateCard(
-                            modifier = Modifier.padding(horizontal = 16.dp),
-                            title = stringResource(Res.string.cloud_library_load_failed, providerState.providerName),
-                            message = providerState.errorMessage.orEmpty(),
-                            actionLabel = stringResource(Res.string.action_retry),
-                            onActionClick = onRefresh,
-                        )
+                uiState.providers
+                    .filter { providerState -> selectedProviderId == null || providerState.providerId == selectedProviderId }
+                    .filter { providerState -> !providerState.errorMessage.isNullOrBlank() && providerState.items.isEmpty() }
+                    .forEach { providerState ->
+                        item(key = "cloud-error-${providerState.providerId}") {
+                            HomeEmptyStateCard(
+                                modifier = Modifier.padding(horizontal = 16.dp),
+                                title = stringResource(Res.string.cloud_library_load_failed, providerState.providerName),
+                                message = providerState.errorMessage.orEmpty(),
+                                actionLabel = stringResource(Res.string.action_retry),
+                                onActionClick = onRefresh,
+                            )
+                        }
                     }
-                }
 
                 if (uiState.isRefreshing && filteredItems.isEmpty()) {
                     cloudLibrarySkeletonItems()
-                } else if (filteredItems.isEmpty() && failedProviderStates.isEmpty()) {
+                } else if (filteredItems.isEmpty()) {
                     item {
                         HomeEmptyStateCard(
                             modifier = Modifier.padding(horizontal = 16.dp),
-                            title = stringResource(
-                                if (hasActiveFilter) {
-                                    Res.string.cloud_library_no_matches_title
-                                } else {
-                                    Res.string.cloud_library_empty_title
-                                },
-                            ),
-                            message = stringResource(
-                                if (hasActiveFilter) {
-                                    Res.string.cloud_library_no_matches_message
-                                } else {
-                                    Res.string.cloud_library_empty_message
-                                },
-                            ),
-                            actionLabel = if (hasActiveFilter) null else stringResource(Res.string.action_retry),
-                            onActionClick = if (hasActiveFilter) null else onRefresh,
+                            title = stringResource(Res.string.cloud_library_empty_title),
+                            message = stringResource(Res.string.cloud_library_empty_message),
+                            actionLabel = stringResource(Res.string.action_retry),
+                            onActionClick = onRefresh,
                         )
                     }
                 } else {
@@ -1435,38 +1297,6 @@ private fun LazyListScope.cloudLibraryContent(
             }
         }
     }
-}
-
-@Composable
-private fun CloudLibrarySearchField(
-    query: String,
-    onQueryChange: (String) -> Unit,
-    modifier: Modifier = Modifier,
-) {
-    OutlinedTextField(
-        value = query,
-        onValueChange = onQueryChange,
-        modifier = modifier.fillMaxWidth(),
-        singleLine = true,
-        shape = RoundedCornerShape(12.dp),
-        placeholder = { Text(stringResource(Res.string.cloud_library_search_label)) },
-        leadingIcon = {
-            Icon(
-                imageVector = Icons.Rounded.Search,
-                contentDescription = null,
-            )
-        },
-        trailingIcon = {
-            if (query.isNotEmpty()) {
-                IconButton(onClick = { onQueryChange("") }) {
-                    Icon(
-                        imageVector = Icons.Rounded.Close,
-                        contentDescription = stringResource(Res.string.compose_search_clear),
-                    )
-                }
-            }
-        },
-    )
 }
 
 private fun LazyListScope.cloudLibrarySkeletonItems() {
@@ -2794,10 +2624,10 @@ private fun libraryCalendarItemsCacheKey(items: List<LibraryItem>): String =
 private fun libraryReleaseSupportCacheKey(
     calendarItemsKey: String,
     radarDetailsRequestKey: String,
-): String = "release_support_v2:${calendarItemsKey.hashCode()}:${radarDetailsRequestKey.hashCode()}"
+): String = "release_support_v3:${calendarItemsKey.hashCode()}:${radarDetailsRequestKey.hashCode()}"
 
 private suspend fun buildLibraryReleaseCalendarEvents(items: List<LibraryItem>): List<LibraryCalendarEvent> {
-    val resolvedDetails = resolveLibraryReleaseRadarDetails(items)
+    val resolvedDetails = resolveLibraryReleaseSupportDetails(items)
     return buildLibraryReleaseCalendarEventsFromDetails(items, resolvedDetails)
 }
 
@@ -2838,13 +2668,13 @@ private fun buildLibraryReleaseCalendarFallbackEvents(items: List<LibraryItem>):
         .sortedWith(compareBy<LibraryCalendarEvent> { it.date.iso }.thenBy { it.item.name.lowercase() })
         .toList()
 
-private suspend fun resolveLibraryReleaseRadarDetails(items: List<LibraryItem>): Map<String, MetaDetails> =
+private suspend fun resolveLibraryReleaseSupportDetails(items: List<LibraryItem>): Map<String, MetaDetails> =
     coroutineScope {
         val resolvedDetails = mutableListOf<Pair<String, MetaDetails>>()
         items
             .filter(LibraryItem::isLibrarySeries)
-            .take(LIBRARY_RELEASE_RADAR_DETAILS_RESOLUTION_LIMIT)
-            .chunked(LIBRARY_RELEASE_RADAR_DETAILS_RESOLUTION_CONCURRENCY)
+            .take(LIBRARY_RELEASE_SUPPORT_DETAILS_RESOLUTION_LIMIT)
+            .chunked(LIBRARY_RELEASE_SUPPORT_DETAILS_RESOLUTION_CONCURRENCY)
             .forEach { chunk ->
                 resolvedDetails += chunk.map { item ->
                     async {
@@ -3105,192 +2935,6 @@ private fun defaultLibraryCalendarSelection(
 private fun displayLibraryCalendarEventDate(date: LibraryCalendarDate): String =
     "${localizedMonthName(date.month)} ${date.day}, ${date.year}"
 
-@Composable
-private fun LibraryHealthCard(
-    report: LibraryHealthReport,
-    modifier: Modifier = Modifier,
-) {
-    val colorScheme = MaterialTheme.colorScheme
-    val shape = RoundedCornerShape(28.dp)
-    Surface(
-        modifier = modifier.fillMaxWidth(),
-        shape = shape,
-        color = colorScheme.surface.copy(alpha = 0.84f),
-        border = BorderStroke(1.dp, colorScheme.onSurface.copy(alpha = 0.10f)),
-    ) {
-        Column(
-            modifier = Modifier
-                .background(
-                    Brush.linearGradient(
-                        listOf(
-                            colorScheme.primary.copy(alpha = 0.18f),
-                            Color.Transparent,
-                        ),
-                    ),
-                )
-                .padding(16.dp),
-            verticalArrangement = Arrangement.spacedBy(14.dp),
-        ) {
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.spacedBy(12.dp),
-                verticalAlignment = Alignment.CenterVertically,
-            ) {
-                Box(
-                    modifier = Modifier
-                        .size(42.dp)
-                        .clip(RoundedCornerShape(16.dp))
-                        .background(colorScheme.primary.copy(alpha = 0.18f)),
-                    contentAlignment = Alignment.Center,
-                ) {
-                    Icon(
-                        imageVector = Icons.Rounded.Refresh,
-                        contentDescription = null,
-                        tint = colorScheme.primary,
-                    )
-                }
-                Column(modifier = Modifier.weight(1f)) {
-                    Text(
-                        text = "Library Health",
-                        style = MaterialTheme.typography.titleMedium,
-                        color = colorScheme.onSurface,
-                        fontWeight = FontWeight.SemiBold,
-                    )
-                    Text(
-                        text = report.summary,
-                        style = MaterialTheme.typography.bodySmall,
-                        color = colorScheme.onSurfaceVariant,
-                        maxLines = 2,
-                        overflow = TextOverflow.Ellipsis,
-                    )
-                }
-                Text(
-                    text = "${report.score}%",
-                    style = MaterialTheme.typography.titleLarge,
-                    color = colorScheme.primary,
-                    fontWeight = FontWeight.Black,
-                )
-            }
-            LinearProgressIndicator(
-                progress = { report.score / 100f },
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .height(6.dp)
-                    .clip(RoundedCornerShape(999.dp)),
-                color = colorScheme.primary,
-                trackColor = colorScheme.onSurface.copy(alpha = 0.08f),
-            )
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.spacedBy(8.dp),
-            ) {
-                LibraryHealthMetric(
-                    value = report.missingArtwork.toString(),
-                    label = "artwork gaps",
-                    modifier = Modifier.weight(1f),
-                )
-                LibraryHealthMetric(
-                    value = report.thinMetadata.toString(),
-                    label = "thin metadata",
-                    modifier = Modifier.weight(1f),
-                )
-                LibraryHealthMetric(
-                    value = report.upcomingSignals.toString(),
-                    label = "radar signals",
-                    modifier = Modifier.weight(1f),
-                )
-            }
-        }
-    }
-}
-
-@Composable
-private fun LibraryHealthMetric(
-    value: String,
-    label: String,
-    modifier: Modifier = Modifier,
-) {
-    val colorScheme = MaterialTheme.colorScheme
-    Column(
-        modifier = modifier
-            .clip(RoundedCornerShape(18.dp))
-            .background(colorScheme.onSurface.copy(alpha = 0.055f))
-            .border(1.dp, colorScheme.onSurface.copy(alpha = 0.08f), RoundedCornerShape(18.dp))
-            .padding(horizontal = 10.dp, vertical = 10.dp),
-        verticalArrangement = Arrangement.spacedBy(2.dp),
-    ) {
-        Text(
-            text = value,
-            style = MaterialTheme.typography.titleMedium,
-            color = colorScheme.onSurface,
-            fontWeight = FontWeight.SemiBold,
-            maxLines = 1,
-        )
-        Text(
-            text = label,
-            style = MaterialTheme.typography.labelSmall,
-            color = colorScheme.onSurfaceVariant,
-            maxLines = 1,
-            overflow = TextOverflow.Ellipsis,
-        )
-    }
-}
-
-private data class LibraryHealthReport(
-    val score: Int,
-    val missingArtwork: Int,
-    val thinMetadata: Int,
-    val upcomingSignals: Int,
-    val summary: String,
-)
-
-private fun buildLibraryHealthReport(
-    items: List<LibraryItem>,
-    releaseRadarItems: List<com.nuvio.app.features.home.HomeReleaseRadarItem>,
-    todayIsoDate: String,
-): LibraryHealthReport {
-    if (items.isEmpty()) {
-        return LibraryHealthReport(
-            score = 100,
-            missingArtwork = 0,
-            thinMetadata = 0,
-            upcomingSignals = 0,
-            summary = "No saved titles to scan yet.",
-        )
-    }
-
-    val missingArtwork = items.count { item -> item.poster.isNullOrBlank() && item.banner.isNullOrBlank() }
-    val thinMetadata = items.count { item ->
-        item.description.isNullOrBlank() ||
-            item.genres.isEmpty() ||
-            item.imdbRating.isNullOrBlank()
-    }
-    val futureLibraryDates = items.count { item ->
-        item.releaseInfo
-            ?.let(::parseLibraryCalendarDate)
-            ?.iso
-            ?.let { iso -> iso >= todayIsoDate } == true
-    }
-    val issueWeight = missingArtwork + thinMetadata
-    val score = (100 - ((issueWeight.toFloat() / (items.size * 2f)) * 100f).toInt()).coerceIn(0, 100)
-    val summary = when {
-        missingArtwork == 0 && thinMetadata == 0 && releaseRadarItems.isNotEmpty() ->
-            "Your library looks polished and has active upcoming-release coverage."
-        missingArtwork == 0 && thinMetadata == 0 ->
-            "Your saved titles look polished. Radar will light up when upcoming releases appear."
-        else ->
-            "Found ${missingArtwork + thinMetadata} quality signals across ${items.size} saved titles."
-    }
-
-    return LibraryHealthReport(
-        score = score,
-        missingArtwork = missingArtwork,
-        thinMetadata = thinMetadata,
-        upcomingSignals = (releaseRadarItems.size + futureLibraryDates).coerceAtLeast(releaseRadarItems.size),
-        summary = summary,
-    )
-}
-
 private fun libraryCalendarCells(month: LibraryCalendarMonth): List<LibraryCalendarDate?> {
     val firstDayOffset = firstLibraryCalendarWeekdayOffset(month.year, month.month)
     val days = daysInLibraryCalendarMonth(month.year, month.month)
@@ -3392,6 +3036,7 @@ private fun LazyListScope.librarySections(
             entries = section.previewEntries,
             headerHorizontalPadding = 16.dp,
             rowContentPadding = PaddingValues(horizontal = 16.dp),
+            showHeaderAccent = showHeaderAccent,
             onViewAllClick = section.source
                 ?.takeIf { it.items.size > LIBRARY_SECTION_PREVIEW_LIMIT }
                 ?.let { source -> onSectionViewAllClick?.let { { it(source) } } },
@@ -3411,7 +3056,6 @@ private fun LazyListScope.librarySections(
                     isWatched = WatchingState.isPosterWatched(
                         watchedKeys = watchedKeys,
                         item = posterItem,
-                        fullyWatchedSeriesKeys = fullyWatchedSeriesKeys,
                     ),
                     onClick = if (entry.exiting) null else onPosterClick?.let { { it(item) } },
                     onLongClick = if (entry.exiting || entrySource == null) {
@@ -3426,11 +3070,9 @@ private fun LazyListScope.librarySections(
 }
 
 private const val LIBRARY_SECTION_PREVIEW_LIMIT = 18
-private const val LIBRARY_HEALTH_SECTION_KEY = "library_health"
-private const val LIBRARY_RELEASE_RADAR_SECTION_KEY = "library_release_radar"
-private const val LIBRARY_RELEASE_RADAR_DETAILS_RESOLUTION_LIMIT = 24
-private const val LIBRARY_RELEASE_RADAR_DETAILS_RESOLUTION_CONCURRENCY = 4
-private const val LIBRARY_RELEASE_SUPPORT_CACHE_TTL_MS = 6L * 60L * 60L * 1_000L
+private const val LIBRARY_RELEASE_SUPPORT_DETAILS_RESOLUTION_LIMIT = 60
+private const val LIBRARY_RELEASE_SUPPORT_DETAILS_RESOLUTION_CONCURRENCY = 6
+private const val LIBRARY_RELEASE_SUPPORT_CACHE_TTL_MS = 2L * 60L * 60L * 1_000L
 private const val LIBRARY_DOWNLOADS_PREVIEW_LIMIT = 18
 private val libraryReleaseSupportJson = Json {
     ignoreUnknownKeys = true
@@ -3458,36 +3100,45 @@ private class LibraryExitingEntry(
     val index: Int,
 )
 
+private fun libraryGlobalKey(sectionType: String, item: LibraryItem): String =
+    "$sectionType|${item.type}|${item.id}"
+
 private class LibraryDisintegrationHolder {
-    private val tracker = ScopedDisintegrationTracker<LibrarySourceMode, String, LibraryExitingEntry> { entry ->
-        librarySectionItemKey(entry.sectionType, entry.item)
-    }
+    private val exiting = LinkedHashMap<String, LibraryExitingEntry>()
+    private var previous = LinkedHashMap<String, LibraryExitingEntry>()
+    private var invalidations by mutableStateOf(0)
 
     fun onExited(globalKey: String) {
-        tracker.onDisintegrated(globalKey)
+        if (exiting.remove(globalKey) != null) invalidations++
     }
 
     fun reset() {
-        tracker.reset()
+        exiting.clear()
+        previous = LinkedHashMap()
     }
 
-    fun sync(
-        sourceMode: LibrarySourceMode,
-        sections: List<LibrarySection>,
-        previewLimit: Int,
-        request: DisintegrationRequest<String>?,
-    ): List<LibraryDisplaySection> {
-        val current = ArrayList<LibraryExitingEntry>()
+    fun sync(sections: List<LibrarySection>, previewLimit: Int): List<LibraryDisplaySection> {
+        @Suppress("UNUSED_EXPRESSION")
+        invalidations
+
+        val current = LinkedHashMap<String, LibraryExitingEntry>()
         sections.forEach { section ->
             section.items.take(previewLimit).forEachIndexed { index, item ->
-                current += LibraryExitingEntry(item, section.type, section.displayTitle, index)
+                val key = libraryGlobalKey(section.type, item)
+                current[key] = LibraryExitingEntry(item, section.type, section.displayTitle, index)
             }
         }
-        val exitingBySection = tracker.sync(sourceMode, current, request)
-            .asSequence()
-            .filter { entry -> entry.exiting }
-            .map { entry -> entry.item }
-            .groupBy { entry -> entry.sectionType }
+        for ((key, info) in previous) {
+            if (key !in current && key !in exiting) {
+                exiting[key] = info
+            }
+        }
+        for (key in current.keys) {
+            exiting.remove(key)
+        }
+        previous = current
+
+        val exitingBySection = exiting.values.groupBy { it.sectionType }
         val seenTypes = HashSet<String>(sections.size)
         val result = ArrayList<LibraryDisplaySection>(sections.size + 1)
 
@@ -3496,14 +3147,14 @@ private class LibraryDisintegrationHolder {
             val entries = ArrayList<LibraryDisplayEntry>(previewLimit + 1)
             section.items.take(previewLimit).forEach { item ->
                 entries += LibraryDisplayEntry(
-                    globalKey = librarySectionItemKey(section.type, item),
+                    globalKey = libraryGlobalKey(section.type, item),
                     item = item,
                     section = section,
                     exiting = false,
                 )
             }
             exitingBySection[section.type]?.sortedBy { it.index }?.forEach { ex ->
-                val key = librarySectionItemKey(section.type, ex.item)
+                val key = libraryGlobalKey(section.type, ex.item)
                 if (entries.none { it.globalKey == key }) {
                     entries.add(
                         ex.index.coerceIn(0, entries.size),
@@ -3518,7 +3169,7 @@ private class LibraryDisintegrationHolder {
             if (type in seenTypes) continue
             val sorted = list.sortedBy { it.index }
             val entries = sorted.map { ex ->
-                LibraryDisplayEntry(librarySectionItemKey(type, ex.item), ex.item, section = null, exiting = true)
+                LibraryDisplayEntry(libraryGlobalKey(type, ex.item), ex.item, section = null, exiting = true)
             }
             result += LibraryDisplaySection(null, type, sorted.first().sectionTitle, entries)
         }

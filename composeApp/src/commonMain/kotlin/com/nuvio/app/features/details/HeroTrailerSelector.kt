@@ -4,7 +4,6 @@ internal fun selectHeroTrailer(trailers: List<MetaTrailer>): MetaTrailer? =
     trailers
         .asSequence()
         .filter { it.isPlayableYouTubeTrailerCandidate() }
-        .distinctBy { it.key }
         .maxWithOrNull(
             compareBy<MetaTrailer>(
                 { it.heroTrailerPriority() },

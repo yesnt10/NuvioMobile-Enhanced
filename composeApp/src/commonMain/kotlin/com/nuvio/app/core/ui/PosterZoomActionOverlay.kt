@@ -88,11 +88,6 @@ object PosterZoomAnchorHolder {
     fun consume(): PosterZoomAnchor? = pending.also { pending = null }
 }
 
-enum class PosterZoomOverlayExitAnimation {
-    COLLAPSE,
-    DISINTEGRATE,
-}
-
 class PosterZoomOverlayAction(
     val icon: ImageVector,
     val label: String,
@@ -138,7 +133,6 @@ fun NuvioPosterZoomActionOverlay(
     subtitle: String?,
     synopsis: String? = null,
     isWatched: Boolean = false,
-    blurred: Boolean = false,
     depthSurface: NuvioCardDepthSurface = NuvioCardDepthSurface.Posters,
     anchor: PosterZoomAnchor?,
     actions: List<PosterZoomOverlayAction>,
@@ -459,9 +453,7 @@ fun NuvioPosterZoomActionOverlay(
                         AsyncImage(
                             model = imageUrl,
                             contentDescription = title,
-                            modifier = Modifier
-                                .fillMaxSize()
-                                .then(if (blurred) Modifier.blur(NuvioTokens.Space.s18) else Modifier),
+                            modifier = Modifier.fillMaxSize(),
                             contentScale = ContentScale.Crop,
                         )
                     } else {

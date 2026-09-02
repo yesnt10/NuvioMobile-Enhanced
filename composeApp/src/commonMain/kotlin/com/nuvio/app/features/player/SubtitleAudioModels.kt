@@ -2,7 +2,6 @@ package com.nuvio.app.features.player
 
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.graphics.Color
-import com.nuvio.app.isIos
 import nuvio.composeapp.generated.resources.Res
 import nuvio.composeapp.generated.resources.compose_player_track_number
 import org.jetbrains.compose.resources.stringResource
@@ -60,9 +59,6 @@ const val SUBTITLE_DELAY_MIN_MS = -600_000
 const val SUBTITLE_DELAY_MAX_MS = 600_000
 const val SUBTITLE_DELAY_STEP_MS = 100
 
-internal val subtitleFontSizeRangeSp: IntRange
-    get() = if (isIos) 6..40 else 12..40
-
 data class SubtitleStyleState(
     val textColor: Color = Color.White,
     val backgroundColor: Color = Color.Transparent,
@@ -75,9 +71,9 @@ data class SubtitleStyleState(
     val customFontName: String? = null,
     val customFontPath: String? = null,
     val bottomOffset: Int = 20,
-    val stripSdh: Boolean = false,
     val useForcedSubtitles: Boolean = false,
     val showOnlyPreferredLanguages: Boolean = false,
+    val stripSdh: Boolean = false,
 ) {
     companion object {
         val DEFAULT = SubtitleStyleState()
@@ -91,8 +87,8 @@ data class SubtitleFontImportResult(
 
 data class SubtitleSyncCue(
     val startTimeMs: Long,
-    val endTimeMs: Long = startTimeMs + 5_000L,
     val text: String,
+    val endTimeMs: Long? = null,
 )
 
 data class SubtitleAutoSyncUiState(

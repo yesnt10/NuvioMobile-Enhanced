@@ -1,8 +1,5 @@
 package com.nuvio.app.features.library
 
-import com.nuvio.app.features.library.sync.LibraryDeltaEvent
-import com.nuvio.app.features.library.sync.LibrarySyncKey
-import com.nuvio.app.features.library.sync.toLibrarySyncKey
 import kotlinx.atomicfu.locks.SynchronizedObject
 import kotlinx.atomicfu.locks.synchronized
 import kotlinx.coroutines.Job
@@ -19,14 +16,8 @@ internal data class LibraryLocalSnapshot(
     val hasLoaded: Boolean,
     val isLoading: Boolean,
     val items: List<LibraryItem>,
-    val deltaCursorEventId: Long,
-    val deltaInitialized: Boolean,
-    val pendingUpsertKeys: List<LibrarySyncKey>,
-    val pendingDeleteKeys: List<LibrarySyncKey>,
-) {
-    val hasPendingPush: Boolean
-        get() = pendingUpsertKeys.isNotEmpty() || pendingDeleteKeys.isNotEmpty()
-}
+    val hasPendingPush: Boolean,
+)
 
 internal data class LibraryStateTransition(
     val snapshot: LibraryLocalSnapshot,
@@ -69,10 +60,7 @@ internal class LibraryLocalState {
     private var contentRevision = 0L
     private var isLoading = false
     private var itemsById: MutableMap<String, LibraryItem> = mutableMapOf()
-    private var deltaCursorEventId = 0L
-    private var deltaInitialized = false
-    private var pendingUpsertKeysByKey: MutableMap<String, LibrarySyncKey> = mutableMapOf()
-    private var pendingDeleteKeysByKey: MutableMap<String, LibrarySyncKey> = mutableMapOf()
+    private var hasPendingPush = false
     private var pushJob: Job? = null
 
     fun snapshot(): LibraryLocalSnapshot = synchronized(lock) {
@@ -136,10 +124,7 @@ internal class LibraryLocalState {
         hasLoaded = false
         isLoading = true
         itemsById = mutableMapOf()
-        deltaCursorEventId = 0L
-        deltaInitialized = false
-        pendingUpsertKeysByKey = mutableMapOf()
-        pendingDeleteKeysByKey = mutableMapOf()
+        hasPendingPush = false
         LibraryStateTransition(
             snapshot = snapshotLocked(),
             detachedPushJob = detachedPushJob,
@@ -150,24 +135,11 @@ internal class LibraryLocalState {
         token: LibraryProfileToken,
         activeProfileId: Int,
         items: Collection<LibraryItem>,
-        deltaCursorEventId: Long = 0L,
-        deltaInitialized: Boolean = false,
-        pendingUpsertKeys: Collection<LibrarySyncKey> = emptyList(),
-        pendingDeleteKeys: Collection<LibrarySyncKey> = emptyList(),
     ): LibraryLocalSnapshot? = synchronized(lock) {
         if (activeProfileId != token.profileId || !isCurrentLocked(token)) {
             return@synchronized null
         }
         itemsById = items.associateByTo(mutableMapOf()) { libraryItemKey(it.id, it.type) }
-        this.deltaCursorEventId = deltaCursorEventId.coerceAtLeast(0L)
-        this.deltaInitialized = deltaInitialized
-        pendingUpsertKeysByKey = pendingUpsertKeys
-            .associateByTo(mutableMapOf()) { libraryItemKey(it.contentId, it.contentType) }
-            .filterToExistingItems(itemsById)
-        pendingDeleteKeysByKey = pendingDeleteKeys
-            .associateByTo(mutableMapOf()) { libraryItemKey(it.contentId, it.contentType) }
-            .apply { pendingUpsertKeysByKey.keys.forEach(::remove) }
-        pendingDeleteKeysByKey.keys.forEach(itemsById::remove)
         hasLoaded = true
         isLoading = false
         revision += 1L
@@ -185,10 +157,7 @@ internal class LibraryLocalState {
         hasLoaded = false
         isLoading = false
         itemsById = mutableMapOf()
-        deltaCursorEventId = 0L
-        deltaInitialized = false
-        pendingUpsertKeysByKey = mutableMapOf()
-        pendingDeleteKeysByKey = mutableMapOf()
+        hasPendingPush = false
         LibraryStateTransition(
             snapshot = snapshotLocked(),
             detachedPushJob = detachedPushJob,
@@ -203,82 +172,45 @@ internal class LibraryLocalState {
     fun applyServerItems(
         pullSnapshot: LibraryLocalSnapshot,
         serverItems: Collection<LibraryItem>,
-        cursorEventId: Long = 0L,
     ): LibraryServerItemsApplyResult? = synchronized(lock) {
         if (!isCurrentLocked(pullSnapshot.token)) return@synchronized null
 
-        val reconciliation = reconcileLibrarySnapshot(
-            serverItems = serverItems,
-            localItemsByKey = itemsById,
-            pendingUpsertKeysByKey = pendingUpsertKeysByKey,
-            pendingDeleteKeysByKey = pendingDeleteKeysByKey,
-            preserveLegacyLocalWhenServerEmpty = !pullSnapshot.deltaInitialized,
-        )
-        if (itemsById != reconciliation.itemsByKey) {
+        val localContentChanged = contentRevision != pullSnapshot.contentRevision
+        val hasLocalChanges = pullSnapshot.hasPendingPush || hasPendingPush || localContentChanged
+        val preserveLocalItems = itemsById.isNotEmpty() && (serverItems.isEmpty() || hasLocalChanges)
+        if (!preserveLocalItems) {
+            itemsById = serverItems.associateByTo(mutableMapOf()) { libraryItemKey(it.id, it.type) }
             contentRevision += 1L
+            hasPendingPush = false
         }
-        itemsById = reconciliation.itemsByKey
-        pendingUpsertKeysByKey = reconciliation.pendingUpsertKeysByKey
-        pendingDeleteKeysByKey = reconciliation.pendingDeleteKeysByKey
-        deltaCursorEventId = cursorEventId.coerceAtLeast(0L)
-        deltaInitialized = true
         hasLoaded = true
         isLoading = false
         revision += 1L
         LibraryServerItemsApplyResult(
             snapshot = snapshotLocked(),
-            preservedLocalItems = reconciliation.preservedLocalItems,
+            preservedLocalItems = preserveLocalItems,
         )
-    }
-
-    fun applyDeltaEvents(
-        token: LibraryProfileToken,
-        events: Collection<LibraryDeltaEvent>,
-    ): LibraryLocalSnapshot? = synchronized(lock) {
-        if (!isCurrentLocked(token)) return@synchronized null
-
-        val reconciliation = reconcileLibraryDelta(
-            events = events,
-            currentItemsByKey = itemsById,
-            pendingUpsertKeysByKey = pendingUpsertKeysByKey,
-            pendingDeleteKeysByKey = pendingDeleteKeysByKey,
-            currentCursorEventId = deltaCursorEventId,
-        )
-        if (reconciliation.changed) {
-            itemsById = reconciliation.itemsByKey
-            contentRevision += 1L
-        }
-        deltaCursorEventId = reconciliation.cursorEventId
-        deltaInitialized = true
-        revision += 1L
-        snapshotLocked()
     }
 
     fun upsert(item: LibraryItem): LibraryLocalSnapshot = synchronized(lock) {
-        val key = libraryItemKey(item.id, item.type)
-        itemsById[key] = item
-        pendingUpsertKeysByKey[key] = item.toLibrarySyncKey()
-        pendingDeleteKeysByKey.remove(key)
+        itemsById[libraryItemKey(item.id, item.type)] = item
         revision += 1L
         contentRevision += 1L
+        hasPendingPush = true
         snapshotLocked()
     }
 
     fun toggle(item: LibraryItem): LibraryLocalToggleResult = synchronized(lock) {
         val key = libraryItemKey(item.id, item.type)
-        val removedItem = itemsById.remove(key)
-        val isSaved = if (removedItem != null) {
-            pendingUpsertKeysByKey.remove(key)
-            pendingDeleteKeysByKey[key] = removedItem.toLibrarySyncKey()
+        val isSaved = if (itemsById.remove(key) != null) {
             false
         } else {
             itemsById[key] = item
-            pendingUpsertKeysByKey[key] = item.toLibrarySyncKey()
-            pendingDeleteKeysByKey.remove(key)
             true
         }
         revision += 1L
         contentRevision += 1L
+        hasPendingPush = true
         LibraryLocalToggleResult(
             snapshot = snapshotLocked(),
             isSaved = isSaved,
@@ -286,17 +218,13 @@ internal class LibraryLocalState {
     }
 
     fun removeById(id: String): LibraryLocalMutation = synchronized(lock) {
-        val removedEntries = itemsById
-            .filterValues { item -> item.id == id }
-        removedEntries.forEach { (key, item) ->
-            itemsById.remove(key)
-            pendingUpsertKeysByKey.remove(key)
-            pendingDeleteKeysByKey[key] = item.toLibrarySyncKey()
-        }
-        val affectedCount = removedEntries.size
+        val before = itemsById.size
+        itemsById.entries.removeAll { (_, item) -> item.id == id }
+        val affectedCount = before - itemsById.size
         if (affectedCount > 0) {
             revision += 1L
             contentRevision += 1L
+            hasPendingPush = true
         }
         LibraryLocalMutation(
             snapshot = snapshotLocked(),
@@ -305,14 +233,11 @@ internal class LibraryLocalState {
     }
 
     fun remove(id: String, type: String): LibraryLocalMutation = synchronized(lock) {
-        val key = libraryItemKey(id, type)
-        val removedItem = itemsById.remove(key)
-        val affectedCount = if (removedItem != null) 1 else 0
-        if (removedItem != null) {
-            pendingUpsertKeysByKey.remove(key)
-            pendingDeleteKeysByKey[key] = removedItem.toLibrarySyncKey()
+        val affectedCount = if (itemsById.remove(libraryItemKey(id, type)) != null) 1 else 0
+        if (affectedCount > 0) {
             revision += 1L
             contentRevision += 1L
+            hasPendingPush = true
         }
         LibraryLocalMutation(
             snapshot = snapshotLocked(),
@@ -336,7 +261,7 @@ internal class LibraryLocalState {
         snapshot: LibraryLocalSnapshot,
         job: Job,
     ): LibraryPushJobInstallResult = synchronized(lock) {
-        if (!isCurrentLocked(snapshot)) {
+        if (!isContentCurrentLocked(snapshot)) {
             LibraryPushJobInstallResult(installed = false, detachedPushJob = null)
         } else {
             val detachedPushJob = pushJob
@@ -351,14 +276,11 @@ internal class LibraryLocalState {
         }
     }
 
-    fun markPushCompleted(snapshot: LibraryLocalSnapshot): LibraryLocalSnapshot? = synchronized(lock) {
-        if (!isCurrentLocked(snapshot)) {
-            null
-        } else {
-            pendingUpsertKeysByKey.clear()
-            pendingDeleteKeysByKey.clear()
-            revision += 1L
-            snapshotLocked()
+    fun markPushCompleted(snapshot: LibraryLocalSnapshot) {
+        synchronized(lock) {
+            if (isContentCurrentLocked(snapshot)) {
+                hasPendingPush = false
+            }
         }
     }
 
@@ -376,10 +298,7 @@ internal class LibraryLocalState {
             hasLoaded = hasLoaded,
             isLoading = isLoading,
             items = itemsById.values.toList(),
-            deltaCursorEventId = deltaCursorEventId,
-            deltaInitialized = deltaInitialized,
-            pendingUpsertKeys = pendingUpsertKeysByKey.values.toList(),
-            pendingDeleteKeys = pendingDeleteKeysByKey.values.toList(),
+            hasPendingPush = hasPendingPush,
         )
 
     private fun isCurrentLocked(token: LibraryProfileToken): Boolean =
@@ -392,12 +311,5 @@ internal class LibraryLocalState {
         isCurrentLocked(snapshot.token) && contentRevision == snapshot.contentRevision
 }
 
-private fun MutableMap<String, LibrarySyncKey>.filterToExistingItems(
-    itemsById: Map<String, LibraryItem>,
-): MutableMap<String, LibrarySyncKey> =
-    apply {
-        keys.retainAll(itemsById.keys)
-    }
-
-internal fun libraryItemKey(id: String, type: String): String =
+private fun libraryItemKey(id: String, type: String): String =
     "${type.trim().lowercase()}:${id.trim()}"

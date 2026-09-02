@@ -317,6 +317,7 @@ private fun DetailIconAction(
             MaterialTheme.colorScheme.onSurface
         },
         tonalElevation = 6.dp,
+        shadowElevation = 8.dp,
     ) {
         Box(
             modifier = Modifier

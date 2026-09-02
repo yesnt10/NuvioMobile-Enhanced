@@ -76,6 +76,8 @@ import kotlinx.coroutines.delay
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
+import kotlinx.coroutines.SupervisorJob
+import kotlinx.coroutines.asCoroutineDispatcher
 import kotlinx.coroutines.isActive
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
@@ -84,6 +86,8 @@ import java.net.HttpURLConnection
 import java.net.URI
 import java.net.URL
 import java.util.Locale
+import java.util.concurrent.Executors
+import java.util.concurrent.atomic.AtomicBoolean
 
 private const val TAG = "NuvioPlayer"
 private const val PLAYER_DIAGNOSTIC_TAG = "NuvioPlayerDiag"
@@ -733,7 +737,7 @@ private fun ExoPlayerSurface(
         lifecycleOwner.lifecycle.addObserver(observer)
         onDispose {
             lifecycleOwner.lifecycle.removeObserver(observer)
-            playerViewRef?.releaseLibassOverlay()
+            playerViewRef?.releaseAssOverlayChildren()
             exoPlayer.release()
         }
     }
@@ -1048,7 +1052,8 @@ private fun LibmpvPlayerSurface(
         val view = playerViewRef ?: return@DisposableEffect onDispose {}
         fun dispatchSnapshot(updateKeepScreenOn: Boolean = false) {
             coroutineScope.launch(Dispatchers.Main.immediate) {
-                latestOnSnapshot.value(view.snapshot())
+                val snapshot = view.snapshot()
+                latestOnSnapshot.value(snapshot)
                 if (updateKeepScreenOn) {
                     view.keepScreenOn = snapshot.isPlaying || snapshot.isLoading
                 }
@@ -1130,7 +1135,6 @@ private fun LibmpvPlayerSurface(
                                     "data=${diagnosticPlayerMessage(data.toJson())}",
                             )
                             latestOnSnapshot.value(snapshot)
-                            nowPlayingController?.syncPlayback(snapshot)
                             view.keepScreenOn = snapshot.isPlaying || snapshot.isLoading
                         }
                     }
@@ -1263,6 +1267,9 @@ private class NuvioLibmpvView(
     private var lastSurfaceWidth: Int = 0
     private var lastSurfaceHeight: Int = 0
     private var pendingLoadPlayWhenReady: Boolean? = null
+    private var latestSnapshot: PlayerPlaybackSnapshot = PlayerPlaybackSnapshot()
+    private var latestAudioTracks: List<LibmpvTrack> = emptyList()
+    private var latestSubtitleTracks: List<LibmpvTrack> = emptyList()
 
     override fun initOptions() {
         setVo(videoOutput.mpvValue)
@@ -1346,9 +1353,9 @@ private class NuvioLibmpvView(
         if (!sameSource) {
             lastKnownDurationMs = 0L
             lastKnownPositionMs = 0L
-            loadCurrentSource(playWhenReady = playWhenReady)
+            loadCurrentSourceNow(playWhenReady = playWhenReady)
         } else {
-            applyRequestHeaders(requestHeaders)
+            executeMpv { applyRequestHeadersNow(requestHeaders) }
             setPaused(!playWhenReady)
             if (pendingLoadPlayWhenReady != null) {
                 pendingLoadPlayWhenReady = playWhenReady
@@ -1360,12 +1367,12 @@ private class NuvioLibmpvView(
         val sourceUrl = currentSourceUrl ?: return
         if (!surfaceReady) {
             pendingLoadPlayWhenReady = playWhenReady
-            applyRequestHeaders(currentRequestHeaders)
+            applyRequestHeadersNow(currentRequestHeaders)
             setPaused(!playWhenReady)
             return
         }
         val libmpvSourceUrl = sourceUrl.toLibmpvLoadPath()
-        applyRequestHeaders(currentRequestHeaders)
+        applyRequestHeadersNow(currentRequestHeaders)
         syncMpvSurfaceSize()
         setPaused(!playWhenReady)
         mpv.setOptionString("start", "0").logIfMpvError("start")
@@ -1394,7 +1401,7 @@ private class NuvioLibmpvView(
             post { syncMpvSurfaceSize() }
             postDelayed({ syncMpvSurfaceSize() }, LibmpvSurfaceResizeSettleDelayMs)
         }
-        pendingLoadPlayWhenReady?.let(::loadCurrentSource)
+        pendingLoadPlayWhenReady?.let(::loadCurrentSourceNow)
     }
 
     private fun syncMpvSurfaceSize() {
@@ -1509,7 +1516,7 @@ private class NuvioLibmpvView(
             ?.takeIf { it > 0 }
 
     fun shouldKeepScreenOn(): Boolean {
-        val snapshot = snapshot()
+        val snapshot = latestSnapshot
         return snapshot.isPlaying || snapshot.isLoading
     }
 
@@ -1996,6 +2003,12 @@ private fun PlayerView.syncLibassOverlay(
         android.widget.FrameLayout.LayoutParams(MATCH_PARENT, MATCH_PARENT)
     )
     setTag(R.id.libass_overlay_bound_player, player)
+}
+
+private fun PlayerView.releaseAssOverlayChildren() {
+    findViewById<android.widget.FrameLayout>(R.id.libass_overlay_container)?.removeAssOverlayChildren()
+    findViewById<android.widget.FrameLayout>(R.id.libass_overlay_container_gl)?.removeAssOverlayChildren()
+    setTag(R.id.libass_overlay_bound_player, null)
 }
 
 private fun LibassRenderType.usesOverlaySubtitleView(): Boolean =

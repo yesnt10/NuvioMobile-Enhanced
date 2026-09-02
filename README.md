@@ -19,8 +19,6 @@
     <a href="#download">Download</a> | <a href="#enhanced-highlights">Highlights</a> | <a href="#build-from-source">Build from source</a> | <a href="#credits">Credits</a>
   </p>
 
-  [Website](https://nuvio.tv) · [GitHub releases](https://github.com/NuvioMedia/NuvioMobile/releases/latest) · [Support Nuvio](https://nuvio.tv/support)
-
 </div>
 
 ## Overview
@@ -28,6 +26,8 @@
 NuvioMobile Enhanced is our tuned fork of NuvioMobile, built to keep pace with upstream while adding the kind of polish that makes the app feel more deliberate in day-to-day use.
 
 The project stays close to the original codebase, but the enhanced branch is where we land improvements like the premium release calendar, richer AI replies, better live TV navigation, and smoother player interactions.
+
+This branch is currently integrated with upstream NuvioMobile `0.4.13`.
 
 
 
@@ -57,7 +57,7 @@ We also try to keep the relationship with upstream clear, so it is obvious what 
 git clone https://github.com/yesnt10/NuvioMobile-Enhanced.git
 cd NuvioMobile-Enhanced
 git checkout enhanced
-./gradlew :composeApp:assembleDebug
+./gradlew :androidApp:assembleFullDebug
 ```
 
 On Windows, use:
@@ -66,7 +66,7 @@ On Windows, use:
 git clone https://github.com/yesnt10/NuvioMobile-Enhanced.git
 cd NuvioMobile-Enhanced
 git checkout enhanced
-.\gradlew.bat :composeApp:assembleDebug
+.\gradlew.bat :androidApp:assembleFullDebug
 ```
 
 If you want a broader app-level check, the shared module is the place to start:
@@ -76,6 +76,17 @@ If you want a broader app-level check, the shared module is the place to start:
 - `composeApp/src/androidMain/` for Android-specific integrations
 - `composeApp/src/iosMain/` for iOS-specific integrations
 - `iosApp/` for the native iOS entry point
+
+### Telegram sources on iOS
+
+The full iOS build can search video files from the Telegram chats and channels available to the signed-in account. Create an application at [my.telegram.org](https://my.telegram.org), then add its credentials to the root `local.properties` file:
+
+```properties
+TELEGRAM_API_ID=123456
+TELEGRAM_API_HASH=your_api_hash
+```
+
+Build the `iosApp` scheme with `NUVIO_IOS_DISTRIBUTION=full`. In the app, open **Settings > Integrations > Telegram** and complete phone, code, email, or two-step verification when requested. Telegram media is streamed through a loopback-only range server and its downloaded cache can be cleared from the same page.
 
 ## What We Optimize For
 
@@ -93,6 +104,7 @@ That is the style we will keep using for future enhanced builds.
 - Original project: [NuvioMedia/NuvioMobile](https://github.com/NuvioMedia/NuvioMobile)
 - Enhanced fork: [yesnt10/NuvioMobile-Enhanced](https://github.com/yesnt10/NuvioMobile-Enhanced)
 - Shared brand asset used here: [tapframe/NuvioTV](https://github.com/tapframe/NuvioTV)
+- Telegram client library: [TDLib](https://core.telegram.org/tdlib), packaged for Swift by [Swiftgram/TDLibFramework](https://github.com/Swiftgram/TDLibFramework)
 
 iOS development requires macOS and Xcode.
 

@@ -1,6 +1,7 @@
 package com.nuvio.app.features.settings
 
 import com.nuvio.app.core.build.AppFeaturePolicy
+import com.nuvio.app.isIos
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
@@ -67,6 +68,8 @@ import com.nuvio.app.features.addons.hasPendingEnabledManifests
 import com.nuvio.app.features.addons.isWaitingForFirstEnabledManifest
 import com.nuvio.app.features.debrid.DebridSettings
 import com.nuvio.app.features.debrid.DebridSettingsRepository
+import com.nuvio.app.features.home.CatalogPosterLayout
+import com.nuvio.app.features.home.CatalogPosterSize
 import com.nuvio.app.features.home.HomeCatalogSettingsItem
 import com.nuvio.app.features.home.HomeCatalogSettingsRepository
 import com.nuvio.app.features.home.buildAddonCatalogRefreshSignature
@@ -79,15 +82,15 @@ import com.nuvio.app.features.player.PlayerSettingsRepository
 import com.nuvio.app.features.player.AndroidLibmpvVideoOutput
 import com.nuvio.app.features.player.AndroidPlaybackEngine
 import com.nuvio.app.features.profiles.ProfileRepository
-import com.nuvio.app.features.simkl.SimklAuthRepository
-import com.nuvio.app.features.simkl.SimklAuthUiState
 import com.nuvio.app.features.trakt.TraktAuthUiState
 import com.nuvio.app.features.trakt.TraktAuthRepository
 import com.nuvio.app.features.trakt.TraktCommentsSettings
-import com.nuvio.app.features.tracking.TrackingSettingsRepository
-import com.nuvio.app.features.tracking.TrackingSettingsUiState
+import com.nuvio.app.features.trakt.TraktSettingsRepository
+import com.nuvio.app.features.trakt.TraktSettingsUiState
 import com.nuvio.app.features.tmdb.TmdbSettings
 import com.nuvio.app.features.tmdb.TmdbSettingsRepository
+import com.nuvio.app.features.telegram.TelegramRepository
+import com.nuvio.app.features.telegram.TelegramUiState
 import com.nuvio.app.features.watchprogress.ContinueWatchingPreferencesRepository
 import com.nuvio.app.features.watchprogress.ContinueWatchingPreferencesUiState
 import com.nuvio.app.features.watchprogress.ContinueWatchingItem
@@ -103,10 +106,12 @@ import org.jetbrains.compose.resources.stringResource
 private val SettingsSearchRevealThreshold = 28.dp
 private const val SettingsSearchRevealAnimationMillis = 240L
 private const val SettingsSearchRevealHapticDelayMillis = 90L
+private const val SupportersContributorsNavigationEnabled = false
 
 private fun SettingsPage.isEnabledByPolicy(): Boolean =
     when (this) {
-        SettingsPage.SupportersContributors -> AppFeaturePolicy.supportersContributorsPageEnabled
+        SettingsPage.SupportersContributors ->
+            AppFeaturePolicy.supportersContributorsPageEnabled && SupportersContributorsNavigationEnabled
         else -> true
     }
 
@@ -174,21 +179,21 @@ fun SettingsScreen(
             DebridSettingsRepository.ensureLoaded()
             DebridSettingsRepository.uiState
         }.collectAsStateWithLifecycle()
+        val telegramUiState by remember {
+            TelegramRepository.ensureLoaded()
+            TelegramRepository.uiState
+        }.collectAsStateWithLifecycle()
         val traktAuthUiState by remember {
             TraktAuthRepository.ensureLoaded()
             TraktAuthRepository.uiState
-        }.collectAsStateWithLifecycle()
-        val simklAuthUiState by remember {
-            SimklAuthRepository.ensureLoaded()
-            SimklAuthRepository.uiState
         }.collectAsStateWithLifecycle()
         val traktCommentsEnabled by remember {
             TraktCommentsSettings.ensureLoaded()
             TraktCommentsSettings.enabled
         }.collectAsStateWithLifecycle()
-        val trackingSettingsUiState by remember {
-            TrackingSettingsRepository.ensureLoaded()
-            TrackingSettingsRepository.uiState
+        val traktSettingsUiState by remember {
+            TraktSettingsRepository.ensureLoaded()
+            TraktSettingsRepository.uiState
         }.collectAsStateWithLifecycle()
         val addonsUiState by remember {
             AddonRepository.initialize()
@@ -327,13 +332,17 @@ fun SettingsScreen(
                 aiAssistantSettings = aiAssistantSettings,
                 mdbListSettings = mdbListSettings,
                 debridSettings = debridSettings,
+                telegramUiState = telegramUiState,
                 traktAuthUiState = traktAuthUiState,
-                simklAuthUiState = simklAuthUiState,
                 traktCommentsEnabled = traktCommentsEnabled,
-                trackingSettingsUiState = trackingSettingsUiState,
+                traktSettingsUiState = traktSettingsUiState,
                 homescreenHeroEnabled = homescreenSettingsUiState.heroEnabled,
                 homescreenShowCatalogType = homescreenSettingsUiState.showCatalogType,
                 homescreenHideUnreleasedContent = homescreenSettingsUiState.hideUnreleasedContent,
+                homescreenHideCatalogUnderline = homescreenSettingsUiState.hideCatalogUnderline,
+                homescreenCatalogColumnCount = homescreenSettingsUiState.catalogColumnCount,
+                homescreenCatalogPosterSize = homescreenSettingsUiState.catalogPosterSize,
+                homescreenCatalogPosterLayout = homescreenSettingsUiState.catalogPosterLayout,
                 homescreenItems = homescreenSettingsUiState.items,
                 homescreenCatalogLoading = addonManifestsLoading,
                 homescreenCatalogErrorMessage = addonManifestErrorMessage,
@@ -395,13 +404,17 @@ fun SettingsScreen(
                 aiAssistantSettings = aiAssistantSettings,
                 mdbListSettings = mdbListSettings,
                 debridSettings = debridSettings,
+                telegramUiState = telegramUiState,
                 traktAuthUiState = traktAuthUiState,
-                simklAuthUiState = simklAuthUiState,
                 traktCommentsEnabled = traktCommentsEnabled,
-                trackingSettingsUiState = trackingSettingsUiState,
+                traktSettingsUiState = traktSettingsUiState,
                 homescreenHeroEnabled = homescreenSettingsUiState.heroEnabled,
                 homescreenShowCatalogType = homescreenSettingsUiState.showCatalogType,
                 homescreenHideUnreleasedContent = homescreenSettingsUiState.hideUnreleasedContent,
+                homescreenHideCatalogUnderline = homescreenSettingsUiState.hideCatalogUnderline,
+                homescreenCatalogColumnCount = homescreenSettingsUiState.catalogColumnCount,
+                homescreenCatalogPosterSize = homescreenSettingsUiState.catalogPosterSize,
+                homescreenCatalogPosterLayout = homescreenSettingsUiState.catalogPosterLayout,
                 homescreenItems = homescreenSettingsUiState.items,
                 homescreenCatalogLoading = addonManifestsLoading,
                 homescreenCatalogErrorMessage = addonManifestErrorMessage,
@@ -474,13 +487,17 @@ private fun MobileSettingsScreen(
     aiAssistantSettings: AiAssistantSettings,
     mdbListSettings: MdbListSettings,
     debridSettings: DebridSettings,
+    telegramUiState: TelegramUiState,
     traktAuthUiState: TraktAuthUiState,
-    simklAuthUiState: SimklAuthUiState,
     traktCommentsEnabled: Boolean,
-    trackingSettingsUiState: TrackingSettingsUiState,
+    traktSettingsUiState: TraktSettingsUiState,
     homescreenHeroEnabled: Boolean,
     homescreenShowCatalogType: Boolean,
     homescreenHideUnreleasedContent: Boolean,
+    homescreenHideCatalogUnderline: Boolean,
+    homescreenCatalogColumnCount: Int,
+    homescreenCatalogPosterSize: CatalogPosterSize,
+    homescreenCatalogPosterLayout: CatalogPosterLayout,
     homescreenItems: List<HomeCatalogSettingsItem>,
     homescreenCatalogLoading: Boolean,
     homescreenCatalogErrorMessage: String?,
@@ -529,7 +546,8 @@ private fun MobileSettingsScreen(
         }
         val searchEntries = settingsSearchEntries(
             pluginsEnabled = AppFeaturePolicy.pluginsEnabled,
-            supportersContributorsPageEnabled = AppFeaturePolicy.supportersContributorsPageEnabled,
+            supportersContributorsPageEnabled =
+                AppFeaturePolicy.supportersContributorsPageEnabled && SupportersContributorsNavigationEnabled,
             accountDeletionEnabled = AppFeaturePolicy.accountDeletionEnabled,
             personalMediaAddonCopyEnabled = AppFeaturePolicy.personalMediaAddonCopyEnabled,
             liquidGlassNativeTabBarSupported = liquidGlassNativeTabBarSupported,
@@ -542,7 +560,7 @@ private fun MobileSettingsScreen(
                 is SettingsSearchTarget.Page -> when (target.page) {
                     SettingsPage.Account -> onAccountClick()
                     SettingsPage.SupportersContributors -> {
-                        if (AppFeaturePolicy.supportersContributorsPageEnabled) {
+                        if (AppFeaturePolicy.supportersContributorsPageEnabled && SupportersContributorsNavigationEnabled) {
                             onSupportersContributorsClick()
                         }
                     }
@@ -653,7 +671,7 @@ private fun MobileSettingsScreen(
                     onFavoritePersonClick = onFavoritePersonClick,
                 )
                 SettingsPage.SupportersContributors -> {
-                    if (AppFeaturePolicy.supportersContributorsPageEnabled) {
+                    if (AppFeaturePolicy.supportersContributorsPageEnabled && SupportersContributorsNavigationEnabled) {
                         supportersContributorsContent(isTablet = false)
                     }
                 }
@@ -736,19 +754,27 @@ private fun MobileSettingsScreen(
                 SettingsPage.ContentDiscovery -> contentDiscoveryContent(
                     isTablet = false,
                     showPluginsEntry = AppFeaturePolicy.pluginsEnabled,
-                    showCloudStreamEntry = AppFeaturePolicy.pluginsEnabled,
+                    showCloudStreamEntry = AppFeaturePolicy.pluginsEnabled && !isIos,
                     onAddonsClick = onAddonsClick,
                     onPluginsClick = onPluginsClick,
                     onCloudStreamClick = onCloudStreamClick,
                 )
                 SettingsPage.Addons -> addonsSettingsContent()
                 SettingsPage.Plugins -> if (AppFeaturePolicy.pluginsEnabled) pluginsSettingsContent() else addonsSettingsContent()
-                SettingsPage.CloudStream -> if (AppFeaturePolicy.pluginsEnabled) cloudStreamSettingsContent() else addonsSettingsContent()
+                SettingsPage.CloudStream -> if (AppFeaturePolicy.pluginsEnabled && !isIos) {
+                    cloudStreamSettingsContent()
+                } else {
+                    addonsSettingsContent()
+                }
                 SettingsPage.Homescreen -> homescreenSettingsContent(
                     isTablet = false,
                     heroEnabled = homescreenHeroEnabled,
                     showCatalogType = homescreenShowCatalogType,
                     hideUnreleasedContent = homescreenHideUnreleasedContent,
+                    hideCatalogUnderline = homescreenHideCatalogUnderline,
+                    catalogColumnCount = homescreenCatalogColumnCount,
+                    catalogPosterSize = homescreenCatalogPosterSize,
+                    catalogPosterLayout = homescreenCatalogPosterLayout,
                     items = homescreenItems,
                     isCatalogLoading = homescreenCatalogLoading,
                     catalogErrorMessage = homescreenCatalogErrorMessage,
@@ -760,6 +786,7 @@ private fun MobileSettingsScreen(
                 SettingsPage.Integrations -> integrationsContent(
                     isTablet = false,
                     onTraktClick = { onPageChange(SettingsPage.TraktAuthentication) },
+                    onTelegramClick = { onPageChange(SettingsPage.Telegram) },
                     onAiAssistantClick = { onPageChange(SettingsPage.AiAssistant) },
                     onTmdbClick = { onPageChange(SettingsPage.TmdbEnrichment) },
                     onMdbListClick = { onPageChange(SettingsPage.MdbListRatings) },
@@ -768,6 +795,10 @@ private fun MobileSettingsScreen(
                 SettingsPage.AiAssistant -> aiAssistantSettingsContent(
                     isTablet = false,
                     settings = aiAssistantSettings,
+                )
+                SettingsPage.Telegram -> telegramSettingsContent(
+                    isTablet = false,
+                    uiState = telegramUiState,
                 )
                 SettingsPage.TmdbEnrichment -> tmdbSettingsContent(
                     isTablet = false,
@@ -781,11 +812,10 @@ private fun MobileSettingsScreen(
                     isTablet = false,
                     settings = debridSettings,
                 )
-                SettingsPage.TraktAuthentication -> trackingSettingsContent(
+                SettingsPage.TraktAuthentication -> traktSettingsContent(
                     isTablet = false,
-                    traktUiState = traktAuthUiState,
-                    simklUiState = simklAuthUiState,
-                    settingsUiState = trackingSettingsUiState,
+                    uiState = traktAuthUiState,
+                    settingsUiState = traktSettingsUiState,
                     commentsEnabled = traktCommentsEnabled,
                     onCommentsEnabledChange = TraktCommentsSettings::setEnabled,
                 )
@@ -879,13 +909,17 @@ private fun TabletSettingsScreen(
     aiAssistantSettings: AiAssistantSettings,
     mdbListSettings: MdbListSettings,
     debridSettings: DebridSettings,
+    telegramUiState: TelegramUiState,
     traktAuthUiState: TraktAuthUiState,
-    simklAuthUiState: SimklAuthUiState,
     traktCommentsEnabled: Boolean,
-    trackingSettingsUiState: TrackingSettingsUiState,
+    traktSettingsUiState: TraktSettingsUiState,
     homescreenHeroEnabled: Boolean,
     homescreenShowCatalogType: Boolean,
     homescreenHideUnreleasedContent: Boolean,
+    homescreenHideCatalogUnderline: Boolean,
+    homescreenCatalogColumnCount: Int,
+    homescreenCatalogPosterSize: CatalogPosterSize,
+    homescreenCatalogPosterLayout: CatalogPosterLayout,
     homescreenItems: List<HomeCatalogSettingsItem>,
     homescreenCatalogLoading: Boolean,
     homescreenCatalogErrorMessage: String?,
@@ -971,7 +1005,8 @@ private fun TabletSettingsScreen(
             val hapticScope = rememberCoroutineScope()
             val searchEntries = settingsSearchEntries(
                 pluginsEnabled = AppFeaturePolicy.pluginsEnabled,
-                supportersContributorsPageEnabled = AppFeaturePolicy.supportersContributorsPageEnabled,
+                supportersContributorsPageEnabled =
+                    AppFeaturePolicy.supportersContributorsPageEnabled && SupportersContributorsNavigationEnabled,
                 accountDeletionEnabled = AppFeaturePolicy.accountDeletionEnabled,
                 personalMediaAddonCopyEnabled = AppFeaturePolicy.personalMediaAddonCopyEnabled,
                 liquidGlassNativeTabBarSupported = liquidGlassNativeTabBarSupported,
@@ -1106,7 +1141,7 @@ private fun TabletSettingsScreen(
                         onFavoritePersonClick = onFavoritePersonClick,
                     )
                     SettingsPage.SupportersContributors -> {
-                        if (AppFeaturePolicy.supportersContributorsPageEnabled) {
+                        if (AppFeaturePolicy.supportersContributorsPageEnabled && SupportersContributorsNavigationEnabled) {
                             supportersContributorsContent(isTablet = true)
                         }
                     }
@@ -1189,19 +1224,27 @@ private fun TabletSettingsScreen(
                     SettingsPage.ContentDiscovery -> contentDiscoveryContent(
                         isTablet = true,
                         showPluginsEntry = AppFeaturePolicy.pluginsEnabled,
-                        showCloudStreamEntry = AppFeaturePolicy.pluginsEnabled,
+                        showCloudStreamEntry = AppFeaturePolicy.pluginsEnabled && !isIos,
                         onAddonsClick = { openInlinePage(SettingsPage.Addons) },
                         onPluginsClick = { openInlinePage(SettingsPage.Plugins) },
                         onCloudStreamClick = { openInlinePage(SettingsPage.CloudStream) },
                     )
                     SettingsPage.Addons -> addonsSettingsContent()
                     SettingsPage.Plugins -> if (AppFeaturePolicy.pluginsEnabled) pluginsSettingsContent() else addonsSettingsContent()
-                    SettingsPage.CloudStream -> if (AppFeaturePolicy.pluginsEnabled) cloudStreamSettingsContent() else addonsSettingsContent()
+                    SettingsPage.CloudStream -> if (AppFeaturePolicy.pluginsEnabled && !isIos) {
+                        cloudStreamSettingsContent()
+                    } else {
+                        addonsSettingsContent()
+                    }
                     SettingsPage.Homescreen -> homescreenSettingsContent(
                         isTablet = true,
                         heroEnabled = homescreenHeroEnabled,
                         showCatalogType = homescreenShowCatalogType,
                         hideUnreleasedContent = homescreenHideUnreleasedContent,
+                        hideCatalogUnderline = homescreenHideCatalogUnderline,
+                        catalogColumnCount = homescreenCatalogColumnCount,
+                        catalogPosterSize = homescreenCatalogPosterSize,
+                        catalogPosterLayout = homescreenCatalogPosterLayout,
                         items = homescreenItems,
                         isCatalogLoading = homescreenCatalogLoading,
                         catalogErrorMessage = homescreenCatalogErrorMessage,
@@ -1213,6 +1256,7 @@ private fun TabletSettingsScreen(
                     SettingsPage.Integrations -> integrationsContent(
                         isTablet = true,
                         onTraktClick = { openInlinePage(SettingsPage.TraktAuthentication) },
+                        onTelegramClick = { openInlinePage(SettingsPage.Telegram) },
                         onAiAssistantClick = { openInlinePage(SettingsPage.AiAssistant) },
                         onTmdbClick = { openInlinePage(SettingsPage.TmdbEnrichment) },
                         onMdbListClick = { openInlinePage(SettingsPage.MdbListRatings) },
@@ -1221,6 +1265,10 @@ private fun TabletSettingsScreen(
                     SettingsPage.AiAssistant -> aiAssistantSettingsContent(
                         isTablet = true,
                         settings = aiAssistantSettings,
+                    )
+                    SettingsPage.Telegram -> telegramSettingsContent(
+                        isTablet = true,
+                        uiState = telegramUiState,
                     )
                     SettingsPage.TmdbEnrichment -> tmdbSettingsContent(
                         isTablet = true,
@@ -1234,11 +1282,10 @@ private fun TabletSettingsScreen(
                         isTablet = true,
                         settings = debridSettings,
                     )
-                    SettingsPage.TraktAuthentication -> trackingSettingsContent(
+                    SettingsPage.TraktAuthentication -> traktSettingsContent(
                         isTablet = true,
-                        traktUiState = traktAuthUiState,
-                        simklUiState = simklAuthUiState,
-                        settingsUiState = trackingSettingsUiState,
+                        uiState = traktAuthUiState,
+                        settingsUiState = traktSettingsUiState,
                         commentsEnabled = traktCommentsEnabled,
                         onCommentsEnabledChange = TraktCommentsSettings::setEnabled,
                     )

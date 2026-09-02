@@ -104,6 +104,7 @@ fun ProfileEditScreen(
 
     val avatars by AvatarRepository.avatars.collectAsStateWithLifecycle()
     LaunchedEffect(Unit) {
+        AvatarRepository.fetchAvatars()
         AvatarRepository.refreshAvatars()
     }
     LaunchedEffect(isNew, avatars, selectedAvatarId, avatarUrl, currentProfile?.avatarId, currentProfile?.avatarUrl) {
@@ -214,36 +215,6 @@ fun ProfileEditScreen(
                             text = stringResource(Res.string.profile_avatar_url_invalid),
                             style = MaterialTheme.typography.bodySmall,
                             color = MaterialTheme.colorScheme.error,
-                        )
-                    }
-                }
-            }
-        }
-
-        if (canChooseBackground) {
-            item {
-                NuvioSurfaceCard {
-                    Column(verticalArrangement = Arrangement.spacedBy(14.dp)) {
-                        Text(
-                            text = stringResource(Res.string.profile_choose_background),
-                            style = MaterialTheme.typography.titleLarge,
-                            color = MaterialTheme.colorScheme.onSurface,
-                        )
-                        Text(
-                            text = stringResource(Res.string.profile_background_member_note),
-                            style = MaterialTheme.typography.bodyMedium,
-                            color = MaterialTheme.colorScheme.onSurfaceVariant,
-                        )
-                        ProfileBackgroundPicker(
-                            backgrounds = backgroundCatalog,
-                            selectedBackgroundId = selectedBackgroundId,
-                            selectedBackgroundUrl = selectedBackgroundUrl,
-                            customBackgroundUrl = currentProfile?.profileBackgroundUrl,
-                            standardBackgroundColor = previewAccent,
-                            onSelectionChange = { id, url ->
-                                selectedBackgroundId = id
-                                selectedBackgroundUrl = url
-                            },
                         )
                     }
                 }
@@ -469,6 +440,11 @@ fun ProfileEditScreen(
             hasExistingPin = currentProfile.pinEnabled,
             onDone = {
                 showPinSetup = false
+                scope.launch {
+                    if (authState is AuthState.Authenticated) {
+                        ProfileRepository.pullProfiles()
+                    }
+                }
             },
             onDismiss = { showPinSetup = false },
         )
@@ -895,7 +871,6 @@ private fun AvatarChoiceItem(
     isSelected: Boolean,
     onClick: () -> Unit,
 ) {
-    val palette = ThemeColors.getColorPalette(MaterialTheme.appTheme)
     Box(
         modifier = Modifier
             .size(size)
@@ -926,13 +901,13 @@ private fun AvatarChoiceItem(
                     .size(20.dp)
                     .align(Alignment.BottomEnd)
                     .clip(CircleShape)
-                    .background(palette.accentBrush()),
+                    .background(MaterialTheme.colorScheme.primary),
                 contentAlignment = Alignment.Center,
             ) {
                 Icon(
                     imageVector = Icons.Rounded.Check,
                     contentDescription = null,
-                    tint = palette.onSecondary,
+                    tint = MaterialTheme.colorScheme.onPrimary,
                     modifier = Modifier.size(12.dp),
                 )
             }

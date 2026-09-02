@@ -3,7 +3,6 @@ package com.nuvio.app.features.home
 import com.nuvio.app.features.addons.ManagedAddon
 import com.nuvio.app.features.collection.Collection
 import com.nuvio.app.features.collection.CollectionRepository
-import kotlinx.atomicfu.atomic
 import kotlinx.coroutines.runBlocking
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -37,6 +36,11 @@ data class HomeCatalogSettingsUiState(
     val heroMotionPreviewEnabled: Boolean = false,
     val showCatalogType: Boolean = true,
     val hideUnreleasedContent: Boolean = false,
+    val hideCatalogUnderline: Boolean = false,
+    val catalogColumnCount: Int = 3,
+    val catalogPosterSize: CatalogPosterSize = CatalogPosterSize.Regular,
+    val catalogPosterLayout: CatalogPosterLayout = CatalogPosterLayout.Portrait,
+    val homeCatalogRowCount: Int = 1,
     val items: List<HomeCatalogSettingsItem> = emptyList(),
 ) {
     val signature: String
@@ -50,6 +54,16 @@ data class HomeCatalogSettingsUiState(
             append(showCatalogType)
             append('|')
             append(hideUnreleasedContent)
+            append('|')
+            append(hideCatalogUnderline)
+            append('|')
+            append(catalogColumnCount)
+            append('|')
+            append(catalogPosterSize.name)
+            append('|')
+            append(catalogPosterLayout.name)
+            append('|')
+            append(homeCatalogRowCount)
             append('|')
             append(
                 items.joinToString(separator = "|") { item ->
@@ -72,8 +86,24 @@ internal data class HomeCatalogSettingsSnapshot(
     val heroMotionPreviewEnabled: Boolean,
     val showCatalogType: Boolean,
     val hideUnreleasedContent: Boolean,
+    val hideCatalogUnderline: Boolean,
+    val catalogColumnCount: Int,
+    val catalogPosterSize: CatalogPosterSize,
+    val catalogPosterLayout: CatalogPosterLayout,
+    val homeCatalogRowCount: Int,
     val preferences: Map<String, HomeCatalogPreference>,
 )
+
+enum class CatalogPosterSize {
+    Compact,
+    Regular,
+    Large,
+}
+
+enum class CatalogPosterLayout {
+    Portrait,
+    Landscape,
+}
 
 @Serializable
 private data class StoredHomeCatalogPreference(
@@ -91,6 +121,11 @@ private data class StoredHomeCatalogSettingsPayload(
     val heroMotionPreviewEnabled: Boolean = false,
     val showCatalogType: Boolean = true,
     val hideUnreleasedContent: Boolean = false,
+    val hideCatalogUnderline: Boolean = false,
+    val catalogColumnCount: Int = 3,
+    val catalogPosterSize: CatalogPosterSize = CatalogPosterSize.Regular,
+    val catalogPosterLayout: CatalogPosterLayout = CatalogPosterLayout.Portrait,
+    val homeCatalogRowCount: Int = 1,
     val items: List<StoredHomeCatalogPreference> = emptyList(),
 )
 
@@ -108,26 +143,31 @@ object HomeCatalogSettingsRepository {
     private var hasLoaded = false
     private var definitions: List<HomeCatalogDefinition> = emptyList()
     private var collectionDefinitions: List<CollectionCatalogDefinition> = emptyList()
-    private val preferencesRef = atomic<Map<String, StoredHomeCatalogPreference>>(emptyMap())
-    private var preferences: Map<String, StoredHomeCatalogPreference>
-        get() = preferencesRef.value
-        set(value) {
-            preferencesRef.value = value
-        }
+    private var preferences: MutableMap<String, StoredHomeCatalogPreference> = mutableMapOf()
     private var heroEnabled = true
     private var heroAutoScrollEnabled = true
     private var heroMotionPreviewEnabled = false
     private var showCatalogType = true
     private var hideUnreleasedContent = false
+    private var hideCatalogUnderline = false
+    private var catalogColumnCount = 3
+    private var catalogPosterSize = CatalogPosterSize.Regular
+    private var catalogPosterLayout = CatalogPosterLayout.Portrait
+    private var homeCatalogRowCount = 1
 
     fun onProfileChanged() {
         hasLoaded = false
-        preferences = emptyMap()
+        preferences.clear()
         heroEnabled = true
         heroAutoScrollEnabled = true
         heroMotionPreviewEnabled = false
         showCatalogType = true
         hideUnreleasedContent = false
+        hideCatalogUnderline = false
+        catalogColumnCount = 3
+        catalogPosterSize = CatalogPosterSize.Regular
+        catalogPosterLayout = CatalogPosterLayout.Portrait
+        homeCatalogRowCount = 1
         definitions = emptyList()
         collectionDefinitions = emptyList()
         _uiState.value = HomeCatalogSettingsUiState()
@@ -137,12 +177,17 @@ object HomeCatalogSettingsRepository {
         hasLoaded = false
         definitions = emptyList()
         collectionDefinitions = emptyList()
-        preferences = emptyMap()
+        preferences.clear()
         heroEnabled = true
         heroAutoScrollEnabled = true
         heroMotionPreviewEnabled = false
         showCatalogType = true
         hideUnreleasedContent = false
+        hideCatalogUnderline = false
+        catalogColumnCount = 3
+        catalogPosterSize = CatalogPosterSize.Regular
+        catalogPosterLayout = CatalogPosterLayout.Portrait
+        homeCatalogRowCount = 1
         _uiState.value = HomeCatalogSettingsUiState()
     }
 
@@ -178,6 +223,11 @@ object HomeCatalogSettingsRepository {
             heroMotionPreviewEnabled = heroMotionPreviewEnabled,
             showCatalogType = showCatalogType,
             hideUnreleasedContent = hideUnreleasedContent,
+            hideCatalogUnderline = hideCatalogUnderline,
+            catalogColumnCount = catalogColumnCount,
+            catalogPosterSize = catalogPosterSize,
+            catalogPosterLayout = catalogPosterLayout,
+            homeCatalogRowCount = homeCatalogRowCount,
             preferences = preferences.mapValues { (_, value) ->
                 HomeCatalogPreference(
                     customTitle = value.customTitle,
@@ -233,6 +283,53 @@ object HomeCatalogSettingsRepository {
         HomeCatalogSettingsSyncService.triggerPush()
     }
 
+    fun setHideCatalogUnderline(enabled: Boolean) {
+        ensureLoaded()
+        if (hideCatalogUnderline == enabled) return
+        hideCatalogUnderline = enabled
+        publish()
+        persist()
+        HomeCatalogSettingsSyncService.triggerPush()
+    }
+
+    fun setCatalogColumnCount(count: Int) {
+        ensureLoaded()
+        val next = count.coerceIn(2, 6)
+        if (catalogColumnCount == next) return
+        catalogColumnCount = next
+        publish()
+        persist()
+        HomeCatalogSettingsSyncService.triggerPush()
+    }
+
+    fun setCatalogPosterSize(size: CatalogPosterSize) {
+        ensureLoaded()
+        if (catalogPosterSize == size) return
+        catalogPosterSize = size
+        publish()
+        persist()
+        HomeCatalogSettingsSyncService.triggerPush()
+    }
+
+    fun setCatalogPosterLayout(layout: CatalogPosterLayout) {
+        ensureLoaded()
+        if (catalogPosterLayout == layout) return
+        catalogPosterLayout = layout
+        publish()
+        persist()
+        HomeCatalogSettingsSyncService.triggerPush()
+    }
+
+    fun setHomeCatalogRowCount(count: Int) {
+        ensureLoaded()
+        val next = count.coerceIn(1, 4)
+        if (homeCatalogRowCount == next) return
+        homeCatalogRowCount = next
+        publish()
+        persist()
+        HomeCatalogSettingsSyncService.triggerPush()
+    }
+
     fun setHeroSourceEnabled(key: String, enabled: Boolean) {
         updatePreference(key, pushRemote = false) { preference ->
             if (!enabled) {
@@ -264,7 +361,12 @@ object HomeCatalogSettingsRepository {
         heroMotionPreviewEnabled = false
         showCatalogType = true
         hideUnreleasedContent = false
-        preferences = emptyMap()
+        hideCatalogUnderline = false
+        catalogColumnCount = 3
+        catalogPosterSize = CatalogPosterSize.Regular
+        catalogPosterLayout = CatalogPosterLayout.Portrait
+        homeCatalogRowCount = 1
+        preferences.clear()
         normalizePreferences()
         publish()
         persist()
@@ -288,12 +390,10 @@ object HomeCatalogSettingsRepository {
         if (fromIndex == toIndex) return
         val orderedKeys = allKeys.toMutableList()
         orderedKeys.add(toIndex, orderedKeys.removeAt(fromIndex))
-        val updatedPreferences = preferences.toMutableMap()
         orderedKeys.forEachIndexed { index, itemKey ->
-            val current = updatedPreferences[itemKey] ?: return@forEachIndexed
-            updatedPreferences[itemKey] = current.copy(order = index)
+            val current = preferences[itemKey] ?: return@forEachIndexed
+            preferences[itemKey] = current.copy(order = index)
         }
-        preferences = updatedPreferences
         publish()
         persist()
         HomeRepository.applyCurrentSettings()
@@ -317,7 +417,12 @@ object HomeCatalogSettingsRepository {
             heroMotionPreviewEnabled = parsedPayload.heroMotionPreviewEnabled
             showCatalogType = parsedPayload.showCatalogType
             hideUnreleasedContent = parsedPayload.hideUnreleasedContent
-            preferences = parsedPayload.items.associateBy { it.key }
+            hideCatalogUnderline = parsedPayload.hideCatalogUnderline
+            catalogColumnCount = parsedPayload.catalogColumnCount.coerceIn(2, 6)
+            catalogPosterSize = parsedPayload.catalogPosterSize
+            catalogPosterLayout = parsedPayload.catalogPosterLayout
+            homeCatalogRowCount = parsedPayload.homeCatalogRowCount.coerceIn(1, 4)
+            preferences = parsedPayload.items.associateBy { it.key }.toMutableMap()
             publish()
             return
         }
@@ -326,7 +431,7 @@ object HomeCatalogSettingsRepository {
             json.decodeFromString<List<StoredHomeCatalogPreference>>(payload)
         }.getOrDefault(emptyList())
 
-        preferences = legacyItems.associateBy { it.key }
+        preferences = legacyItems.associateBy { it.key }.toMutableMap()
         publish()
     }
 
@@ -375,7 +480,7 @@ object HomeCatalogSettingsRepository {
                 order = stored?.order ?: nextOrder++,
             )
         }
-        preferences = normalized.toMap()
+        preferences = normalized
     }
 
     private fun publish() {
@@ -419,6 +524,11 @@ object HomeCatalogSettingsRepository {
             heroMotionPreviewEnabled = heroMotionPreviewEnabled,
             showCatalogType = showCatalogType,
             hideUnreleasedContent = hideUnreleasedContent,
+            hideCatalogUnderline = hideCatalogUnderline,
+            catalogColumnCount = catalogColumnCount,
+            catalogPosterSize = catalogPosterSize,
+            catalogPosterLayout = catalogPosterLayout,
+            homeCatalogRowCount = homeCatalogRowCount,
             items = items,
         )
     }
@@ -432,6 +542,11 @@ object HomeCatalogSettingsRepository {
                     heroMotionPreviewEnabled = heroMotionPreviewEnabled,
                     showCatalogType = showCatalogType,
                     hideUnreleasedContent = hideUnreleasedContent,
+                    hideCatalogUnderline = hideCatalogUnderline,
+                    catalogColumnCount = catalogColumnCount,
+                    catalogPosterSize = catalogPosterSize,
+                    catalogPosterLayout = catalogPosterLayout,
+                    homeCatalogRowCount = homeCatalogRowCount,
                     items = preferences.values.sortedBy { it.order },
                 ),
             ),
@@ -447,7 +562,7 @@ object HomeCatalogSettingsRepository {
         val current = preferences[key] ?: defaultPreferenceForMissingKey(key) ?: return
         val updated = transform(current)
         if (updated == current) return
-        preferences = preferences + (key to updated)
+        preferences[key] = updated
         publish()
         persist()
         HomeRepository.applyCurrentSettings()
@@ -480,12 +595,10 @@ object HomeCatalogSettingsRepository {
         val movingKey = orderedKeys.removeAt(currentIndex)
         orderedKeys.add(targetIndex, movingKey)
 
-        val updatedPreferences = preferences.toMutableMap()
         orderedKeys.forEachIndexed { index, itemKey ->
-            val current = updatedPreferences[itemKey] ?: return@forEachIndexed
-            updatedPreferences[itemKey] = current.copy(order = index)
+            val current = preferences[itemKey] ?: return@forEachIndexed
+            preferences[itemKey] = current.copy(order = index)
         }
-        preferences = updatedPreferences
 
         publish()
         persist()
@@ -531,6 +644,11 @@ object HomeCatalogSettingsRepository {
             heroAutoScrollEnabled = heroAutoScrollEnabled,
             showCatalogType = showCatalogType,
             hideUnreleasedContent = hideUnreleasedContent,
+            hideCatalogUnderline = hideCatalogUnderline,
+            catalogColumnCount = catalogColumnCount,
+            catalogPosterSize = catalogPosterSize,
+            catalogPosterLayout = catalogPosterLayout,
+            homeCatalogRowCount = homeCatalogRowCount,
             items = items,
         )
     }
@@ -540,6 +658,11 @@ object HomeCatalogSettingsRepository {
         heroAutoScrollEnabled = payload.heroAutoScrollEnabled
         showCatalogType = payload.showCatalogType
         hideUnreleasedContent = payload.hideUnreleasedContent
+        hideCatalogUnderline = payload.hideCatalogUnderline
+        catalogColumnCount = payload.catalogColumnCount.coerceIn(2, 6)
+        catalogPosterSize = payload.catalogPosterSize
+        catalogPosterLayout = payload.catalogPosterLayout
+        homeCatalogRowCount = payload.homeCatalogRowCount.coerceIn(1, 4)
         if (payload.items.isNotEmpty()) {
             val existingHeroState = preferences.mapValues { it.value.heroSourceEnabled }
             val remotePreferences = payload.items.associate { item ->
@@ -557,7 +680,7 @@ object HomeCatalogSettingsRepository {
             val preservedPreferences = preferences.filterKeys { key ->
                 key !in remoteKeys && (key in knownKeys || key.requiresExplicitSyncKey())
             }
-            preferences = preservedPreferences + remotePreferences
+            preferences = (preservedPreferences + remotePreferences).toMutableMap()
             normalizePreferences()
         }
         hasLoaded = true
@@ -591,12 +714,10 @@ object HomeCatalogSettingsRepository {
         val reorderedKeys = pinnedKeys + nonPinnedKeys
         if (reorderedKeys == orderedKeys) return
 
-        val updatedPreferences = preferences.toMutableMap()
         reorderedKeys.forEachIndexed { index, itemKey ->
-            val current = updatedPreferences[itemKey] ?: return@forEachIndexed
-            updatedPreferences[itemKey] = current.copy(order = index)
+            val current = preferences[itemKey] ?: return@forEachIndexed
+            preferences[itemKey] = current.copy(order = index)
         }
-        preferences = updatedPreferences
     }
 
     private fun defaultPreferenceForMissingKey(key: String): StoredHomeCatalogPreference? {

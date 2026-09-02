@@ -29,6 +29,7 @@ import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.snapshotFlow
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.alpha
@@ -43,6 +44,9 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import coil3.compose.AsyncImage
+import kotlinx.coroutines.flow.distinctUntilChanged
+import kotlinx.coroutines.flow.filter
+import kotlinx.coroutines.flow.map
 import nuvio.composeapp.generated.resources.Res
 import nuvio.composeapp.generated.resources.home_view_all
 import nuvio.composeapp.generated.resources.poster_logo_content_description
@@ -69,11 +73,13 @@ fun <T> NuvioShelfSection(
     itemSpacing: Dp = 10.dp,
     rowModifier: Modifier = Modifier,
     showHeaderAccent: Boolean = true,
+    rowCount: Int = 1,
     onViewAllClick: (() -> Unit)? = null,
     viewAllPillSize: NuvioViewAllPillSize = NuvioViewAllPillSize.Default,
     key: ((T) -> Any)? = null,
     animatePlacement: Boolean = false,
     rowResetKey: Any? = null,
+    onEndReached: (() -> Unit)? = null,
     itemContent: @Composable (T) -> Unit,
 ) {
     val tokens = MaterialTheme.nuvio
@@ -88,6 +94,18 @@ fun <T> NuvioShelfSection(
         }
     }
 
+    LaunchedEffect(rowState, entries.size, onEndReached) {
+        val onEnd = onEndReached ?: return@LaunchedEffect
+        snapshotFlow { rowState.layoutInfo }
+            .map { layoutInfo ->
+                val lastVisible = layoutInfo.visibleItemsInfo.lastOrNull()?.index ?: -1
+                lastVisible >= layoutInfo.totalItemsCount - 4
+            }
+            .distinctUntilChanged()
+            .filter { it && entries.isNotEmpty() }
+            .collect { onEnd() }
+    }
+
     Column(
         modifier = modifier.fillMaxWidth(),
         verticalArrangement = Arrangement.spacedBy(tokens.spacing.controlGap + NuvioTokens.Space.s2),
@@ -96,37 +114,79 @@ fun <T> NuvioShelfSection(
             NuvioShelfSectionHeader(
                 title = title,
                 modifier = Modifier.padding(horizontal = headerHorizontalPadding),
+                showAccent = showHeaderAccent,
                 onViewAllClick = onViewAllClick,
                 viewAllPillSize = viewAllPillSize,
             )
         }
-        LazyRow(
-            state = rowState,
-            modifier = rowModifier,
-            contentPadding = rowContentPadding,
-            horizontalArrangement = Arrangement.spacedBy(itemSpacing),
-        ) {
-            if (duplicateSafeEntries != null) {
-                items(
-                    items = duplicateSafeEntries,
-                    key = { entry -> entry.lazyKey },
-                    contentType = { "poster" },
-                ) { keyedEntry ->
-                    if (animatePlacement) {
-                        Box(modifier = Modifier.animateItem()) { itemContent(keyedEntry.value) }
-                    } else {
-                        itemContent(keyedEntry.value)
+        if (rowCount <= 1) {
+            LazyRow(
+                state = rowState,
+                modifier = rowModifier,
+                contentPadding = rowContentPadding,
+                horizontalArrangement = Arrangement.spacedBy(itemSpacing),
+            ) {
+                if (duplicateSafeEntries != null) {
+                    items(
+                        items = duplicateSafeEntries,
+                        key = { entry -> entry.lazyKey },
+                        contentType = { "poster" },
+                    ) { keyedEntry ->
+                        if (animatePlacement) {
+                            Box(modifier = Modifier.animateItem()) { itemContent(keyedEntry.value) }
+                        } else {
+                            itemContent(keyedEntry.value)
+                        }
+                    }
+                } else {
+                    items(
+                        items = entries,
+                        contentType = { "poster" },
+                    ) { entry ->
+                        if (animatePlacement) {
+                            Box(modifier = Modifier.animateItem()) { itemContent(entry) }
+                        } else {
+                            itemContent(entry)
+                        }
                     }
                 }
-            } else {
-                items(
-                    items = entries,
-                    contentType = { "poster" },
-                ) { entry ->
-                    if (animatePlacement) {
-                        Box(modifier = Modifier.animateItem()) { itemContent(entry) }
-                    } else {
-                        itemContent(entry)
+            }
+        } else {
+            val resolvedRowCount = rowCount.coerceIn(1, 4)
+            val keyedColumns = remember(duplicateSafeEntries, resolvedRowCount) {
+                duplicateSafeEntries?.chunked(resolvedRowCount).orEmpty()
+            }
+            val columns = remember(entries, resolvedRowCount) {
+                entries.chunked(resolvedRowCount)
+            }
+            LazyRow(
+                state = rowState,
+                modifier = rowModifier,
+                contentPadding = rowContentPadding,
+                horizontalArrangement = Arrangement.spacedBy(itemSpacing),
+            ) {
+                if (duplicateSafeEntries != null) {
+                    items(
+                        items = keyedColumns,
+                        key = { column -> column.joinToString(separator = "_") { it.lazyKey.toString() } },
+                        contentType = { "poster-column" },
+                    ) { column ->
+                        Column(verticalArrangement = Arrangement.spacedBy(itemSpacing)) {
+                            column.forEach { keyedEntry ->
+                                itemContent(keyedEntry.value)
+                            }
+                        }
+                    }
+                } else {
+                    items(
+                        items = columns,
+                        contentType = { "poster-column" },
+                    ) { column ->
+                        Column(verticalArrangement = Arrangement.spacedBy(itemSpacing)) {
+                            column.forEach { entry ->
+                                itemContent(entry)
+                            }
+                        }
                     }
                 }
             }
@@ -254,6 +314,7 @@ fun NuvioPosterCard(
 private fun NuvioShelfSectionHeader(
     title: String,
     modifier: Modifier = Modifier,
+    showAccent: Boolean = true,
     onViewAllClick: (() -> Unit)? = null,
     viewAllPillSize: NuvioViewAllPillSize = NuvioViewAllPillSize.Default,
 ) {
@@ -285,6 +346,18 @@ private fun NuvioShelfSectionHeader(
                 onClick = onViewAllClick,
                 size = viewAllPillSize,
                 modifier = viewAllPlaceholderModifier,
+            )
+        }
+        if (showAccent) {
+            Box(
+                modifier = Modifier
+                    .padding(top = NuvioTokens.Space.s6)
+                    .width(NuvioTokens.Space.s64 - NuvioTokens.Space.s4)
+                    .height(NuvioTokens.Space.s4)
+                    .background(
+                        color = tokens.colors.accent,
+                        shape = tokens.shapes.chip,
+                    ),
             )
         }
     }

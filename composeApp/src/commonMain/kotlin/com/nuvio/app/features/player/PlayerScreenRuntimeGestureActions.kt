@@ -242,7 +242,9 @@ internal fun PlayerScreenRuntime.cycleResizeMode() {
     val nextMode = resizeMode.next()
     resizeMode = nextMode
     lastSyncedSettingsResizeMode = nextMode
-    PlayerSettingsRepository.setResizeMode(nextMode)
+    if (playerSettingsUiState.rememberPlayerChoicesEnabled) {
+        PlayerSettingsRepository.setResizeMode(nextMode)
+    }
     showGestureMessage(
         when (nextMode) {
             PlayerResizeMode.Fit -> resizeModeFitLabel

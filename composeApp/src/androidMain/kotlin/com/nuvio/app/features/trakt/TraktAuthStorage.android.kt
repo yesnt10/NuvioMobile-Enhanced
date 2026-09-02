@@ -14,17 +14,17 @@ internal actual object TraktAuthStorage {
         preferences = context.getSharedPreferences(preferencesName, Context.MODE_PRIVATE)
     }
 
-    actual fun loadPayload(profileId: Int): String? =
-        preferences?.getString(ProfileScopedKey.of(payloadKey, profileId), null)
+    actual fun loadPayload(): String? =
+        preferences?.getString(ProfileScopedKey.of(payloadKey), null)
 
-    actual fun savePayload(profileId: Int, payload: String) {
+    actual fun savePayload(payload: String) {
         preferences
             ?.edit()
-            ?.putString(ProfileScopedKey.of(payloadKey, profileId), payload)
+            ?.putString(ProfileScopedKey.of(payloadKey), payload)
             ?.apply()
     }
 
-    actual fun removeProfile(profileId: Int) {
+    fun removeProfile(profileId: Int) {
         preferences
             ?.edit()
             ?.remove(ProfileScopedKey.of(payloadKey, profileId))

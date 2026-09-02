@@ -85,7 +85,6 @@ import com.nuvio.app.core.ui.rememberAnimatedSelectionBrush
 import com.nuvio.app.core.ui.rememberAnimatedSoftBrush
 import com.nuvio.app.core.ui.withDuplicateSafeLazyKeys
 import com.nuvio.app.features.downloads.DownloadsRepository
-import com.nuvio.app.features.details.MetaScreenSettingsRepository
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.rememberModalBottomSheetState
@@ -176,12 +175,6 @@ fun StreamsScreen(
     var preferredFilterApplied by remember(videoId) { mutableStateOf(false) }
     var autoPlayOverlayLogoLoadError by remember(logo) { mutableStateOf(false) }
     val autoPlayOverlayLogoUrl = logo?.takeIf { it.isNotBlank() }
-    val episodeProgress = watchProgressUiState.progressForVideo(
-        videoId = videoId,
-        parentMetaId = parentMetaId,
-        seasonNumber = seasonNumber,
-        episodeNumber = episodeNumber,
-    )
     val storedProgress = if (startFromBeginning) {
         null
     } else {
@@ -609,7 +602,6 @@ private fun MobileStreamsLayout(
                     episodeNumber = episodeNumber,
                     episodeTitle = episodeTitle ?: title,
                     thumbnail = heroArtwork,
-                    blurred = blurEpisodeThumbnail,
                     showTitle = title,
                 )
             } else {
@@ -772,7 +764,6 @@ private fun EpisodeHeroBlock(
     episodeNumber: Int,
     episodeTitle: String,
     thumbnail: String?,
-    blurred: Boolean,
     showTitle: String,
     modifier: Modifier = Modifier,
 ) {
@@ -788,9 +779,7 @@ private fun EpisodeHeroBlock(
             AsyncImage(
                 model = thumbnail,
                 contentDescription = null,
-                modifier = Modifier
-                    .fillMaxSize()
-                    .then(if (blurred) Modifier.blur(18.dp) else Modifier),
+                modifier = Modifier.fillMaxSize(),
                 contentScale = ContentScale.Crop,
             )
         }

@@ -156,6 +156,7 @@ internal fun PluginsUiState.toStoredPluginsState(): StoredPluginsState =
     StoredPluginsState(
         pluginsEnabled = pluginsEnabled,
         groupStreamsByRepository = groupStreamsByRepository,
+        excludedQualities = excludedQualities,
         repositories = repositories.map { repository ->
             StoredPluginRepository(
                 manifestUrl = repository.manifestUrl,

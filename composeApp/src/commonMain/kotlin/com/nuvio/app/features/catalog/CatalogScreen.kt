@@ -58,11 +58,13 @@ import com.nuvio.app.core.ui.rememberPosterCardStyleUiState
 import com.nuvio.app.core.ui.posterCardClickable
 import com.nuvio.app.core.ui.nuvioSafeBottomPadding
 import com.nuvio.app.core.ui.withDuplicateSafeLazyKeys
+import com.nuvio.app.features.home.CatalogPosterLayout
+import com.nuvio.app.features.home.CatalogPosterSize
 import com.nuvio.app.features.home.MetaPreview
 import com.nuvio.app.features.home.HomeCatalogSettingsRepository
-import com.nuvio.app.features.home.PosterShape
 import com.nuvio.app.features.home.components.HomeEmptyStateCard
 import com.nuvio.app.features.home.stableKey
+import com.nuvio.app.features.settings.NuvioEnhancedSettingsRepository
 import com.nuvio.app.features.watched.WatchedRepository
 import com.nuvio.app.features.watching.application.WatchingState
 import kotlinx.coroutines.flow.distinctUntilChanged
@@ -177,7 +179,22 @@ fun CatalogScreen(
             .fillMaxSize()
             .background(MaterialTheme.colorScheme.background),
     ) {
-        val columns = remember(maxWidth) { catalogGridColumnsForWidth(maxWidth) }
+        val columns = remember(
+            maxWidth,
+            homeCatalogSettingsUiState.catalogColumnCount,
+            homeCatalogSettingsUiState.catalogPosterSize,
+        ) {
+            catalogColumnsForSettings(
+                requestedColumns = homeCatalogSettingsUiState.catalogColumnCount,
+                posterSize = homeCatalogSettingsUiState.catalogPosterSize,
+                maxWidth = maxWidth,
+            )
+        }
+        val gridSpacing = when (homeCatalogSettingsUiState.catalogPosterSize) {
+            CatalogPosterSize.Compact -> 10.dp
+            CatalogPosterSize.Regular -> 12.dp
+            CatalogPosterSize.Large -> 14.dp
+        }
 
         Box(modifier = Modifier.fillMaxSize()) {
             LazyVerticalGrid(
@@ -190,8 +207,8 @@ fun CatalogScreen(
                     end = 16.dp,
                     bottom = nuvioSafeBottomPadding(28.dp),
                 ),
-                horizontalArrangement = Arrangement.spacedBy(12.dp),
-                verticalArrangement = Arrangement.spacedBy(18.dp),
+                horizontalArrangement = Arrangement.spacedBy(gridSpacing),
+                verticalArrangement = Arrangement.spacedBy(gridSpacing + 6.dp),
             ) {
                 if (uiState.items.isEmpty() && uiState.isLoading) {
                     items(columns * 3) {
@@ -241,6 +258,8 @@ fun CatalogScreen(
                                 item = item,
                                 cornerRadiusDp = posterCardStyle.cornerRadiusDp,
                                 hideLabels = posterCardStyle.hideLabelsEnabled,
+                                posterSize = homeCatalogSettingsUiState.catalogPosterSize,
+                                posterLayout = homeCatalogSettingsUiState.catalogPosterLayout,
                                 isWatched = WatchingState.isPosterWatched(
                                     watchedKeys = watchedUiState.watchedKeys,
                                     item = item,
@@ -260,6 +279,8 @@ fun CatalogScreen(
                                 item = item,
                                 cornerRadiusDp = posterCardStyle.cornerRadiusDp,
                                 hideLabels = posterCardStyle.hideLabelsEnabled,
+                                posterSize = homeCatalogSettingsUiState.catalogPosterSize,
+                                posterLayout = homeCatalogSettingsUiState.catalogPosterLayout,
                                 isWatched = WatchingState.isPosterWatched(
                                     watchedKeys = watchedUiState.watchedKeys,
                                     item = item,
@@ -387,17 +408,33 @@ private fun CatalogPosterTile(
     item: MetaPreview,
     cornerRadiusDp: Int,
     hideLabels: Boolean,
+    posterSize: CatalogPosterSize,
+    posterLayout: CatalogPosterLayout,
     isWatched: Boolean,
     onClick: (() -> Unit)? = null,
     onLongClick: (() -> Unit)? = null,
 ) {
+    val enhancedSettings by remember {
+        NuvioEnhancedSettingsRepository.ensureLoaded()
+        NuvioEnhancedSettingsRepository.uiState
+    }.collectAsStateWithLifecycle()
+    val titleSize = when (posterSize) {
+        CatalogPosterSize.Compact -> 13.sp
+        CatalogPosterSize.Regular -> 15.sp
+        CatalogPosterSize.Large -> 16.sp
+    }
+    val detailSize = when (posterSize) {
+        CatalogPosterSize.Compact -> 12.sp
+        CatalogPosterSize.Regular -> 14.sp
+        CatalogPosterSize.Large -> 15.sp
+    }
     Column(
         verticalArrangement = Arrangement.spacedBy(8.dp),
     ) {
         Box(
             modifier = Modifier
                 .fillMaxWidth()
-                .aspectRatio(item.posterShape.catalogAspectRatio())
+                .aspectRatio(posterLayout.catalogAspectRatio())
                 .clip(RoundedCornerShape(cornerRadiusDp.dp))
                 .background(MaterialTheme.colorScheme.surface)
                 .nuvioCardDepth(
@@ -424,16 +461,23 @@ private fun CatalogPosterTile(
         if (!hideLabels) {
             Text(
                 text = item.name,
-                style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.SemiBold),
+                style = MaterialTheme.typography.titleMedium.copy(
+                    fontWeight = FontWeight.SemiBold,
+                    fontSize = titleSize,
+                ),
                 color = MaterialTheme.colorScheme.onBackground,
                 maxLines = 2,
                 overflow = TextOverflow.Ellipsis,
             )
-            val detail = item.releaseInfo?.let { formatReleaseDateForDisplay(it) }
+            val detail = if (enhancedSettings.hideHomeReleaseDates) {
+                null
+            } else {
+                item.releaseInfo?.let { formatReleaseDateForDisplay(it) }
+            }
             if (detail != null) {
                 Text(
                     text = detail,
-                    style = MaterialTheme.typography.bodyMedium,
+                    style = MaterialTheme.typography.bodyMedium.copy(fontSize = detailSize),
                     color = MaterialTheme.colorScheme.onSurfaceVariant,
                     maxLines = 1,
                     overflow = TextOverflow.Ellipsis,
@@ -499,20 +543,30 @@ private fun CatalogLoadingFooter() {
     }
 }
 
-private fun PosterShape.catalogAspectRatio(): Float =
-    when (this) {
-        PosterShape.Poster -> 0.68f
-        PosterShape.Square -> 1f
-        PosterShape.Landscape -> 1.78f
+private fun catalogColumnsForSettings(
+    requestedColumns: Int,
+    posterSize: CatalogPosterSize,
+    maxWidth: Dp,
+): Int {
+    val sizeAdjustment = when (posterSize) {
+        CatalogPosterSize.Compact -> 1
+        CatalogPosterSize.Regular -> 0
+        CatalogPosterSize.Large -> -1
     }
+    val widthMaximum = when {
+        maxWidth >= 1400.dp -> 8
+        maxWidth >= 1200.dp -> 7
+        maxWidth >= 1000.dp -> 6
+        maxWidth >= 840.dp -> 5
+        else -> 4
+    }
+    return (requestedColumns + sizeAdjustment).coerceIn(2, widthMaximum)
+}
 
-private fun catalogGridColumnsForWidth(screenWidth: Dp): Int =
-    when {
-        screenWidth >= 1400.dp -> 7
-        screenWidth >= 1200.dp -> 6
-        screenWidth >= 1000.dp -> 5
-        screenWidth >= 840.dp -> 4
-        else -> 3
+private fun CatalogPosterLayout.catalogAspectRatio(): Float =
+    when (this) {
+        CatalogPosterLayout.Portrait -> 0.68f
+        CatalogPosterLayout.Landscape -> 16f / 9f
     }
 
 private enum class LibraryFilter {

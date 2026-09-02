@@ -150,7 +150,11 @@ internal fun WatchProgressEntry.shouldUseAsCompletedSeedForContinueWatching(): B
     val entry = normalizedCompletion()
     if (entry.isLiveTvProgressEntry()) return false
     if (isMalformedNextUpSeedContentId(entry.parentMetaId)) return false
-    return entry.isEffectivelyCompleted
+    if (!entry.isEffectivelyCompleted) return false
+    if (entry.source != WatchProgressSourceTraktPlayback) return true
+
+    val explicitPercent = entry.normalizedProgressPercent ?: return false
+    return explicitPercent >= WatchProgressTraktPlaybackNextUpSeedPercentThreshold
 }
 
 internal fun shouldReplaceProgressSnapshotEntry(
@@ -173,8 +177,8 @@ internal fun shouldReplaceProgressSnapshotEntry(
 
 internal fun shouldCascadeCompletedProgressToWatchedHistory(
     entry: WatchProgressEntry,
-    providerOwnsCompletedHistory: Boolean,
-): Boolean = !providerOwnsCompletedHistory && entry.normalizedCompletion().isCompleted
+    isUsingTraktProgress: Boolean,
+): Boolean = !isUsingTraktProgress && entry.normalizedCompletion().isCompleted
 
 internal fun String?.isSeriesTypeForContinueWatching(): Boolean =
     equals("series", ignoreCase = true) || equals("tv", ignoreCase = true)

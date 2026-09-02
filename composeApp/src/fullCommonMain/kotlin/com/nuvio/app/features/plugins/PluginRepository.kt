@@ -559,38 +559,11 @@ actual object PluginRepository {
     }
 
     private fun persist() {
-        val state = _uiState.value
-        val payload = StoredPluginsState(
-            pluginsEnabled = state.pluginsEnabled,
-            groupStreamsByRepository = state.groupStreamsByRepository,
-            excludedQualities = state.excludedQualities,
-            repositories = state.repositories.map { repo ->
-                StoredPluginRepository(
-                    manifestUrl = repo.manifestUrl,
-                    name = repo.name,
-                    description = repo.description,
-                    version = repo.version,
-                    scraperCount = repo.scraperCount,
-                    lastUpdated = repo.lastUpdated,
-                )
-            },
-            scrapers = state.scrapers.map { scraper ->
-                StoredPluginScraper(
-                    id = scraper.id,
-                    repositoryUrl = scraper.repositoryUrl,
-                    name = scraper.name,
-                    description = scraper.description,
-                    version = scraper.version,
-                    filename = scraper.filename,
-                    supportedTypes = scraper.supportedTypes,
-                    enabled = scraper.enabled,
-                    manifestEnabled = scraper.manifestEnabled,
-                    hasSettings = scraper.hasSettings,
-                    logo = scraper.logo,
-                    contentLanguage = scraper.contentLanguage,
-                    formats = scraper.formats,
-                    code = scraper.code,
-                )            },
+        val snapshot = PluginPersistenceSnapshot(
+            profileId = currentProfileId,
+            generation = persistenceGeneration.value,
+            revision = persistenceRevision.incrementAndGet(),
+            state = _uiState.value,
         )
         val requiresCodeWrite = snapshot.state.scrapers.any { scraper ->
             !PluginStorage.hasScraperCode(snapshot.profileId, scraper.id)
@@ -661,44 +634,38 @@ actual object PluginRepository {
 
     private fun loadStateAsUiState(profileId: Int): LoadedPluginState {
         val stored = loadStoredState(profileId)
-        return PluginsUiState(
-            pluginsEnabled = stored?.pluginsEnabled ?: true,
-            groupStreamsByRepository = stored?.groupStreamsByRepository ?: false,
-            excludedQualities = stored?.excludedQualities.orEmpty(),
-            repositories = stored?.repositories
-                ?.map {
-                    PluginRepositoryItem(
-                        manifestUrl = it.manifestUrl,
-                        name = it.name,
-                        description = it.description,
-                        version = it.version,
-                        scraperCount = it.scraperCount,
-                        lastUpdated = it.lastUpdated,
-                        isRefreshing = false,
-                        errorMessage = null,
-                    )
-                }
-                ?: emptyList(),
-            scrapers = stored?.scrapers
-                ?.map {
-                    PluginScraper(
-                        id = it.id,
-                        repositoryUrl = it.repositoryUrl,
-                        name = it.name,
-                        description = it.description,
-                        version = it.version,
-                        filename = it.filename,
-                        supportedTypes = it.supportedTypes,
-                        enabled = it.enabled,
-                        manifestEnabled = it.manifestEnabled,
-                        hasSettings = it.hasSettings,
-                        logo = it.logo,
-                        contentLanguage = it.contentLanguage,
-                        formats = it.formats,
-                        code = it.code,
-                    )
-                }
-                ?: emptyList(),
+        var requiresMigration = false
+        val scrapers = stored?.scrapers
+            ?.mapNotNull { storedScraper ->
+                storedScraper.restorePluginScraper { scraperId ->
+                    PluginStorage.loadScraperCode(profileId, scraperId)
+                }?.also { restored ->
+                    requiresMigration = requiresMigration || restored.requiresMigration
+                }?.scraper
+            }
+            ?: emptyList()
+        return LoadedPluginState(
+            state = PluginsUiState(
+                pluginsEnabled = stored?.pluginsEnabled ?: true,
+                groupStreamsByRepository = stored?.groupStreamsByRepository ?: false,
+                excludedQualities = stored?.excludedQualities.orEmpty(),
+                repositories = stored?.repositories
+                    ?.map {
+                        PluginRepositoryItem(
+                            manifestUrl = it.manifestUrl,
+                            name = it.name,
+                            description = it.description,
+                            version = it.version,
+                            scraperCount = it.scraperCount,
+                            lastUpdated = it.lastUpdated,
+                            isRefreshing = false,
+                            errorMessage = null,
+                        )
+                    }
+                    ?: emptyList(),
+                scrapers = scrapers,
+            ),
+            requiresMigration = requiresMigration,
         )
     }
 

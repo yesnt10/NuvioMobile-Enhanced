@@ -278,7 +278,8 @@ internal fun parseSidecarTimedCuesLenient(rawText: String, sourceUrl: String): L
     val out = ArrayList<CuesWithTiming>(syncCues.size)
     for (i in syncCues.indices) {
         val startUs = syncCues[i].startTimeMs * 1_000L
-        val endUs = (syncCues[i].endTimeMs * 1_000L).coerceAtLeast(startUs + 1L)
+        val endUs = ((syncCues[i].endTimeMs ?: syncCues[i].startTimeMs + 2_000L) * 1_000L)
+            .coerceAtLeast(startUs + 1L)
         val durationUs = (endUs - startUs).coerceAtLeast(1L)
         val cue = Cue.Builder().setText(syncCues[i].text).build()
         out.add(CuesWithTiming(listOf(cue), startUs, durationUs))

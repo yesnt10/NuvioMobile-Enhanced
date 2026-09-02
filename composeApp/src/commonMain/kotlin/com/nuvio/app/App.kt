@@ -59,6 +59,7 @@ import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.saveable.rememberSaveable
@@ -117,8 +118,6 @@ import com.nuvio.app.core.network.NetworkCondition
 import com.nuvio.app.core.network.NetworkStatusRepository
 import com.nuvio.app.core.sync.AppForegroundMonitor
 import com.nuvio.app.core.sync.ProfileSettingsSync
-import com.nuvio.app.core.sync.RealtimeSyncConfig
-import com.nuvio.app.core.sync.RealtimeSyncInvalidationService
 import com.nuvio.app.core.sync.SyncManager
 import com.nuvio.app.core.ui.LocalNuvioNavBarScrollState
 import com.nuvio.app.core.ui.NuvioClassicNavigationBar
@@ -1179,37 +1178,6 @@ private fun MainAppContent(
                     }
                 }
             }
-        }
-    }
-
-    LaunchedEffect(authState, profileState.activeProfile?.profileIndex) {
-        if (!RealtimeSyncConfig.ENABLED) {
-            RealtimeSyncInvalidationService.stop()
-            return@LaunchedEffect
-        }
-
-        val authenticatedState = authState as? AuthState.Authenticated ?: return@LaunchedEffect
-        if (authenticatedState.isAnonymous) return@LaunchedEffect
-
-        val activeProfileId = profileState.activeProfile?.profileIndex ?: return@LaunchedEffect
-        RealtimeSyncInvalidationService.start(
-            userId = authenticatedState.userId,
-            profileId = activeProfileId,
-        )
-    }
-
-    DisposableEffect(authState, profileState.activeProfile?.profileIndex) {
-        val authenticatedState = authState as? AuthState.Authenticated
-        if (
-            !RealtimeSyncConfig.ENABLED ||
-            authenticatedState == null ||
-            authenticatedState.isAnonymous ||
-            profileState.activeProfile == null
-        ) {
-            RealtimeSyncInvalidationService.stop()
-        }
-        onDispose {
-            RealtimeSyncInvalidationService.stop()
         }
     }
 
@@ -3529,7 +3497,9 @@ private fun MainAppContent(
                                         }
                                     } else {
                                         if (!isTraktLibrarySource) {
-                                            LibraryRepository.toggleSaved(libraryItem)
+                                            coroutineScope.launch {
+                                                LibraryRepository.toggleSaved(libraryItem)
+                                            }
                                         } else {
                                             pickerItem = libraryItem
                                             pickerTitle = preview.name
@@ -4093,7 +4063,6 @@ private fun AppTabHost(
                         modifier = Modifier.fillMaxSize(),
                         onPosterClick = onPosterClick,
                         onPosterLongClick = onPosterLongClick,
-                        onPersonClick = onSearchPersonClick,
                         searchFocusRequestCount = searchFocusRequestCount,
                         scrollToTopRequests = searchScrollToTopRequests,
                     )

@@ -4,6 +4,7 @@ import co.touchlab.kermit.Logger
 import com.nuvio.app.core.auth.AuthRepository
 import com.nuvio.app.core.auth.AuthState
 import com.nuvio.app.core.network.SupabaseProvider
+import com.nuvio.app.core.sync.HOME_CATALOG_LEGACY_SYNC_PLATFORMS
 import com.nuvio.app.core.sync.HOME_CATALOG_SHARED_SYNC_PLATFORM
 import com.nuvio.app.core.sync.putSyncOriginClientId
 import com.nuvio.app.features.profiles.ProfileRepository
@@ -42,6 +43,11 @@ data class SyncHomeCatalogPayload(
     @SerialName("hero_auto_scroll_enabled") val heroAutoScrollEnabled: Boolean = true,
     @SerialName("show_catalog_type") val showCatalogType: Boolean = true,
     @SerialName("hide_unreleased_content") val hideUnreleasedContent: Boolean = false,
+    @SerialName("hide_catalog_underline") val hideCatalogUnderline: Boolean = false,
+    @SerialName("catalog_column_count") val catalogColumnCount: Int = 3,
+    @SerialName("catalog_poster_size") val catalogPosterSize: CatalogPosterSize = CatalogPosterSize.Regular,
+    @SerialName("catalog_poster_layout") val catalogPosterLayout: CatalogPosterLayout = CatalogPosterLayout.Portrait,
+    @SerialName("home_catalog_row_count") val homeCatalogRowCount: Int = 1,
     val items: List<SyncCatalogItem> = emptyList(),
 )
 
@@ -59,25 +65,16 @@ private data class RemoteHomeCatalogSettings(
     val hasHeroAutoScrollEnabled: Boolean,
     val hasHideUnreleasedContent: Boolean,
     val hasHideCatalogUnderline: Boolean,
+    val hasCatalogColumnCount: Boolean,
+    val hasCatalogPosterSize: Boolean,
+    val hasCatalogPosterLayout: Boolean,
+    val hasHomeCatalogRowCount: Boolean,
 )
 
 private data class PullToken(
     val userId: String,
     val profileId: Int,
 )
-
-private data class CachedSharedSettings(
-    val token: PullToken,
-    val settingsJson: JsonObject,
-)
-
-internal fun mergeHomeCatalogSettingsJson(
-    remoteJson: JsonObject?,
-    localJson: JsonObject,
-): JsonObject = buildJsonObject {
-    remoteJson?.forEach { (key, value) -> put(key, value) }
-    localJson.forEach { (key, value) -> put(key, value) }
-}
 
 object HomeCatalogSettingsSyncService {
     private val scope = CoroutineScope(SupervisorJob() + Dispatchers.Default)
@@ -92,6 +89,10 @@ object HomeCatalogSettingsSyncService {
     private const val SHOW_CATALOG_TYPE_KEY = "show_catalog_type"
     private const val HIDE_UNRELEASED_CONTENT_KEY = "hide_unreleased_content"
     private const val HIDE_CATALOG_UNDERLINE_KEY = "hide_catalog_underline"
+    private const val CATALOG_COLUMN_COUNT_KEY = "catalog_column_count"
+    private const val CATALOG_POSTER_SIZE_KEY = "catalog_poster_size"
+    private const val CATALOG_POSTER_LAYOUT_KEY = "catalog_poster_layout"
+    private const val HOME_CATALOG_ROW_COUNT_KEY = "home_catalog_row_count"
 
     @Volatile
     var isSyncingFromRemote: Boolean = false
@@ -101,33 +102,19 @@ object HomeCatalogSettingsSyncService {
     @Volatile
     private var completedInitialPull: PullToken? = null
 
-    @Volatile
-    private var cachedSharedSettings: CachedSharedSettings? = null
-
     suspend fun pullFromServer(profileId: Int) {
         runCatching {
             val pullToken = currentPullToken(profileId) ?: return
             val localPayload = HomeCatalogSettingsRepository.exportToSyncPayload()
-            val remoteBlob = fetchRemoteBlob(profileId)
-            cachedSharedSettings = CachedSharedSettings(
-                token = pullToken,
-                settingsJson = remoteBlob?.settingsJson ?: buildJsonObject { },
-            )
-            val remotePayload = remoteBlob?.let { blob ->
-                decodePayloadPreservingLocalDefaults(blob.settingsJson, localPayload)
-            }
+            val remote = fetchBestRemotePayload(profileId, localPayload)
 
-            if (remoteBlob == null) {
+            if (remote == null) {
                 log.i { "pullFromServer — no remote home catalog settings found; preserving local" }
                 markInitialPullComplete(pullToken)
                 return
             }
 
-            if (remotePayload == null) {
-                log.w { "pullFromServer — failed to parse remote home catalog settings" }
-                markInitialPullComplete(pullToken)
-                return
-            }
+            val remotePayload = remote.payload
 
             if (remotePayload.items.isEmpty()) {
                 log.i { "pullFromServer — remote has empty items, preserving local catalog order" }
@@ -156,23 +143,22 @@ object HomeCatalogSettingsSyncService {
             delay(500)
             if (isSyncingFromRemote) return@launch
             if (currentPullToken() != requestedToken) return@launch
-            pushToRemote(requestedToken)
+            pushToRemote(requestedToken.profileId)
         }
     }
 
-    private suspend fun pushToRemote(token: PullToken) {
+    private suspend fun pushToRemote(profileId: Int) {
         runCatching {
             val payload = HomeCatalogSettingsRepository.exportToSyncPayload()
-            val jsonElement = mergedSharedPayloadJson(token, payload)
+            val jsonElement = mergedSharedPayloadJson(profileId, payload)
 
             val params = buildJsonObject {
-                put("p_profile_id", token.profileId)
+                put("p_profile_id", profileId)
                 put("p_platform", HOME_CATALOG_SHARED_SYNC_PLATFORM)
                 put("p_settings_json", jsonElement)
                 putSyncOriginClientId()
             }
             SupabaseProvider.client.postgrest.rpc("sync_push_home_catalog_settings", params)
-            cachedSharedSettings = CachedSharedSettings(token = token, settingsJson = jsonElement)
             log.d { "pushToRemote — success" }
         }.onFailure { e ->
             log.e(e) { "pushToRemote — FAILED" }
@@ -251,6 +237,10 @@ object HomeCatalogSettingsSyncService {
             hasHeroAutoScrollEnabled = blob.settingsJson.containsKey(HERO_AUTO_SCROLL_KEY),
             hasHideUnreleasedContent = blob.settingsJson.containsKey(HIDE_UNRELEASED_CONTENT_KEY),
             hasHideCatalogUnderline = blob.settingsJson.containsKey(HIDE_CATALOG_UNDERLINE_KEY),
+            hasCatalogColumnCount = blob.settingsJson.containsKey(CATALOG_COLUMN_COUNT_KEY),
+            hasCatalogPosterSize = blob.settingsJson.containsKey(CATALOG_POSTER_SIZE_KEY),
+            hasCatalogPosterLayout = blob.settingsJson.containsKey(CATALOG_POSTER_LAYOUT_KEY),
+            hasHomeCatalogRowCount = blob.settingsJson.containsKey(HOME_CATALOG_ROW_COUNT_KEY),
         )
     }
 
@@ -266,6 +256,18 @@ object HomeCatalogSettingsSyncService {
         val hideUnderlineSource = rows
             .filter { it.hasHideCatalogUnderline }
             .maxByOrNull { it.updatedAt.orEmpty() }
+        val catalogColumnCountSource = rows
+            .filter { it.hasCatalogColumnCount }
+            .maxByOrNull { it.updatedAt.orEmpty() }
+        val catalogPosterSizeSource = rows
+            .filter { it.hasCatalogPosterSize }
+            .maxByOrNull { it.updatedAt.orEmpty() }
+        val catalogPosterLayoutSource = rows
+            .filter { it.hasCatalogPosterLayout }
+            .maxByOrNull { it.updatedAt.orEmpty() }
+        val homeCatalogRowCountSource = rows
+            .filter { it.hasHomeCatalogRowCount }
+            .maxByOrNull { it.updatedAt.orEmpty() }
 
         return copy(
             payload = payload.copy(
@@ -275,16 +277,25 @@ object HomeCatalogSettingsSyncService {
                     ?: payload.hideUnreleasedContent,
                 hideCatalogUnderline = hideUnderlineSource?.payload?.hideCatalogUnderline
                     ?: payload.hideCatalogUnderline,
+                catalogColumnCount = catalogColumnCountSource?.payload?.catalogColumnCount
+                    ?: payload.catalogColumnCount,
+                catalogPosterSize = catalogPosterSizeSource?.payload?.catalogPosterSize
+                    ?: payload.catalogPosterSize,
+                catalogPosterLayout = catalogPosterLayoutSource?.payload?.catalogPosterLayout
+                    ?: payload.catalogPosterLayout,
+                homeCatalogRowCount = homeCatalogRowCountSource?.payload?.homeCatalogRowCount
+                    ?: payload.homeCatalogRowCount,
             ),
         )
     }
 
     private suspend fun fetchRemoteBlob(
         profileId: Int,
+        platform: String,
     ): SupabaseHomeCatalogSettingsBlob? {
         val params = buildJsonObject {
             put("p_profile_id", profileId)
-            put("p_platform", HOME_CATALOG_SHARED_SYNC_PLATFORM)
+            put("p_platform", platform)
         }
         val result = SupabaseProvider.client.postgrest.rpc("sync_pull_home_catalog_settings", params)
         return result.decodeList<SupabaseHomeCatalogSettingsBlob>().firstOrNull()
@@ -306,17 +317,43 @@ object HomeCatalogSettingsSyncService {
             } else {
                 localPayload.hideUnreleasedContent
             },
+            hideCatalogUnderline = if (settingsJson.containsKey(HIDE_CATALOG_UNDERLINE_KEY)) {
+                decoded.hideCatalogUnderline
+            } else {
+                localPayload.hideCatalogUnderline
+            },
+            catalogColumnCount = if (settingsJson.containsKey(CATALOG_COLUMN_COUNT_KEY)) {
+                decoded.catalogColumnCount
+            } else {
+                localPayload.catalogColumnCount
+            },
+            catalogPosterSize = if (settingsJson.containsKey(CATALOG_POSTER_SIZE_KEY)) {
+                decoded.catalogPosterSize
+            } else {
+                localPayload.catalogPosterSize
+            },
+            catalogPosterLayout = if (settingsJson.containsKey(CATALOG_POSTER_LAYOUT_KEY)) {
+                decoded.catalogPosterLayout
+            } else {
+                localPayload.catalogPosterLayout
+            },
+            homeCatalogRowCount = if (settingsJson.containsKey(HOME_CATALOG_ROW_COUNT_KEY)) {
+                decoded.homeCatalogRowCount
+            } else {
+                localPayload.homeCatalogRowCount
+            },
         )
     }.getOrNull()
 
-    private fun mergedSharedPayloadJson(
-        token: PullToken,
+    private suspend fun mergedSharedPayloadJson(
+        profileId: Int,
         payload: SyncHomeCatalogPayload,
     ): JsonObject {
         val localJson = json.encodeToJsonElement(SyncHomeCatalogPayload.serializer(), payload).jsonObject
-        val remoteJson = cachedSharedSettings
-            ?.takeIf { cached -> cached.token == token }
-            ?.settingsJson
-        return mergeHomeCatalogSettingsJson(remoteJson = remoteJson, localJson = localJson)
+        val remoteJson = fetchRemoteBlob(profileId, HOME_CATALOG_SHARED_SYNC_PLATFORM)?.settingsJson
+        return buildJsonObject {
+            remoteJson?.forEach { (key, value) -> put(key, value) }
+            localJson.forEach { (key, value) -> put(key, value) }
+        }
     }
 }

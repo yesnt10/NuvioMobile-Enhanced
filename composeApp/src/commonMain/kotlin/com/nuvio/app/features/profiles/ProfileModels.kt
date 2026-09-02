@@ -3,7 +3,6 @@ package com.nuvio.app.features.profiles
 import androidx.compose.ui.graphics.Color
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
-import kotlinx.serialization.Transient
 
 const val MAX_PROFILES = 6
 
@@ -68,8 +67,6 @@ data class AvatarCatalogItem(
     @SerialName("sort_order") val sortOrder: Int = 0,
     @SerialName("is_active") val isActive: Boolean = true,
     @SerialName("bg_color") val bgColor: String? = null,
-    @Transient val localImageUrl: String? = null,
-    @Transient val memberOnly: Boolean = false,
 )
 
 fun parseHexColor(hex: String): Color {
@@ -91,15 +88,7 @@ val PROFILE_COLORS = listOf(
 )
 
 fun avatarStorageUrl(storagePath: String): String =
-    if (storagePath.startsWith("https://") || storagePath.startsWith("http://")) {
-        storagePath
-    } else {
-        "${com.nuvio.app.core.network.ServerConfigurationRepository.active.value.backendUrl}/storage/v1/object/public/avatars/$storagePath"
-    }
-
-fun avatarImageUrl(avatar: AvatarCatalogItem): String? =
-    avatar.localImageUrl
-        ?: avatar.storagePath.takeIf { it.isNotBlank() && !avatar.memberOnly }?.let(::avatarStorageUrl)
+    "${com.nuvio.app.core.network.SupabaseConfig.URL}/storage/v1/object/public/avatars/$storagePath"
 
 fun normalizedAvatarUrl(url: String?): String? =
     normalizedRemoteImageUrl(url)

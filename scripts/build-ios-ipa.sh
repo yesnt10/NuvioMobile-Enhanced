@@ -54,9 +54,13 @@ fi
     CODE_SIGN_IDENTITY= \
     build
 
-app_path="${derived_data}/Build/Products/${configuration}-iphoneos/Nuvio.app"
+products_directory="${derived_data}/Build/Products/${configuration}-iphoneos"
+app_path="${products_directory}/Nuvio Enhanced.app"
 if [[ ! -d "${app_path}" ]]; then
-    echo "iOS build did not produce ${app_path}." >&2
+    app_path="${products_directory}/Nuvio.app"
+fi
+if [[ ! -d "${app_path}" ]]; then
+    echo "iOS build did not produce a Nuvio app bundle in ${products_directory}." >&2
     exit 1
 fi
 

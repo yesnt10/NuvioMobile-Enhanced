@@ -19,6 +19,8 @@ import com.nuvio.app.features.plugins.PluginRepository
 import com.nuvio.app.features.plugins.pluginContentId
 import com.nuvio.app.features.plugins.PluginsUiState
 import com.nuvio.app.features.plugins.isExcludedByPluginQualityFilter
+import com.nuvio.app.features.telegram.TELEGRAM_ADDON_ID
+import com.nuvio.app.features.telegram.TelegramRepository
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
@@ -118,6 +120,8 @@ object StreamsRepository {
         } else {
             PluginsUiState(pluginsEnabled = false)
         }
+        TelegramRepository.ensureLoaded()
+        val telegramAvailable = TelegramRepository.uiState.value.isConnected && !searchTitle.isNullOrBlank()
         val cloudStreamSearchRequest = buildCloudStreamSearchRequest(
             type = type,
             videoId = videoId,
@@ -148,7 +152,7 @@ object StreamsRepository {
         val contentRequestKey = "$type::$videoId::$season::$episode" +
             "::pluginsGrouped=${pluginUiState.groupStreamsByRepository}" +
             "::pluginQuality=$pluginQualityKey::cloudstream=$cloudStreamRegistryRevision" +
-            "::cloudTarget=${cloudStreamSearchRequest?.cacheKey.orEmpty()}"
+            "::cloudTarget=${cloudStreamSearchRequest?.cacheKey.orEmpty()}::telegram=$telegramAvailable"
         val requestKey = "$contentRequestKey::manualSelection=$manualSelection"
         val currentState = _uiState.value
         if (
@@ -313,7 +317,7 @@ object StreamsRepository {
             groupByRepository = pluginUiState.groupStreamsByRepository,
         )
 
-        if (installedAddons.isEmpty() && pluginProviderGroups.isEmpty() && cloudStreamProviderGroups.isEmpty()) {
+        if (installedAddons.isEmpty() && pluginProviderGroups.isEmpty() && cloudStreamProviderGroups.isEmpty() && !telegramAvailable) {
             _uiState.value = StreamsUiState(
                 requestToken = requestToken,
                 isAnyLoading = false,
@@ -345,7 +349,7 @@ object StreamsRepository {
                 "for stream type=$type id=$videoId"
         }
 
-        if (streamAddons.isEmpty() && pluginProviderGroups.isEmpty() && cloudStreamProviderGroups.isEmpty()) {
+        if (streamAddons.isEmpty() && pluginProviderGroups.isEmpty() && cloudStreamProviderGroups.isEmpty() && !telegramAvailable) {
             _uiState.value = StreamsUiState(
                 requestToken = requestToken,
                 isAnyLoading = false,
@@ -377,6 +381,17 @@ object StreamsRepository {
                 streams = emptyList(),
                 isLoading = true,
             )
+        } + if (telegramAvailable) {
+            listOf(
+                AddonStreamGroup(
+                    addonName = "Telegram",
+                    addonId = TELEGRAM_ADDON_ID,
+                    streams = emptyList(),
+                    isLoading = true,
+                ),
+            )
+        } else {
+            emptyList()
         }, installedAddonOrder)
         val isInitiallyLoading = initialGroups.any { it.isLoading }
         _uiState.value = StreamsUiState(
@@ -397,7 +412,8 @@ object StreamsRepository {
             val pluginFirstErrorByAddonId = mutableMapOf<String, String>()
             val totalTasks = streamAddons.size +
                 pluginProviderGroups.sumOf { it.scrapers.size } +
-                cloudStreamProviderGroups.size
+                cloudStreamProviderGroups.size +
+                if (telegramAvailable) 1 else 0
             val cloudStreamSemaphore = Semaphore(CLOUDSTREAM_STREAM_PROVIDER_CONCURRENCY)
 
             val installedAddonNames = installedAddonOrder.toSet()
@@ -719,6 +735,37 @@ object StreamsRepository {
                         error = "${providerGroup.addonName} timed out",
                     )
                     publishCompletion(StreamLoadCompletion.Addon(group))
+                }
+            }
+
+            if (telegramAvailable) {
+                launch {
+                    val telegramGroup = runCatchingUnlessCancelled {
+                        TelegramRepository.searchStreams(
+                            title = searchTitle.orEmpty(),
+                            season = season,
+                            episode = episode,
+                        )
+                    }.fold(
+                        onSuccess = { streams ->
+                            AddonStreamGroup(
+                                addonName = "Telegram",
+                                addonId = TELEGRAM_ADDON_ID,
+                                streams = streams,
+                                isLoading = false,
+                            )
+                        },
+                        onFailure = { error ->
+                            AddonStreamGroup(
+                                addonName = "Telegram",
+                                addonId = TELEGRAM_ADDON_ID,
+                                streams = emptyList(),
+                                isLoading = false,
+                                error = error.message,
+                            )
+                        },
+                    )
+                    publishCompletion(StreamLoadCompletion.Addon(telegramGroup))
                 }
             }
 

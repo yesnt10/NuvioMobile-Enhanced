@@ -9,6 +9,7 @@ import androidx.compose.animation.shrinkVertically
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.border
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.foundation.layout.Arrangement
@@ -30,7 +31,10 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
@@ -51,7 +55,6 @@ import com.nuvio.app.features.mdblist.MdbListMetadataService.PROVIDER_AUDIENCE
 import com.nuvio.app.features.mdblist.MdbListMetadataService.PROVIDER_IMDB
 import com.nuvio.app.features.mdblist.MdbListMetadataService.PROVIDER_LETTERBOXD
 import com.nuvio.app.features.mdblist.MdbListMetadataService.PROVIDER_METACRITIC
-import com.nuvio.app.features.mdblist.MdbListMetadataService.PROVIDER_MAL
 import com.nuvio.app.features.mdblist.MdbListMetadataService.PROVIDER_TMDB
 import com.nuvio.app.features.mdblist.MdbListMetadataService.PROVIDER_TOMATOES
 import com.nuvio.app.features.mdblist.MdbListMetadataService.PROVIDER_TRAKT
@@ -391,6 +394,22 @@ private val ratingVisuals = listOf(
         format = ::formatWhole,
     ),
     RatingVisuals(
+        source = PROVIDER_TOMATOES,
+        displayName = "Rotten Tomatoes",
+        logo = Res.drawable.rating_rotten_tomatoes,
+        logoWidth = 16.dp,
+        valueColor = Color(0xFFFA320A),
+        format = ::formatPercent,
+    ),
+    RatingVisuals(
+        source = PROVIDER_METACRITIC,
+        displayName = "Metacritic",
+        logo = Res.drawable.rating_metacritic,
+        logoWidth = 16.dp,
+        valueColor = Color(0xFFFFCC33),
+        format = ::formatWhole,
+    ),
+    RatingVisuals(
         source = PROVIDER_TRAKT,
         displayName = "Trakt",
         logo = Res.drawable.rating_trakt,
@@ -407,36 +426,12 @@ private val ratingVisuals = listOf(
         format = ::formatOneDecimal,
     ),
     RatingVisuals(
-        source = PROVIDER_MAL,
-        displayName = "MyAnimeList",
-        logo = Res.drawable.rating_mal,
-        logoWidth = 16.dp,
-        valueColor = Color(0xFF2E51A2),
-        format = ::formatOneDecimal,
-    ),
-    RatingVisuals(
-        source = PROVIDER_TOMATOES,
-        displayName = "Rotten Tomatoes",
-        logo = Res.drawable.rating_rotten_tomatoes,
-        logoWidth = 16.dp,
-        valueColor = Color(0xFFFA320A),
-        format = ::formatPercent,
-    ),
-    RatingVisuals(
         source = PROVIDER_AUDIENCE,
         displayName = runBlocking { getString(Res.string.rating_audience_score) },
         logo = Res.drawable.rating_audience_score,
         logoWidth = 16.dp,
         valueColor = Color(0xFFFA320A),
         format = ::formatPercent,
-    ),
-    RatingVisuals(
-        source = PROVIDER_METACRITIC,
-        displayName = "Metacritic",
-        logo = Res.drawable.rating_metacritic,
-        logoWidth = 16.dp,
-        valueColor = Color(0xFFFFCC33),
-        format = ::formatWhole,
     ),
 )
 
